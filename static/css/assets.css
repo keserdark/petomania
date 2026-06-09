@@ -108,7 +108,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: background 0.15s, border-color 0.15s, color 0.15s;
+    transition: none;
 }
 .assets-popup-close:hover { color: var(--danger); border-color: var(--danger); }
 
