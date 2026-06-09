@@ -1010,7 +1010,7 @@ def api_battle_turn():
         reward = calculate_reward(player['level'], npc['level'], True)
         if reward > 0:
             conn = get_db()
-            conn.execute('UPDATE users SET dacoins = dacoins + ? WHERE discord_id = ?', (reward, uid))
+            conn.execute('UPDATE dacoins SET balance = balance + ? WHERE user_id = ?', (reward, uid))
             conn.commit()
             conn.close()
         conn = get_db()
