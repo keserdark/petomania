@@ -16,6 +16,58 @@ document.addEventListener('contextmenu', function(e) {
 });
 </script>
 
+<link rel="stylesheet" href="{{ url_for('static', filename='css/shop.css') }}">
+ 
+<div class="shop-overlay" id="shop-overlay">
+    <div class="shop-panel">
+ 
+        <!-- Header -->
+        <div class="shop-header">
+            <span class="shop-header-icon" id="shop-header-icon">🛒</span>
+            <div class="shop-header-info">
+                <div class="shop-header-name" id="shop-header-name">Magazin</div>
+                <div class="shop-header-npc"  id="shop-header-npc"></div>
+            </div>
+            <div class="shop-header-dacoins">
+                ✦ <span id="shop-dacoins-val">0</span>
+            </div>
+            <button class="shop-close" onclick="closeShop()">✕</button>
+        </div>
+ 
+        <!-- Tabs categorii -->
+        <div class="shop-tabs" id="shop-tabs"></div>
+ 
+        <!-- Grid iteme -->
+        <div class="shop-body">
+            <div class="shop-grid" id="shop-grid"></div>
+        </div>
+ 
+        <!-- Popup confirmare (pozitionat peste panel) -->
+        <div class="shop-confirm-overlay" id="shop-confirm-overlay">
+            <div class="shop-confirm-box">
+                <div class="shop-confirm-icon" id="shop-confirm-icon"></div>
+                <div class="shop-confirm-name" id="shop-confirm-name"></div>
+                <div class="shop-confirm-desc" id="shop-confirm-desc"></div>
+                <div class="shop-confirm-qty-row">
+                    <button class="shop-qty-btn" onclick="shopQtyChange(-1)">−</button>
+                    <span class="shop-qty-display" id="shop-qty-display">1</span>
+                    <button class="shop-qty-btn" onclick="shopQtyChange(1)">+</button>
+                </div>
+                <div class="shop-confirm-total" id="shop-confirm-total"></div>
+                <div class="shop-confirm-msg"   id="shop-confirm-msg"></div>
+                <div class="shop-confirm-actions">
+                    <button class="shop-confirm-btn cancel" onclick="_closeConfirm ? _closeConfirm() : null">Anulează</button>
+                    <button class="shop-confirm-btn buy"    id="shop-buy-btn" onclick="shopConfirmBuy()">Cumpără</button>
+                </div>
+            </div>
+        </div>
+ 
+    </div>
+</div>
+ 
+<script src="{{ url_for('static', filename='js/shop_widget.js') }}"></script>
+
+
 <body class="petomania-body">
 
 <div class="pet-layout">
