@@ -95,13 +95,13 @@ ladyImg.onload = onLoad;
 function redraw(hover) {
     ctx.clearRect(0, 0, W, H);
     ctx.drawImage(bgImg, 0, 0, W, H);
+    ctx.drawImage(ladyImg, 0, 0, W, H);
     if (hover) {
         ctx.save();
-        ctx.filter = 'brightness(1.4) drop-shadow(0 0 18px rgba(255,215,0,1))';
+        ctx.globalAlpha = 0.45;
+        ctx.globalCompositeOperation = 'lighter';
         ctx.drawImage(ladyImg, 0, 0, W, H);
         ctx.restore();
-    } else {
-        ctx.drawImage(ladyImg, 0, 0, W, H);
     }
 }
 
