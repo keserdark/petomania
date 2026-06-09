@@ -68,7 +68,7 @@ INVENTORY_ITEMS = {
     {
         'key':   'healing_potion_small',
         'name':  'Poțiune de Vindecare Mică',
-        'desc':  'Restaurează 30 HP companionului activ.',
+        'desc':  'Restaurează 30 HP unui companion.',
         'icon':  '🧪',
         'img':   '/static/items/inventory_items/HealingPotion_Small.png',
         'price': 30,
@@ -76,6 +76,17 @@ INVENTORY_ITEMS = {
         'usable_outside_battle': True,
         'quest_item': False,
     },
+    {
+    'key':   'energy_potion_small',
+    'name':  'Poțiune de Energie Mică',
+    'desc':  'Restaurează 30 energie unui companion.',
+    'icon':  '🧪',
+    'img':   '/static/items/inventory_items/EnergyPotion_Small.png',
+    'price': 25,
+    'effects': { 'energy': 30 },
+    'usable_outside_battle': True,
+    'quest_item': False,
+},
     ],
 
     # ── OFRANDE ──────────────────────────────────
