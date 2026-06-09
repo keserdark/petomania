@@ -188,6 +188,11 @@ document.addEventListener('contextmenu', function(e) {
                     <button class="popup-action-btn" id="pi-offer">&#8596;&nbsp; Oferă</button>
                     <button class="popup-action-btn danger" id="pi-drop">&#128465;&nbsp; Aruncă</button>
                 </div>
+                <!-- Target selector — apare dupa click Foloseste -->
+                <div id="pi-target-select" style="display:none">
+                    <div class="pi-target-title">Pe cine folosești?</div>
+                    <div class="pi-target-list" id="pi-target-list"></div>
+                </div>
                 <div class="popup-action-msg" id="pi-msg"></div>
                 <button class="popup-close-btn" onclick="rbCloseItemPopup()">&#215; închide</button>
             </div>
@@ -292,6 +297,17 @@ document.addEventListener('contextmenu', function(e) {
     .rucsac-grid{ grid-template-columns:repeat(5,1fr); gap:5px; }
     .rslot{ border-radius:7px; }
     .rslot-icon{ font-size:16px; } .rslot-img{ width:32px; height:32px; object-fit:contain; display:block; }
+.pi-target-title{font-family:'Cinzel',serif;font-size:12px;color:var(--gold);margin-bottom:8px;text-align:center}
+.pi-target-list{display:flex;flex-direction:column;gap:6px;max-height:200px;overflow-y:auto}
+.pi-target-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;background:var(--bg-elev);border:1px solid var(--border);cursor:pointer;transition:background .15s,border-color .15s}
+.pi-target-item:hover{background:var(--gold-soft);border-color:var(--gold-dim)}
+.pi-target-img{width:36px;height:36px;object-fit:contain;flex-shrink:0}
+.pi-target-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.pi-target-name{font-size:12px;font-weight:600;color:var(--text-primary)}
+.pi-target-name em{font-size:10px;color:var(--text-muted);font-style:normal}
+.pi-target-hp-bar-bg{height:4px;background:var(--bg-deep);border-radius:2px;overflow:hidden}
+.pi-target-hp-bar-fill{height:100%;border-radius:2px;transition:width .3s}
+.pi-target-hp-txt{font-size:10px;font-weight:600}
 }
 
 /* ── PANEL HEADER ── */
@@ -587,24 +603,81 @@ document.getElementById('rb-item-overlay').onclick = (e) => {
     if (e.target === document.getElementById('rb-item-overlay')) rbCloseItemPopup();
 };
 
-document.getElementById('pi-use').onclick = async () => {
+document.getElementById('pi-use').onclick = () => {
     if (!rbActiveItem) return;
-    const btn = document.getElementById('pi-use');
-    btn.disabled = true;
-    const res = await rbPost(RB_API.use, { category: rbActiveItem.category, item_key: rbActiveItem.item_key });
+    // Arata target selector
+    document.getElementById('pi-use').style.display    = 'none';
+    document.getElementById('pi-offer').style.display  = 'none';
+    document.getElementById('pi-drop').style.display   = 'none';
+    document.getElementById('pi-target-select').style.display = 'block';
+    rbRenderTargets();
+};
+
+function rbRenderTargets() {
+    const list = document.getElementById('pi-target-list');
+    list.innerHTML = '';
+    rbData.companions.forEach((c, i) => {
+        if (!c) return;
+        const pct = c.hp_max > 0 ? Math.round((c.hp_current / c.hp_max) * 100) : 0;
+        const col = pct > 50 ? '#4caf7d' : pct > 25 ? '#e0a052' : '#e05252';
+        const div = document.createElement('div');
+        div.className = 'pi-target-item';
+        div.innerHTML = `
+            <img src="${c.image_url}" alt="${c.name}" class="pi-target-img">
+            <div class="pi-target-info">
+                <span class="pi-target-name">${c.name}${c.active ? ' <em>(activ)</em>' : ''}</span>
+                <div class="pi-target-hp-bar-bg">
+                    <div class="pi-target-hp-bar-fill" style="width:${pct}%;background:${col}"></div>
+                </div>
+                <span class="pi-target-hp-txt" style="color:${col}">${c.hp_current} / ${c.hp_max}</span>
+            </div>
+        `;
+        div.onclick = () => rbUseOnTarget(i);
+        list.appendChild(div);
+    });
+
+    // Buton anulare
+    const cancel = document.createElement('button');
+    cancel.className = 'popup-action-btn';
+    cancel.style.marginTop = '6px';
+    cancel.textContent = '← Înapoi';
+    cancel.onclick = () => {
+        document.getElementById('pi-target-select').style.display = 'none';
+        document.getElementById('pi-use').style.display    = 'flex';
+        document.getElementById('pi-offer').style.display  = 'flex';
+        document.getElementById('pi-drop').style.display   = 'flex';
+    };
+    list.appendChild(cancel);
+}
+
+async function rbUseOnTarget(slotIdx) {
+    if (!rbActiveItem) return;
+    document.getElementById('pi-target-select').style.display = 'none';
+    const res = await rbPost(RB_API.use, {
+        category:    rbActiveItem.category,
+        item_key:    rbActiveItem.item_key,
+        target_slot: slotIdx,
+    });
     rbShowMsg('pi-msg', res.msg, res.ok);
+    document.getElementById('pi-use').style.display   = 'flex';
+    document.getElementById('pi-offer').style.display = 'flex';
+    document.getElementById('pi-drop').style.display  = 'flex';
     if (res.ok) {
         rbActiveItem.quantity--;
         document.getElementById('pi-qty').textContent = rbActiveItem.quantity;
+        // Actualizeaza HP in companions panel
+        if (res.new_hp !== undefined && rbData.companions[slotIdx]) {
+            rbData.companions[slotIdx].hp_current = res.new_hp;
+        }
         if (rbActiveItem.quantity <= 0) {
             setTimeout(() => { rbCloseItemPopup(); rbLoadData(); }, 800);
         } else {
             rbData.categories[rbTab].slots.find(s => s && s.item_key === rbActiveItem.item_key).quantity = rbActiveItem.quantity;
             rbRenderGrid();
+            rbRenderCompanions();
         }
     }
-    btn.disabled = false;
-};
+}
 
 document.getElementById('pi-offer').onclick = () => {
     rbShowMsg('pi-msg', 'Funcția de oferire va fi disponibilă în curând.', false);

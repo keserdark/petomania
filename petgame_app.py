@@ -725,14 +725,15 @@ def api_rucsac_data():
 @app.route('/joc/petomania/api/rucsac/use', methods=['POST'])
 @login_required
 def api_rucsac_use():
-    user     = get_current_user()
-    uid      = int(user['id'])
-    data     = request.json or {}
-    category = data.get('category', '')
-    item_key = data.get('item_key', '')
+    user        = get_current_user()
+    uid         = int(user['id'])
+    data        = request.json or {}
+    category    = data.get('category', '')
+    item_key    = data.get('item_key', '')
+    target_slot = int(data.get('target_slot', 0))
     if not category or not item_key:
         return jsonify({'ok': False, 'msg': 'Date lipsă.'})
-    return jsonify(use_item(uid, category, item_key))
+    return jsonify(use_item(uid, category, item_key, target_slot))
 
 
 @app.route('/joc/petomania/api/rucsac/drop', methods=['POST'])
@@ -848,37 +849,6 @@ def api_loadout_clear():
     current[f'slot_{slot}'] = None
     save_loadout(uid, current['slot_2'], current['slot_3'], current['slot_4'], current['slot_5'])
     return jsonify({'ok': True})
-
-
-
-# ── MAGAZIN ───────────────────────────────────────────────────────────
-
-@app.route('/joc/petomania/api/shop/<shop_id>')
-@login_required
-def api_shop_data(shop_id):
-    from shop_config import get_shop
-    from modules.shop import build_shop_context
-    ctx = build_shop_context(shop_id)
-    if not ctx:
-        return jsonify({'ok': False, 'error': 'Magazin inexistent.'})
-    user    = get_current_user()
-    dacoins = get_dacoins(int(user['id']))
-    return jsonify({'ok': True, 'shop': ctx, 'dacoins': dacoins})
-
-
-@app.route('/joc/petomania/api/shop/<shop_id>/buy', methods=['POST'])
-@login_required
-def api_shop_buy(shop_id):
-    from modules.shop import shop_buy
-    user     = get_current_user()
-    uid      = int(user['id'])
-    data     = request.json or {}
-    category = data.get('category', '')
-    item_key = data.get('item_key', '')
-    qty      = int(data.get('qty', 1))
-    if not category or not item_key:
-        return jsonify({'ok': False, 'error': 'Date lipsă.'})
-    return jsonify(shop_buy(uid, shop_id, category, item_key, qty))
 
 
 # ── RUN ───────────────────────────────────────────────────────────────

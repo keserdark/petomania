@@ -10,6 +10,7 @@ from inventory_config import (
 from cogs.petgame_stats import get_stats_at_level
 from modules.db import get_db
 from modules.pets import get_pet, get_form
+from modules.loadout import get_loadout
 
 
 def inv_get_all(user_id: int) -> dict:
@@ -129,76 +130,92 @@ def _get_hp_max(p: dict) -> int:
     return stats['hp']
 
 
-def use_item(user_id: int, category: str, item_key: str) -> dict:
+def _apply_effects(p: dict, effects: dict, category: str) -> list:
+    """Aplica efectele unui item pe un dict de pet. Returneaza lista de changed."""
+    changed = []
+    hp_max = _get_hp_max(p)
+
+    if 'hp' in effects and category in ('medical', 'potiuni', 'mancare'):
+        old_hp = p.get('hp_current', 0)
+        new_hp = min(hp_max, old_hp + effects['hp'])
+        healed = new_hp - old_hp
+        if healed > 0:
+            p['hp_current'] = new_hp
+            changed.append(f"HP +{healed}")
+        elif category in ('medical', 'potiuni'):
+            return []  # semnaleaza "deja plin"
+
+    if 'hunger' in effects:
+        p['hunger'] = min(100, p.get('hunger', 0) + effects['hunger'])
+        changed.append(f"Foame +{effects['hunger']}")
+
+    if 'energy' in effects:
+        p['energy'] = min(100, p.get('energy', 0) + effects['energy'])
+        changed.append(f"Energie +{effects['energy']}")
+
+    return changed
+
+
+def use_item(user_id: int, category: str, item_key: str, target_slot: int = 0) -> dict:
+    """
+    Foloseste un item.
+    target_slot: 0 = pet activ, 1-4 = slot menajerie din loadout
+    """
     item_cfg = inv_get_item(category, item_key)
     if not item_cfg:
         return {'ok': False, 'msg': 'Item necunoscut.'}
     if item_cfg.get('quest_item'):
         return {'ok': False, 'msg': 'Acest item nu poate fi folosit direct.'}
     if item_cfg.get('usable_in_zone'):
-        return {'ok': False, 'msg': USE_STUB_MESSAGES.get(category, 'Necesită zonă specifică.')}
+        return {'ok': False, 'msg': USE_STUB_MESSAGES.get(category, 'Necesita zona specifica.')}
     if category in USE_STUB_MESSAGES and category not in ('mancare', 'medical', 'potiuni'):
         return {'ok': False, 'msg': USE_STUB_MESSAGES[category]}
 
-    pet = get_pet(user_id)
-    if not pet:
-        return {'ok': False, 'msg': 'Nu ai un companion activ.'}
-
-    p       = dict(pet)
     effects = item_cfg.get('effects', {})
-    changed = []
 
-    if category == 'mancare':
-        if 'hunger' in effects:
-            p['hunger'] = min(100, p['hunger'] + effects['hunger'])
-            changed.append(f"Foame +{effects['hunger']}")
-        if 'energy' in effects:
-            p['energy'] = min(100, p['energy'] + effects['energy'])
-            changed.append(f"Energie +{effects['energy']}")
-        if 'hp' in effects:
-            hp_max = _get_hp_max(p)
-            p['hp_current'] = min(hp_max, p['hp_current'] + effects['hp'])
-            changed.append(f"HP +{effects['hp']}")
-    elif category == 'medical':
-        if 'hp' in effects:
-            hp_max = _get_hp_max(p)
-            old_hp = p['hp_current']
-            new_hp = min(hp_max, old_hp + effects['hp'])
-            healed = new_hp - old_hp
-            if healed <= 0:
-                return {'ok': False, 'msg': 'HP-ul companionului este deja plin.'}
-            p['hp_current'] = new_hp
-            changed.append(f"HP +{healed}")
+    # ── Target slot 0 = pet activ ──
+    if target_slot == 0:
+        pet = get_pet(user_id)
+        if not pet:
+            return {'ok': False, 'msg': 'Nu ai un companion activ.'}
+        p = dict(pet)
+        changed = _apply_effects(p, effects, category)
+        if not changed:
+            return {'ok': False, 'msg': 'HP-ul companionului este deja plin.' if 'hp' in effects else 'Acest item nu are efect momentan.'}
+        conn = get_db()
+        conn.execute(
+            'UPDATE pets SET hunger = ?, energy = ?, hp_current = ? WHERE user_id = ?',
+            (p['hunger'], p['energy'], p['hp_current'], user_id)
+        )
+        conn.commit()
+        conn.close()
+        inv_remove(user_id, category, item_key, 1)
+        return {'ok': True, 'msg': '✅ ' + ' · '.join(changed), 'new_hp': p['hp_current']}
 
-    elif category == 'potiuni':
-        if 'hp' in effects:
-            hp_max = _get_hp_max(p)
-            old_hp = p['hp_current']
-            new_hp = min(hp_max, old_hp + effects['hp'])
-            healed = new_hp - old_hp
-            if healed <= 0:
-                return {'ok': False, 'msg': 'HP-ul companionului este deja plin.'}
-            p['hp_current'] = new_hp
-            changed.append(f"HP +{healed}")
-        if 'hunger' in effects:
-            p['hunger'] = min(100, p['hunger'] + effects['hunger'])
-            changed.append(f"Foame +{effects['hunger']}")
-        if 'energy' in effects:
-            p['energy'] = min(100, p['energy'] + effects['energy'])
-            changed.append(f"Energie +{effects['energy']}")
-
-    if not changed:
-        return {'ok': False, 'msg': 'Acest item nu are efect momentan.'}
-
+    # ── Target slot 1-4 = menajerie din loadout ──
+    loadout = get_loadout(user_id)
+    slot_key = f'slot_{target_slot + 1}'
+    men_id = loadout.get(slot_key)
+    if not men_id:
+        return {'ok': False, 'msg': 'Slot gol.'}
     conn = get_db()
+    row = conn.execute('SELECT * FROM menagerie WHERE id = ? AND user_id = ?', (men_id, user_id)).fetchone()
+    if not row:
+        conn.close()
+        return {'ok': False, 'msg': 'Companion negasit.'}
+    p = dict(row)
+    changed = _apply_effects(p, effects, category)
+    if not changed:
+        conn.close()
+        return {'ok': False, 'msg': 'HP-ul companionului este deja plin.' if 'hp' in effects else 'Acest item nu are efect momentan.'}
     conn.execute(
-        'UPDATE pets SET hunger = ?, energy = ?, hp_current = ? WHERE user_id = ?',
-        (p['hunger'], p['energy'], p['hp_current'], user_id)
+        'UPDATE menagerie SET hunger = ?, energy = ?, hp_current = ? WHERE id = ?',
+        (p['hunger'], p['energy'], p['hp_current'], men_id)
     )
     conn.commit()
     conn.close()
     inv_remove(user_id, category, item_key, 1)
-    return {'ok': True, 'msg': '✅ ' + ' · '.join(changed)}
+    return {'ok': True, 'msg': '✅ ' + ' · '.join(changed), 'new_hp': p['hp_current']}
 
 
 def rename_pet(user_id: int, new_name: str) -> dict:
