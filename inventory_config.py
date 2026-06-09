@@ -12,7 +12,8 @@
 #     'key':      'nexus_simplu',      # ID unic snake_case
 #     'name':     'Nexus Simplu',      # Nume afișat
 #     'desc':     'Descriere scurtă',  # Afișat în popup
-#     'icon':     '🔵',               # Emoji icon
+#     'icon':     '🔵',               # Emoji fallback (folosit daca lipseste img)
+#     'img':      '/static/items/inventory_items/Nexus_Basic.png',  # PNG custom
 #     'price':    50,                  # Preț Dacoins (0 = nu se cumpără)
 #
 #     # EFECTE — folosite de logica use_item()
@@ -34,8 +35,18 @@ INVENTORY_ITEMS = {
 
     # ── NEXUS GLOBURI ────────────────────────────
     'nexus': [
-        # Primul item va fi adăugat aici
-    ],
+    {
+        'key':   'nexus_basic',
+        'name':  'Nexus Basic',
+        'desc':  'Un glob de energie primară. Folosit pentru captura companionilor.',
+        'icon':  '🔮',
+        'img':   '/static/items/inventory_items/Nexus_Basic.png',
+        'price': 50,
+        'effects': {},
+        'usable_outside_battle': False,
+        'quest_item': False,
+    },
+],
 
     # ── MÂNCARE ──────────────────────────────────
     'mancare': [

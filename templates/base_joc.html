@@ -291,7 +291,7 @@ document.addEventListener('contextmenu', function(e) {
     .rucsac-right{ display:none; }
     .rucsac-grid{ grid-template-columns:repeat(5,1fr); gap:5px; }
     .rslot{ border-radius:7px; }
-    .rslot-icon{ font-size:16px; }
+    .rslot-icon{ font-size:16px; } .rslot-img{ width:32px; height:32px; object-fit:contain; display:block; }
 }
 
 /* ── PANEL HEADER ── */
@@ -337,7 +337,7 @@ document.addEventListener('contextmenu', function(e) {
 .rslot{aspect-ratio:1;border:1px solid var(--border);border-radius:10px;background:var(--bg-elev);display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;transition:border-color .15s,background .15s;user-select:none}
 .rslot.filled{cursor:pointer;border-color:var(--border-strong)}
 .rslot.filled:hover{border-color:var(--gold-dim);background:var(--bg-elev2)}
-.rslot-icon{font-size:22px}
+.rslot-icon{font-size:22px} .rslot-img{width:40px;height:40px}
 .rslot-qty{position:absolute;bottom:4px;right:6px;font-size:10px;font-weight:700;color:var(--gold)}
 .rslot-empty-ring{font-size:14px;opacity:.12}
 .rucsac-footer{border-top:1px solid var(--border);padding:8px 14px;background:var(--bg-card);flex-shrink:0}
@@ -511,7 +511,7 @@ function rbRenderGrid() {
     document.getElementById('rb-grid').innerHTML = cat.slots.map((slot, i) => {
         if (slot) {
             return `<div class="rslot filled" onclick="rbOpenItemPopup(${i})" title="${slot.name}">
-                <span class="rslot-icon">${slot.icon}</span>
+                ${slot.is_img ? `<img class="rslot-img" src="${slot.icon}" alt="${slot.name}">` : `<span class="rslot-icon">${slot.icon}</span>`}
                 <span class="rslot-qty">${slot.quantity}</span>
             </div>`;
         }
@@ -564,7 +564,11 @@ function rbOpenItemPopup(i) {
     const slot = rbData.categories[rbTab].slots[i];
     if (!slot) return;
     rbActiveItem = { ...slot, category: rbData.categories[rbTab].key };
-    document.getElementById('pi-icon').textContent = slot.icon;
+    if (slot.is_img) {
+        document.getElementById('pi-icon').innerHTML = `<img src="${slot.icon}" style="width:48px;height:48px;object-fit:contain;">`;
+    } else {
+        document.getElementById('pi-icon').textContent = slot.icon;
+    }
     document.getElementById('pi-name').textContent = slot.name;
     document.getElementById('pi-desc').textContent = slot.desc;
     document.getElementById('pi-qty').textContent  = slot.quantity;

@@ -31,7 +31,7 @@ SHOPS = {
         'desc':     'Articole rare din toate colțurile regatului.',
         'categories': ['nexus', 'potiuni', 'esente'],
         'items': {
-            'nexus':   [],   # de populat
+            'nexus':   ['nexus_basic'],
             'potiuni': [],   # de populat
             'esente':  [],   # de populat
         }

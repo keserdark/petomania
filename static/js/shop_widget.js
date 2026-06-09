@@ -92,8 +92,11 @@ function _renderGrid() {
         if (i < items.length) {
             const item = items[i];
             slot.className = 'shop-slot';
+            const iconHtml = item.img
+                ? `<img class="shop-slot-img" src="${item.img}" alt="${item.name}">`
+                : `<span class="shop-slot-icon">${item.icon}</span>`;
             slot.innerHTML = `
-                <span class="shop-slot-icon">${item.icon}</span>
+                ${iconHtml}
                 <span class="shop-slot-name">${item.name}</span>
                 <span class="shop-slot-price">✦ ${item.price.toLocaleString()}</span>
             `;
@@ -111,7 +114,11 @@ function _openConfirm(item) {
     _confirmItem = item;
     _confirmQty  = 1;
 
-    $id('shop-confirm-icon').textContent = item.icon;
+    if (item.img) {
+        $id('shop-confirm-icon').innerHTML = `<img src="${item.img}" style="width:56px;height:56px;object-fit:contain;">`;
+    } else {
+        $id('shop-confirm-icon').textContent = item.icon;
+    }
     $id('shop-confirm-name').textContent = item.name;
     $id('shop-confirm-desc').textContent = item.desc;
     $id('shop-confirm-msg').textContent  = '';

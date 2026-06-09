@@ -28,7 +28,8 @@ def build_shop_context(shop_id: str) -> dict | None:
                     'item_key': key,
                     'name':     item_cfg['name'],
                     'desc':     item_cfg['desc'],
-                    'icon':     item_cfg['icon'],
+                    'icon':     item_cfg.get('img') or item_cfg['icon'],
+                    'img':      item_cfg.get('img'),
                     'price':    item_cfg['price'],
                     'category': cat_key,
                 })
