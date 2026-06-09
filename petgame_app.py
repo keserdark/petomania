@@ -928,29 +928,36 @@ def api_corvin_talked():
 def api_battle_start():
     from modules.battle import build_combatant, generate_npc
     from moves_config import get_move
+    from modules.pets import sync_pet, get_form, get_state
     user = get_current_user()
     uid  = int(user['id'])
-    data = request.json or {}
-    pet_id = data.get('pet_id')
 
-    if pet_id:
-        conn = get_db()
-        row  = conn.execute('SELECT * FROM menagerie WHERE id = ? AND user_id = ?', (pet_id, uid)).fetchone()
-        conn.close()
-        if not row:
-            return jsonify({'ok': False, 'error': 'Pet negasit.'})
-        from modules.pets import get_form
-        from modules.pets import get_form, get_state
-        pet['image_url'] = get_static_url(get_image_url(pet['species'], get_form(pet['level']), get_state(dict(pet)), pet.get('gender', 'male')))
-    else:
-        from modules.pets import sync_pet
-        pet = sync_pet(uid)
-        if not pet:
-            return jsonify({'ok': False, 'error': 'Nu ai un companion activ.'})
-        pet = dict(pet)
+    # Petul activ (slot 1)
+    pet = sync_pet(uid)
+    if not pet:
+        return jsonify({'ok': False, 'error': 'Nu ai un companion activ.'})
+    pet = dict(pet)
 
     player = build_combatant(pet)
     npc    = generate_npc(player['level'])
+
+    # Loadout complet pentru switch
+    loadout_raw = build_loadout_context(uid)
+    bench = []  # petii de pe bancă (slot 2-5, cu HP > 0)
+    for slot in loadout_raw:
+        if slot.get('empty') or slot.get('slot') == 1:
+            continue
+        bench.append({
+            'id':        slot['id'],
+            'name':      slot['name'],
+            'level':     slot['level'],
+            'hp_max':    slot['hp_max'],
+            'hp_current':slot['hp_current'],
+            'image_url': slot['image_url'],
+            'species':   slot['species'],
+            'nature':    slot.get('nature'),
+            'gender':    slot.get('gender', 'male'),
+        })
 
     moveset_data = []
     for mk in player['moveset']:
@@ -960,6 +967,7 @@ def api_battle_start():
 
     session['battle_player'] = player
     session['battle_npc']    = npc
+    session['battle_bench']  = bench
 
     return jsonify({
         'ok': True,
@@ -976,6 +984,7 @@ def api_battle_start():
             'hp_max': npc['hp_max'], 'hp_current': npc['hp_current'],
             'image_url': npc['image_url'], 'status': None, 'shield': 0,
         },
+        'bench': bench,
     })
 
 
@@ -1039,6 +1048,62 @@ def api_battle_flee():
     session.pop('battle_player', None)
     session.pop('battle_npc', None)
     return jsonify({'ok': True})
+
+
+
+# ── BATTLE PAGE ───────────────────────────────────────────────────────
+
+@app.route('/joc/petomania/battle')
+@login_required
+def battle():
+    return render_template('battle.html')
+
+
+@app.route('/joc/petomania/api/battle/switch', methods=['POST'])
+@login_required
+def api_battle_switch():
+    from modules.battle import build_combatant
+    from moves_config import get_move
+    user   = get_current_user()
+    uid    = int(user['id'])
+    pet_id = (request.json or {}).get('pet_id')
+    bench  = session.get('battle_bench', [])
+
+    pet_data = next((p for p in bench if str(p['id']) == str(pet_id)), None)
+    if not pet_data:
+        return jsonify({'ok': False, 'error': 'Pet negasit pe bancă.'})
+    if pet_data['hp_current'] <= 0:
+        return jsonify({'ok': False, 'error': 'Acest companion a căzut.'})
+
+    # Construieste noul combatant
+    from modules.db import get_db
+    conn = get_db()
+    row  = conn.execute('SELECT * FROM menagerie WHERE id = ? AND user_id = ?', (pet_data['id'], uid)).fetchone()
+    conn.close()
+    if not row:
+        return jsonify({'ok': False, 'error': 'Pet negasit în DB.'})
+
+    new_player = build_combatant(dict(row))
+    moveset_data = []
+    for mk in new_player['moveset']:
+        m = get_move(mk)
+        if m:
+            moveset_data.append({'key': m['key'], 'name': m['name'], 'icon': m['icon'], 'type': m['type'], 'power': m['power']})
+
+    # Scoate din bench
+    session['battle_bench']  = [p for p in bench if str(p['id']) != str(pet_id)]
+    session['battle_player'] = new_player
+
+    return jsonify({
+        'ok': True,
+        'player': {
+            'id': new_player['id'], 'name': new_player['name'],
+            'species': new_player['species'], 'nature': new_player['nature'],
+            'level': new_player['level'], 'hp_max': new_player['hp_max'],
+            'hp_current': new_player['hp_current'], 'image_url': new_player['image_url'],
+            'moveset': moveset_data, 'status': None, 'shield': 0,
+        },
+    })
 
 
 # ── RUN ───────────────────────────────────────────────────────────────

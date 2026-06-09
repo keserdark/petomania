@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arenă — Luptă</title>
+    <link rel="stylesheet" href="/static/css/site.css">
+    <link rel="stylesheet" href="/static/css/battle.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body {
+            width: 100%; height: 100%;
+            background: #0a0a0a;
+            overflow: hidden;
+            font-family: 'Inter', sans-serif;
+        }
+        #battle-wrap {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        #battle-canvas {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        /* Combatanti */
+        #battle-scene {
+            position: absolute;
+            inset: 0;
+            bottom: 35%;
+        }
+        .bc {
+            position: absolute;
+            display: flex;
+            align-items: flex-end;
+            gap: clamp(6px, 1vw, 14px);
+        }
+        .bc-enemy {
+            top: 5%; right: 3%;
+            flex-direction: row-reverse;
+        }
+        .bc-player {
+            bottom: 3%; left: 3%;
+            flex-direction: row;
+        }
+        .bc-img {
+            object-fit: contain;
+            filter: drop-shadow(0 4px 16px rgba(0,0,0,0.8));
+        }
+        .bc-img-player {
+            width: clamp(90px, 14vw, 220px);
+            height: clamp(90px, 14vw, 220px);
+        }
+        .bc-img-enemy {
+            width: clamp(80px, 12vw, 190px);
+            height: clamp(80px, 12vw, 190px);
+            transform: scaleX(-1);
+        }
+        .bc-info {
+            background: rgba(10,10,10,0.85);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 10px;
+            padding: clamp(6px, 1vh, 12px) clamp(8px, 1.2vw, 18px);
+            min-width: clamp(130px, 18vw, 240px);
+            backdrop-filter: blur(6px);
+        }
+        .bc-name {
+            font-family: 'Cinzel', serif;
+            font-size: clamp(12px, 1.2vw, 18px);
+            font-weight: 700;
+            color: #f0e6c8;
+        }
+        .bc-level { font-size: clamp(9px, 0.9vw, 13px); color: #888; margin-bottom: 4px; }
+        .bc-status { font-size: clamp(9px, 0.85vw, 12px); color: #e05252; font-weight: 600; min-height: 14px; margin-bottom: 2px; }
+        .bc-hp-bg { height: 7px; background: #1a1a1a; border-radius: 4px; overflow: hidden; margin-bottom: 3px; }
+        .bc-hp-fill { height: 100%; border-radius: 4px; background: #4caf7d; transition: width .4s, background .4s; }
+        .bc-hp-txt { font-size: clamp(9px, 0.85vw, 13px); color: #888; font-weight: 600; }
+
+        /* Bottom panel */
+        #battle-bottom {
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            height: 35%;
+            display: flex;
+            flex-direction: column;
+            background: rgba(8,8,8,0.95);
+            border-top: 1px solid rgba(255,255,255,0.08);
+        }
+        #battle-log {
+            flex: 1;
+            overflow-y: auto;
+            padding: clamp(6px, 1vh, 12px) clamp(10px, 1.5vw, 20px);
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        .blog-line { font-size: clamp(10px, 1vw, 14px); color: #b0a88a; line-height: 1.4; }
+        #battle-controls {
+            padding: clamp(6px, 1vh, 12px) clamp(10px, 1.5vw, 20px);
+            display: flex;
+            align-items: center;
+            gap: clamp(6px, 0.8vw, 12px);
+            border-top: 1px solid rgba(255,255,255,0.06);
+            flex-shrink: 0;
+        }
+        #battle-moves {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: clamp(4px, 0.5vw, 8px);
+            flex: 1;
+        }
+        .bmove {
+            display: flex; flex-direction: column; align-items: center; gap: 3px;
+            padding: clamp(6px, 1vh, 10px) 4px;
+            background: #141414; border: 1px solid #2a2a2a;
+            border-radius: 8px; color: #d0c8a8;
+            cursor: pointer; font-family: 'Cinzel', serif;
+            font-size: clamp(9px, 0.85vw, 12px); font-weight: 600;
+            transition: background .15s, border-color .15s;
+        }
+        .bmove:hover:not(:disabled) { background: rgba(201,168,76,0.12); border-color: rgba(201,168,76,0.4); color: #c9a84c; }
+        .bmove:disabled { opacity: 0.4; cursor: not-allowed; }
+        .bmove-icon { font-size: clamp(14px, 1.6vw, 24px); }
+        .bmove-name { text-align: center; line-height: 1.2; }
+        .bflee {
+            background: #141414; border: 1px solid #2a2a2a;
+            color: #888; padding: clamp(6px, 1vh, 10px) clamp(10px, 1.2vw, 18px);
+            border-radius: 8px; cursor: pointer;
+            font-size: clamp(10px, 1vw, 14px); font-weight: 600;
+            transition: color .15s, border-color .15s; white-space: nowrap; flex-shrink: 0;
+        }
+        .bflee:hover { color: #e05252; border-color: #e05252; }
+
+        /* Switch overlay */
+        #switch-overlay {
+            position: absolute; inset: 0;
+            background: rgba(0,0,0,0.88);
+            display: none; align-items: center; justify-content: center;
+            z-index: 50;
+        }
+        #switch-overlay.open { display: flex; }
+        .switch-box {
+            background: #111; border: 1px solid #2a2a2a;
+            border-radius: 14px; padding: 24px 28px;
+            display: flex; flex-direction: column; gap: 12px;
+            min-width: 280px; text-align: center;
+        }
+        .switch-title {
+            font-family: 'Cinzel', serif; font-size: 15px;
+            font-weight: 700; color: #c9a84c;
+        }
+        .switch-list { display: flex; flex-direction: column; gap: 8px; }
+        .switch-pet {
+            display: flex; align-items: center; gap: 10px;
+            padding: 8px 12px; background: #1a1a1a;
+            border: 1px solid #2a2a2a; border-radius: 8px;
+            cursor: pointer; transition: background .15s, border-color .15s;
+        }
+        .switch-pet:hover { background: rgba(201,168,76,0.1); border-color: rgba(201,168,76,0.4); }
+        .switch-pet img { width: 40px; height: 40px; object-fit: contain; }
+        .switch-pet-info { flex: 1; text-align: left; }
+        .switch-pet-name { font-size: 13px; font-weight: 600; color: #f0e6c8; }
+        .switch-pet-hp { font-size: 11px; color: #888; }
+        .switch-none { font-size: 12px; color: #666; font-style: italic; }
+
+        /* Result overlay */
+        #result-overlay {
+            position: absolute; inset: 0;
+            background: rgba(0,0,0,0.88);
+            display: none; align-items: center; justify-content: center; z-index: 60;
+        }
+        #result-overlay.open { display: flex; }
+        .result-box {
+            background: #111; border: 1px solid #2a2a2a; border-radius: 16px;
+            padding: 36px 48px; display: flex; flex-direction: column;
+            align-items: center; gap: 14px; text-align: center;
+        }
+        .result-icon { font-size: 52px; }
+        .result-title { font-family: 'Cinzel', serif; font-size: 24px; font-weight: 700; color: #c9a84c; }
+        .result-reward { font-size: 15px; color: #c9a84c; font-weight: 600; min-height: 20px; }
+        .result-btn {
+            margin-top: 8px; padding: 10px 28px;
+            background: rgba(201,168,76,0.12); border: 1px solid rgba(201,168,76,0.4);
+            border-radius: 8px; color: #c9a84c;
+            font-family: 'Cinzel', serif; font-size: 13px; font-weight: 700;
+            cursor: pointer; transition: background .15s;
+        }
+        .result-btn:hover { background: rgba(201,168,76,0.22); }
+    </style>
+</head>
+<body>
+<div id="battle-wrap">
+    <canvas id="battle-canvas"></canvas>
+
+    <!-- Scene -->
+    <div id="battle-scene">
+        <!-- Enemy -->
+        <div class="bc bc-enemy">
+            <div class="bc-info">
+                <div class="bc-name" id="npc-name">—</div>
+                <div class="bc-level" id="npc-level">Nv.—</div>
+                <div class="bc-status" id="npc-status"></div>
+                <div class="bc-hp-bg"><div class="bc-hp-fill" id="npc-hp-bar" style="width:100%"></div></div>
+                <div class="bc-hp-txt" id="npc-hp-txt">—/—</div>
+            </div>
+            <img id="npc-img" src="" alt="" class="bc-img bc-img-enemy">
+        </div>
+        <!-- Player -->
+        <div class="bc bc-player">
+            <img id="player-img" src="" alt="" class="bc-img bc-img-player">
+            <div class="bc-info">
+                <div class="bc-name" id="player-name">—</div>
+                <div class="bc-level" id="player-level">Nv.—</div>
+                <div class="bc-status" id="player-status"></div>
+                <div class="bc-hp-bg"><div class="bc-hp-fill" id="player-hp-bar" style="width:100%"></div></div>
+                <div class="bc-hp-txt" id="player-hp-txt">—/—</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom panel -->
+    <div id="battle-bottom">
+        <div id="battle-log"><div class="blog-line">Se încarcă lupta...</div></div>
+        <div id="battle-controls">
+            <div id="battle-moves"></div>
+            <button class="bflee" onclick="fleeBattle()">🏃 Fugi</button>
+        </div>
+    </div>
+
+    <!-- Switch overlay -->
+    <div id="switch-overlay">
+        <div class="switch-box">
+            <div class="switch-title">⚔️ Trimite un companion</div>
+            <div class="switch-list" id="switch-list"></div>
+        </div>
+    </div>
+
+    <!-- Result overlay -->
+    <div id="result-overlay">
+        <div class="result-box">
+            <div class="result-icon" id="result-icon"></div>
+            <div class="result-title" id="result-title"></div>
+            <div class="result-reward" id="result-reward"></div>
+            <button class="result-btn" onclick="window.location='/joc/petomania/arena'">← Înapoi la Arenă</button>
+        </div>
+    </div>
+</div>
+
+<script>
+const W = 1287, H = 816;
+const canvas = document.getElementById('battle-canvas');
+const ctx    = canvas.getContext('2d');
+canvas.width = W; canvas.height = H;
+
+const bgImg = new Image();
+bgImg.src   = '/static/arena/battle.png';
+bgImg.onload = () => ctx.drawImage(bgImg, 0, 0, W, H);
+
+let battleData = { player: null, npc: null, bench: [], busy: false };
+
+// ── Start ──
+async function initBattle() {
+    const resp = await fetch('/joc/petomania/api/battle/start', {
+        method: 'POST', headers: {'Content-Type':'application/json'}, body: '{}'
+    });
+    const data = await resp.json();
+    if (!data.ok) { addLog('❌ ' + data.error); return; }
+
+    battleData.player = data.player;
+    battleData.npc    = data.npc;
+    battleData.bench  = data.bench || [];
+
+    updateUI('player', data.player);
+    updateUI('npc', data.npc);
+    renderMoves(data.player.moveset);
+    clearLog();
+    addLog('⚔️ Lupta începe!');
+}
+
+// ── UI ──
+function updateUI(side, c) {
+    const pct = c.hp_max > 0 ? Math.round(c.hp_current / c.hp_max * 100) : 0;
+    const col = pct > 50 ? '#4caf7d' : pct > 25 ? '#e0a052' : '#e05252';
+    document.getElementById(`${side}-name`).textContent  = c.name;
+    document.getElementById(`${side}-level`).textContent = `Nv.${c.level}`;
+    document.getElementById(`${side}-hp-bar`).style.width      = pct + '%';
+    document.getElementById(`${side}-hp-bar`).style.background = col;
+    document.getElementById(`${side}-hp-txt`).textContent = `${c.hp_current} / ${c.hp_max}`;
+    document.getElementById(`${side}-status`).textContent = c.status ? `[${c.status.toUpperCase()}]` : '';
+    if (c.image_url) document.getElementById(`${side}-img`).src = c.image_url;
+}
+
+function renderMoves(moveset) {
+    document.getElementById('battle-moves').innerHTML = moveset.map(m => `
+        <button class="bmove" onclick="doTurn('${m.key}')">
+            <span class="bmove-icon">${m.icon}</span>
+            <span class="bmove-name">${m.name}</span>
+        </button>
+    `).join('');
+}
+
+function addLog(msg) {
+    const el = document.getElementById('battle-log');
+    el.insertAdjacentHTML('beforeend', `<div class="blog-line">${msg}</div>`);
+    el.scrollTop = el.scrollHeight;
+}
+function clearLog() { document.getElementById('battle-log').innerHTML = ''; }
+
+function setBusy(v) {
+    battleData.busy = v;
+    document.querySelectorAll('.bmove').forEach(b => b.disabled = v);
+}
+
+// ── Turn ──
+async function doTurn(moveKey) {
+    if (battleData.busy) return;
+    setBusy(true);
+
+    const resp = await fetch('/joc/petomania/api/battle/turn', {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({move_key: moveKey})
+    });
+    const data = await resp.json();
+    if (!data.ok) { addLog('❌ Eroare.'); setBusy(false); return; }
+
+    data.log.forEach(l => addLog(l));
+    updateUI('player', data.player);
+    updateUI('npc', data.npc);
+
+    if (data.winner === 'player') {
+        showResult('player', data.reward);
+    } else if (data.winner === 'npc') {
+        // NPC a castigat turul — verifica daca mai avem peti
+        const bench = battleData.bench.filter(p => p.hp_current > 0);
+        if (bench.length > 0) {
+            openSwitch(bench);
+        } else {
+            showResult('npc', 0);
+        }
+    } else {
+        setBusy(false);
+    }
+}
+
+// ── Switch ──
+function openSwitch(bench) {
+    const list = document.getElementById('switch-list');
+    if (!bench || bench.length === 0) {
+        list.innerHTML = '<div class="switch-none">Nu mai ai companioi disponibili.</div>';
+    } else {
+        list.innerHTML = bench.map(p => `
+            <div class="switch-pet" onclick="doSwitch(${p.id})">
+                <img src="${p.image_url}" alt="${p.name}">
+                <div class="switch-pet-info">
+                    <div class="switch-pet-name">${p.name} · Nv.${p.level}</div>
+                    <div class="switch-pet-hp">${p.hp_current} / ${p.hp_max} HP</div>
+                </div>
+            </div>
+        `).join('');
+    }
+    document.getElementById('switch-overlay').classList.add('open');
+}
+
+async function doSwitch(petId) {
+    document.getElementById('switch-overlay').classList.remove('open');
+    const resp = await fetch('/joc/petomania/api/battle/switch', {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({pet_id: petId})
+    });
+    const data = await resp.json();
+    if (!data.ok) { addLog('❌ ' + data.error); setBusy(false); return; }
+
+    battleData.player = data.player;
+    battleData.bench  = battleData.bench.filter(p => p.id !== petId);
+    updateUI('player', data.player);
+    renderMoves(data.player.moveset);
+    addLog(`🔄 ${data.player.name} intră în luptă!`);
+    setBusy(false);
+}
+
+// ── Result ──
+function showResult(winner, reward) {
+    const el = document.getElementById('result-overlay');
+    el.classList.add('open');
+    if (winner === 'player') {
+        document.getElementById('result-icon').textContent  = '🏆';
+        document.getElementById('result-title').textContent = 'Victorie!';
+        document.getElementById('result-reward').textContent = reward > 0 ? `+${reward} ✦ Dacoins` : '';
+    } else {
+        document.getElementById('result-icon').textContent  = '💀';
+        document.getElementById('result-title').textContent = 'Înfrângere...';
+        document.getElementById('result-reward').textContent = 'Antrenează-te și întoarce-te mai puternic.';
+    }
+}
+
+async function fleeBattle() {
+    await fetch('/joc/petomania/api/battle/flee', {method:'POST'});
+    window.location = '/joc/petomania/arena';
+}
+
+// Start
+initBattle();
+</script>
+</body>
+</html>
