@@ -1,0 +1,18 @@
+{% extends "base_joc.html" %}
+{% block content_class %}pet-content-scroll{% endblock %}
+{% block title %}Arenă{% endblock %}
+
+{% block content %}
+<div class="pet-page-header">
+    <h1 class="pet-page-title">🏟️ Arenă</h1>
+</div>
+
+<div class="pet-empty-state">
+    <div class="pet-empty-icon">⚔️</div>
+    <h2>În curând</h2>
+    <p>Arena PvP este în dezvoltare. Pregătește-ți echipa!</p>
+    <a href="{{ url_for('oras') }}" class="pet-btn pet-btn-feed" style="display:inline-flex;margin-top:12px;">
+        ← Înapoi la Oraș
+    </a>
+</div>
+{% endblock %}

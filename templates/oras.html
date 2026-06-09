@@ -46,6 +46,13 @@
                 <div class="city-loc-desc">Misiuni și explorare</div>
             </div>
         </a>
+        <a href="{{ url_for('arena') }}" class="city-loc-item">
+            <span class="city-loc-icon">🏟️</span>
+            <div>
+                <div class="city-loc-name">Arenă</div>
+                <div class="city-loc-desc">Luptă PvP</div>
+            </div>
+        </a>
     </div>
 
 </div>
@@ -67,6 +74,7 @@ const ZONES = [
     { file: 'biserica.png', href: '{{ url_for("biserica") }}', label: '⛪ Biserică' },
     { file: 'piata.png',    href: '{{ url_for("piata") }}',    label: '🏪 Piață' },
     { file: 'aventura.png', href: '{{ url_for("aventura") }}', label: '⚔️ Aventură' },
+    { file: 'arena.png',    href: '{{ url_for("arena") }}',    label: '🏟️ Arenă' },
 ];
 
 const BASE = '/static/city/';

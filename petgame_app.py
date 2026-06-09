@@ -309,8 +309,8 @@ def menajerie():
     uid        = int(user['id'])
     active     = sync_pet(uid)
     active_ctx = _build_pet_context(active) if active else None
-    rows       = get_menagerie(uid)
-    men_pets   = [_build_pet_context(dict(r)) for r in rows]
+    rows          = get_menagerie(uid)
+    men_pets      = [_build_pet_context(dict(r)) for r in rows]
     loadout_slots = build_loadout_context(uid)
     return render_template('menajerie.html', active=active_ctx, men_pets=men_pets, loadout_slots=loadout_slots)
 
@@ -879,6 +879,14 @@ def api_shop_buy(shop_id):
     if not category or not item_key:
         return jsonify({'ok': False, 'error': 'Date lipsă.'})
     return jsonify(shop_buy(uid, shop_id, category, item_key, qty))
+
+
+# ── ARENA ────────────────────────────────────────────────────────────
+
+@app.route('/joc/petomania/arena')
+@login_required
+def arena():
+    return render_template('arena.html')
 
 
 # ── RUN ───────────────────────────────────────────────────────────────
