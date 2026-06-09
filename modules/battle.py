@@ -5,7 +5,7 @@ Sistemul de lupta PvE Arena.
 import random
 import math
 from modules.db import get_db
-from modules.pets import get_pet, get_form
+from modules.pets import get_pet, get_form, get_image_url, get_state
 from cogs.petgame_stats import get_stats_at_level
 from cogs.petgame_natures import get_interaction
 from moves_config import get_moveset, get_move
@@ -33,9 +33,7 @@ def generate_npc(player_level: int) -> dict:
     stats     = get_stats_at_level(species, nature, level, form)
     moveset   = get_moveset(species, nature, level)
     name      = random.choice(NPC_NAMES)
-
-    gender    = random.choice(['Male', 'Female'])
-    image_url = f'/static/00transparent/{species}/Stage{form}-Basic-Form-{gender}.png'
+    gender    = random.choice(['male', 'female'])
 
     return {
         'id':           f'npc_{random.randint(10000, 99999)}',
@@ -49,7 +47,7 @@ def generate_npc(player_level: int) -> dict:
         'hp_current':   stats['hp'],
         'stats':        stats,
         'moveset':      [m['key'] for m in moveset],
-        'image_url':    image_url,
+        'image_url':    get_image_url(species, form, 'Basic', gender),
         'is_npc':       True,
         'status':       None,  # stun, burn, poison, freeze
         'status_turns': 0,
@@ -75,8 +73,7 @@ def build_combatant(pet: dict) -> dict:
     moveset = get_moveset(species, nature, level)
 
     gender    = pet.get('gender', 'male')
-    g_label   = 'Female' if gender == 'female' else 'Male'
-    image_url = f'/static/00transparent/{species}/Stage{form}-Basic-Form-{g_label}.png'
+    image_url = get_image_url(species, form, 'Basic', gender)
 
     return {
         'id':           pet.get('id', 0),
