@@ -486,6 +486,15 @@ async function rbLoadData() {
         const r = await fetch(RB_API.data);
         rbData  = await r.json();
         if (rbData.ok) {
+            // Construieste categoria "Toate" — toate itemele existente fara null-uri si fara padding
+            const allSlots = rbData.categories
+                .flatMap(cat => cat.slots.filter(s => s !== null).map(s => ({...s, _cat: cat.key})));
+            rbData.categories.unshift({
+                key: 'toate',
+                name: 'Toate',
+                slots: allSlots,
+                slots_used: allSlots.length,
+            });
             rbTab = 0;
             rbRender();
             document.getElementById('rucsac-loading').style.display = 'none';
@@ -514,9 +523,12 @@ function rbRenderDots() {
 
 function rbRenderGrid() {
     const cat = rbData.categories[rbTab];
-    document.getElementById('rb-tab-name').textContent  = cat.name;
+    const isAll = cat.key === 'toate';
+    document.getElementById('rb-tab-name').textContent   = cat.name;
     document.getElementById('rb-slots-used').textContent = cat.slots_used;
-    document.getElementById('rb-grid').innerHTML = cat.slots.map((slot, i) => {
+    // Pe "Toate" nu afisam sloturi goale
+    const slots = isAll ? cat.slots.filter(s => s !== null) : cat.slots;
+    document.getElementById('rb-grid').innerHTML = slots.map((slot, i) => {
         if (slot) {
             return `<div class="rslot filled" onclick="rbOpenItemPopup(${i})" title="${slot.name}">
                 ${slot.is_img ? `<img class="rslot-img" src="${slot.icon}" alt="${slot.name}">` : `<span class="rslot-icon">${slot.icon}</span>`}
@@ -571,7 +583,7 @@ document.getElementById('rb-next').onclick = () => {
 function rbOpenItemPopup(i) {
     const slot = rbData.categories[rbTab].slots[i];
     if (!slot) return;
-    rbActiveItem = { ...slot, category: rbData.categories[rbTab].key };
+    rbActiveItem = { ...slot, category: slot._cat || rbData.categories[rbTab].key };
     if (slot.is_img) {
         document.getElementById('pi-icon').innerHTML = `<img src="${slot.icon}" style="width:48px;height:48px;object-fit:contain;">`;
     } else {
