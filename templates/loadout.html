@@ -116,7 +116,7 @@
 .loadout-carousel{
     display:flex;align-items:center;justify-content:center;
     gap:0;width:100%;position:relative;
-    height:min(80vh, 800px);overflow:visible;
+    height:min(60vh, 600px);overflow:visible;
 }
 
 /* ── ORB ── */
@@ -129,23 +129,23 @@
 
 /* Pozitii si scale per offset */
 .loadout-orb[data-pos="center"]{
-    transform:translateX(0) translateY(20%) scale(1);
+    transform:translateX(0) scale(1);
     opacity:1;z-index:3;
 }
 .loadout-orb[data-pos="left"]{
-    transform:translateX(-72%) translateY(20%) scale(0.72);
+    transform:translateX(-72%) scale(0.72);
     opacity:0.7;z-index:2;
 }
 .loadout-orb[data-pos="right"]{
-    transform:translateX(72%) translateY(20%) scale(0.72);
+    transform:translateX(72%) scale(0.72);
     opacity:0.7;z-index:2;
 }
 .loadout-orb[data-pos="far-left"]{
-    transform:translateX(-130%) translateY(20%) scale(0.5);
+    transform:translateX(-130%) scale(0.5);
     opacity:0.35;z-index:1;
 }
 .loadout-orb[data-pos="far-right"]{
-    transform:translateX(130%) translateY(20%) scale(0.5);
+    transform:translateX(130%) scale(0.5);
     opacity:0.35;z-index:1;
 }
 .loadout-orb[data-pos="hidden"]{
