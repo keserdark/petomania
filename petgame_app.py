@@ -91,7 +91,7 @@ ROLE_NAMES = {
     '1500078293721022655': ('Mare Campion','#ffd700'),
 }
 
-GITHUB_BASE = 'https://raw.githubusercontent.com/keserdark/village-bot/main/PetGame/static'
+GITHUB_BASE = 'https://raw.githubusercontent.com/keserdark/petomania/main/PetGame/static'
 
 # ─────────────────────────────────────────────
 # TOKEN STORE — URL temporare (expira in 10s)
@@ -854,10 +854,15 @@ def serve_img(token):
         url = entry['url']
         del _token_store[token]
     
+    print(f"🖼️ serve_img URL: {url}", flush=True)
     req = urllib.request.Request(url, headers={'User-Agent': 'Petomania/1.0'})
-    with urllib.request.urlopen(req, timeout=8) as resp:
-        data = resp.read()
-    return Response(data, mimetype='image/png', headers={'Cache-Control': 'max-age=300'})
+    try:
+        with urllib.request.urlopen(req, timeout=8) as resp:
+            data = resp.read()
+        return Response(data, mimetype='image/png', headers={'Cache-Control': 'max-age=300'})
+    except Exception as e:
+        print(f"❌ serve_img error: {e} — URL: {url}", flush=True)
+        abort(500)
 
 # ─────────────────────────────────────────────
 # PAGINI
@@ -1297,7 +1302,7 @@ def render_pet(user_id: int):
 # ORAS
 # ─────────────────────────────────────────────
 
-GITHUB_CITY = 'https://raw.githubusercontent.com/keserdark/village-bot/main/PetGame/static/city'
+GITHUB_CITY = 'https://raw.githubusercontent.com/keserdark/petomania/main/PetGame/static/city'
 
 @app.route('/joc/petomania/oras')
 @login_required
@@ -1340,7 +1345,7 @@ def city_img(filename):
         data = resp.read()
     return Response(data, mimetype='image/png', headers={'Cache-Control': 'max-age=3600'})
 
-GITHUB_PIATA = 'https://raw.githubusercontent.com/keserdark/village-bot/main/PetGame/static/piata'
+GITHUB_PIATA = 'https://raw.githubusercontent.com/keserdark/petomania/main/PetGame/static/piata'
 
 @app.route('/joc/petomania/piata/<filename>')
 @login_required
@@ -1352,7 +1357,7 @@ def piata_img(filename):
         data = resp.read()
     return Response(data, mimetype='image/png', headers={'Cache-Control': 'max-age=3600'})
 
-GITHUB_ASSETS = 'https://raw.githubusercontent.com/keserdark/village-bot/main/PetGame/static/Assets'
+GITHUB_ASSETS = 'https://raw.githubusercontent.com/keserdark/petomania/main/PetGame/static/Assets'
 
 @app.route('/joc/petomania/assets-img/<filename>')
 @login_required
@@ -1544,7 +1549,7 @@ def consumable():
     return render_template('petomania/consumable.html')
 
 
-GITHUB_COMPANICON = 'https://raw.githubusercontent.com/keserdark/village-bot/main/PetGame/static'
+GITHUB_COMPANICON = 'https://raw.githubusercontent.com/keserdark/petomania/main/PetGame/static'
 
 @app.route('/joc/petomania/companicon-img/<path:filepath>')
 @login_required
