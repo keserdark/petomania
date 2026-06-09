@@ -9,7 +9,7 @@ from cogs.petgame_config import SPECIES
 from cogs.petgame_natures import NATURES
 from cogs.petgame_stats import get_stats_at_level, FORM_MULTIPLIERS
 from petgame_room_config import get_item, resolve_file
-from modules.db import get_db, update_pet as _update_pet
+from modules.db import get_db
 
 # Constante gameplay
 DECAY_INTERVAL   = 120
