@@ -91,7 +91,7 @@ ROLE_NAMES = {
     '1500078293721022655': ('Mare Campion','#ffd700'),
 }
 
-GITHUB_BASE = 'https://raw.githubusercontent.com/keserdark/petomania/main/PetGame/static'
+GITHUB_BASE = 'https://raw.githubusercontent.com/keserdark/petomania/main/static'
 
 # ─────────────────────────────────────────────
 # TOKEN STORE — URL temporare (expira in 10s)
@@ -1302,7 +1302,7 @@ def render_pet(user_id: int):
 # ORAS
 # ─────────────────────────────────────────────
 
-GITHUB_CITY = 'https://raw.githubusercontent.com/keserdark/petomania/main/PetGame/static/city'
+GITHUB_CITY = 'https://raw.githubusercontent.com/keserdark/petomania/main/static/city'
 
 @app.route('/joc/petomania/oras')
 @login_required
@@ -1345,7 +1345,7 @@ def city_img(filename):
         data = resp.read()
     return Response(data, mimetype='image/png', headers={'Cache-Control': 'max-age=3600'})
 
-GITHUB_PIATA = 'https://raw.githubusercontent.com/keserdark/petomania/main/PetGame/static/piata'
+GITHUB_PIATA = 'https://raw.githubusercontent.com/keserdark/petomania/main/static/piata'
 
 @app.route('/joc/petomania/piata/<filename>')
 @login_required
@@ -1357,7 +1357,7 @@ def piata_img(filename):
         data = resp.read()
     return Response(data, mimetype='image/png', headers={'Cache-Control': 'max-age=3600'})
 
-GITHUB_ASSETS = 'https://raw.githubusercontent.com/keserdark/petomania/main/PetGame/static/Assets'
+GITHUB_ASSETS = 'https://raw.githubusercontent.com/keserdark/petomania/main/static/Assets'
 
 @app.route('/joc/petomania/assets-img/<filename>')
 @login_required
@@ -1549,7 +1549,7 @@ def consumable():
     return render_template('consumable.html')
 
 
-GITHUB_COMPANICON = 'https://raw.githubusercontent.com/keserdark/petomania/main/PetGame/static'
+GITHUB_COMPANICON = 'https://raw.githubusercontent.com/keserdark/petomania/main/static'
 
 @app.route('/joc/petomania/companicon-img/<path:filepath>')
 @login_required
