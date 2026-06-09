@@ -88,7 +88,7 @@
         #battle-bottom {
             position: absolute;
             bottom: 0; left: 0; right: 0;
-            height: 35%;
+            height: 25%;
             display: flex;
             flex-direction: column;
             background: rgba(8,8,8,0.95);
@@ -130,14 +130,56 @@
         .bmove:disabled { opacity: 0.4; cursor: not-allowed; }
         .bmove-icon { font-size: clamp(14px, 1.6vw, 24px); }
         .bmove-name { text-align: center; line-height: 1.2; }
-        .bflee {
-            background: #141414; border: 1px solid #2a2a2a;
-            color: #888; padding: clamp(6px, 1vh, 10px) clamp(10px, 1.2vw, 18px);
-            border-radius: 8px; cursor: pointer;
-            font-size: clamp(10px, 1vw, 14px); font-weight: 600;
-            transition: color .15s, border-color .15s; white-space: nowrap; flex-shrink: 0;
+        .bflee { display: none; }
+
+        /* Meniu principal 4 butoane */
+        #battle-menu {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: clamp(4px, 0.5vw, 8px);
+            flex: 1;
         }
-        .bflee:hover { color: #e05252; border-color: #e05252; }
+        .bmenu-btn {
+            display: flex; align-items: center; justify-content: center; gap: 6px;
+            background: #141414; border: 2px solid #2a2a2a;
+            border-radius: 8px; color: #d0c8a8;
+            cursor: pointer; font-family: 'Cinzel', serif;
+            font-size: clamp(11px, 1.1vw, 15px); font-weight: 700;
+            transition: background .15s, border-color .15s, color .15s;
+        }
+        .bmenu-btn:hover:not(:disabled) { background: rgba(201,168,76,0.12); border-color: rgba(201,168,76,0.5); color: #c9a84c; }
+        .bmenu-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+        .bmenu-btn.fight   { border-color: #c9a84c; color: #c9a84c; }
+        .bmenu-btn.bag     { border-color: #5b9bd5; color: #5b9bd5; }
+        .bmenu-btn.pet     { border-color: #4caf7d; color: #4caf7d; }
+        .bmenu-btn.run     { border-color: #888; color: #888; }
+        .bmenu-btn.fight:hover { background: rgba(201,168,76,0.15); }
+        .bmenu-btn.bag:hover   { background: rgba(91,155,213,0.15); }
+        .bmenu-btn.pet:hover   { background: rgba(76,175,125,0.15); }
+        .bmenu-btn.run:hover   { background: rgba(136,136,136,0.15); color: #e05252; border-color: #e05252; }
+
+        /* Moves panel (ascuns initial) */
+        #battle-moves-panel {
+            display: none;
+            flex: 1;
+            flex-direction: column;
+            gap: 4px;
+        }
+        #battle-moves-panel.open { display: flex; }
+        #battle-moves-back {
+            background: none; border: none; color: #888;
+            font-size: clamp(10px, 1vw, 13px); cursor: pointer;
+            text-align: left; padding: 2px 4px; font-family: 'Cinzel', serif;
+            transition: color .15s;
+        }
+        #battle-moves-back:hover { color: #c9a84c; }
+        #battle-moves {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: clamp(4px, 0.5vw, 8px);
+            flex: 1;
+        }
 
         /* Switch overlay */
         #switch-overlay {
@@ -238,8 +280,18 @@
     <div id="battle-bottom">
         <div id="battle-log"><div class="blog-line">Se încarcă lupta...</div></div>
         <div id="battle-controls">
-            <div id="battle-moves"></div>
-            <button class="bflee" onclick="fleeBattle()">🏃 Fugi</button>
+            <!-- Meniu principal -->
+            <div id="battle-menu">
+                <button class="bmenu-btn fight" onclick="showMoves()">⚔️ Luptă</button>
+                <button class="bmenu-btn bag"   onclick="openBag()" id="btn-bag">🎒 Rucsac</button>
+                <button class="bmenu-btn pet"   onclick="openSwitchMenu()" id="btn-pet">🐾 Pet</button>
+                <button class="bmenu-btn run"   onclick="tryFlee()" id="btn-run">🏃 Fugi</button>
+            </div>
+            <!-- Moves panel -->
+            <div id="battle-moves-panel">
+                <button id="battle-moves-back" onclick="showMenu()">← Înapoi</button>
+                <div id="battle-moves"></div>
+            </div>
         </div>
     </div>
 
@@ -354,12 +406,13 @@ async function doTurn(moveKey) {
             showResult('npc', 0);
         }
     } else {
+        showMenu();
         setBusy(false);
     }
 }
 
 // ── Switch ──
-function openSwitch(bench) {
+function openSwitch(bench, voluntary = false) {
     const list = document.getElementById('switch-list');
     if (!bench || bench.length === 0) {
         list.innerHTML = '<div class="switch-none">Nu mai ai companioi disponibili.</div>';
@@ -406,6 +459,53 @@ function showResult(winner, reward) {
         document.getElementById('result-icon').textContent  = '💀';
         document.getElementById('result-title').textContent = 'Înfrângere...';
         document.getElementById('result-reward').textContent = 'Antrenează-te și întoarce-te mai puternic.';
+    }
+}
+
+function showMenu() {
+    document.getElementById('battle-menu').style.display = 'grid';
+    document.getElementById('battle-moves-panel').classList.remove('open');
+}
+
+function showMoves() {
+    document.getElementById('battle-menu').style.display = 'none';
+    document.getElementById('battle-moves-panel').classList.add('open');
+}
+
+function openSwitchMenu() {
+    const bench = battleData.bench ? battleData.bench.filter(p => p.hp_current > 0) : [];
+    openSwitch(bench, true);  // true = switch voluntar, nu fortat
+}
+
+function openBag() {
+    addLog('🎒 Rucsacul nu e disponibil încă în luptă.');
+}
+
+async function tryFlee() {
+    const playerLvl = battleData.player ? battleData.player.level : 1;
+    const npcLvl    = battleData.npc    ? battleData.npc.level    : 1;
+    const diff      = npcLvl - playerLvl;
+    // Sansa de scapare: 80% daca egal, -10% per nivel diferenta, minim 10%
+    const chance    = Math.max(0.1, 0.8 - diff * 0.1);
+    if (Math.random() < chance) {
+        await fetch('/joc/petomania/api/battle/flee', {method:'POST'});
+        window.location = '/joc/petomania/arena';
+    } else {
+        addLog('❌ Nu ai reușit să fugi!');
+        // NPC atacă in locul playerului
+        setBusy(true);
+        const resp = await fetch('/joc/petomania/api/battle/turn', {
+            method: 'POST', headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({move_key: 'scratch'})  // server ignora move-ul playerului si da npc turn
+        });
+        const data = await resp.json();
+        if (data.ok) {
+            data.log.forEach(l => addLog(l));
+            updateUI('player', data.player);
+            updateUI('npc', data.npc);
+            if (data.winner) showResult(data.winner === 'player' ? 'player' : 'npc', data.reward);
+            else setBusy(false);
+        }
     }
 }
 
