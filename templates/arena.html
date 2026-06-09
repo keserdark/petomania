@@ -1,18 +1,241 @@
 {% extends "base_joc.html" %}
-{% block content_class %}pet-content-scroll{% endblock %}
+{% block content_class %}pet-content-city{% endblock %}
 {% block title %}Arenă{% endblock %}
 
 {% block content %}
-<div class="pet-page-header">
-    <h1 class="pet-page-title">🏟️ Arenă</h1>
-</div>
+<div class="arena-wrap">
+    <canvas id="arena-canvas"></canvas>
+    <div id="arena-tooltip" class="city-tooltip"></div>
 
-<div class="pet-empty-state">
-    <div class="pet-empty-icon">⚔️</div>
-    <h2>În curând</h2>
-    <p>Arena PvP este în dezvoltare. Pregătește-ți echipa!</p>
-    <a href="{{ url_for('oras') }}" class="pet-btn pet-btn-feed" style="display:inline-flex;margin-top:12px;">
-        ← Înapoi la Oraș
+    <!-- Popup Corvin — meniu principal -->
+    <div class="assets-popup-overlay" id="corvin-overlay">
+        <div class="assets-popup">
+            <button class="assets-popup-close" onclick="closeCorvinPopup()">✕</button>
+            <div class="assets-popup-deco">⚔️</div>
+            <div class="assets-popup-title">🗡️ Corvin Vargan</div>
+            <button class="assets-popup-btn" onclick="openCorvinDialog()">
+                <span class="assets-popup-btn-icon">💬</span>
+                <span>Vorbește cu omul</span>
+            </button>
+            <button class="assets-popup-btn" onclick="closeCorvinPopup()">
+                <span class="assets-popup-btn-icon">⚔️</span>
+                <span>Luptă în Arenă</span>
+            </button>
+            <button class="assets-popup-btn" onclick="closeCorvinPopup()">
+                <span class="assets-popup-btn-icon">🏹</span>
+                <span>Provoacă un alt cetățean</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Popup Dialog Corvin -->
+    <div class="assets-popup-overlay" id="corvin-dialog-overlay">
+        <div class="assets-popup assets-dialog">
+            <button class="assets-popup-close" onclick="closeCorvinDialog()">✕</button>
+            <div class="assets-popup-deco">⚔️</div>
+            <div class="assets-popup-title">🗡️ Corvin Vargan</div>
+            <div class="assets-dialog-text" id="corvin-dialog-text">
+                <div class="assets-dialog-loading">Se încarcă...</div>
+            </div>
+            <div id="corvin-dialog-actions"></div>
+        </div>
+    </div>
+
+    <!-- Buton Inapoi -->
+    <a href="{{ url_for('oras') }}" class="room-care-btn"
+       style="z-index:30; top:auto; bottom:14px; right:auto; left:14px;">
+        ← Oraș
     </a>
 </div>
+{% endblock %}
+
+{% block scripts %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/assets.css') }}">
+<style>
+.arena-wrap {
+    position: relative;
+    height: calc(100vh - var(--footbar-h));
+    width: auto;
+    aspect-ratio: 1287 / 816;
+    max-width: calc(100vw - var(--sidebar-w));
+    min-width: 0;
+    max-height: calc((100vw - var(--sidebar-w)) * 816 / 1287);
+    overflow: hidden;
+    background: #0a0a0a;
+    flex-shrink: 0;
+}
+#arena-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+}
+</style>
+<script>
+const W = 1287;
+const H = 816;
+const BASE = '/static/arena/';
+
+const canvas  = document.getElementById('arena-canvas');
+const ctx     = canvas.getContext('2d', { willReadFrequently: true });
+const tooltip = document.getElementById('arena-tooltip');
+const wrap    = canvas.parentElement;
+
+canvas.width  = W;
+canvas.height = H;
+
+const bgImg     = new Image();
+bgImg.crossOrigin = 'anonymous';
+bgImg.src = BASE + 'ArenaBackground.png';
+
+const corvinImg = new Image();
+corvinImg.crossOrigin = 'anonymous';
+corvinImg.src = BASE + 'CorvinVargan@0.5x.png';
+
+const corvinOff = document.createElement('canvas');
+corvinOff.width  = W;
+corvinOff.height = H;
+
+let loaded = 0;
+function onLoad() {
+    loaded++;
+    if (loaded < 2) return;
+    ctx.drawImage(bgImg,     0, 0, W, H);
+    ctx.drawImage(corvinImg, 0, 0, W, H);
+    const oc = corvinOff.getContext('2d', { willReadFrequently: true });
+    oc.drawImage(corvinImg, 0, 0, W, H);
+}
+bgImg.onload     = onLoad;
+corvinImg.onload = onLoad;
+
+function redraw(hover) {
+    ctx.clearRect(0, 0, W, H);
+    ctx.drawImage(bgImg, 0, 0, W, H);
+    ctx.drawImage(corvinImg, 0, 0, W, H);
+    if (hover) {
+        ctx.save();
+        ctx.globalAlpha = 0.45;
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.drawImage(corvinImg, 0, 0, W, H);
+        ctx.restore();
+    }
+}
+
+let lastHit      = 0;
+let currentHover = false;
+let popupOpen    = false;
+
+canvas.addEventListener('mousemove', (e) => {
+    if (popupOpen) return;
+    if (currentHover) {
+        tooltip.style.left = (e.clientX - wrap.getBoundingClientRect().left + 14) + 'px';
+        tooltip.style.top  = (e.clientY - wrap.getBoundingClientRect().top  - 8)  + 'px';
+    }
+    const now = Date.now();
+    if (now - lastHit < 33) return;
+    lastHit = now;
+    const rect  = canvas.getBoundingClientRect();
+    const x = Math.floor((e.clientX - rect.left) * W / rect.width);
+    const y = Math.floor((e.clientY - rect.top)  * H / rect.height);
+    const oc    = corvinOff.getContext('2d', { willReadFrequently: true });
+    const alpha = oc.getImageData(x, y, 1, 1).data[3];
+    const hit   = alpha > 20;
+    if (hit !== currentHover) {
+        currentHover = hit;
+        canvas.style.cursor   = hit ? 'pointer' : 'default';
+        tooltip.style.opacity = hit ? '1' : '0';
+        if (hit) tooltip.textContent = '🗡️ Corvin Vargan';
+        redraw(hit);
+    }
+});
+
+canvas.addEventListener('click', (e) => {
+    const rect  = canvas.getBoundingClientRect();
+    const x = Math.floor((e.clientX - rect.left) * W / rect.width);
+    const y = Math.floor((e.clientY - rect.top)  * H / rect.height);
+    const oc    = corvinOff.getContext('2d', { willReadFrequently: true });
+    const alpha = oc.getImageData(x, y, 1, 1).data[3];
+    if (alpha > 20) openCorvinPopup();
+});
+
+canvas.addEventListener('mouseleave', () => {
+    tooltip.style.opacity = '0';
+    canvas.style.cursor   = 'default';
+    currentHover = false;
+    redraw(false);
+});
+
+// ── Fade pulse ──
+let isHovering = false;
+let fadeAlpha  = 0;
+let fadeDir    = 1;
+let fadActive  = false;
+
+function fadeStep() {
+    if (isHovering) return;
+    fadeAlpha += fadeDir * 0.05;
+    if (fadeAlpha >= 1) {
+        fadeAlpha = 1; fadeDir = -1;
+    } else if (fadeAlpha <= 0) {
+        fadeAlpha = 0; fadeDir = 1; fadActive = false;
+        ctx.clearRect(0, 0, W, H);
+        ctx.drawImage(bgImg, 0, 0, W, H);
+        ctx.drawImage(corvinImg, 0, 0, W, H);
+        return;
+    }
+    ctx.clearRect(0, 0, W, H);
+    ctx.drawImage(bgImg, 0, 0, W, H);
+    ctx.drawImage(corvinImg, 0, 0, W, H);
+    ctx.save();
+    ctx.globalAlpha = fadeAlpha * 0.35;
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.drawImage(corvinImg, 0, 0, W, H);
+    ctx.restore();
+    requestAnimationFrame(fadeStep);
+}
+
+setInterval(() => {
+    if (isHovering || fadActive) return;
+    fadActive = true; fadeAlpha = 0; fadeDir = 1;
+    requestAnimationFrame(fadeStep);
+}, 3000);
+
+canvas.addEventListener('mouseenter', () => { isHovering = true; fadActive = false; });
+canvas.addEventListener('mouseleave', () => { isHovering = false; redraw(false); });
+
+// ── Popup Corvin ──
+function openCorvinPopup() {
+    popupOpen    = true;
+    isHovering   = true;
+    fadActive    = false;
+    currentHover = false;
+    tooltip.style.opacity = '0';
+    canvas.style.cursor   = 'default';
+    document.getElementById('corvin-overlay').classList.add('open');
+}
+function closeCorvinPopup() {
+    popupOpen  = false;
+    isHovering = false;
+    document.getElementById('corvin-overlay').classList.remove('open');
+}
+document.getElementById('corvin-overlay').addEventListener('click', (e) => {
+    if (e.target === document.getElementById('corvin-overlay')) closeCorvinPopup();
+});
+
+// ── Dialog Corvin ──
+function openCorvinDialog() {
+    closeCorvinPopup();
+    document.getElementById('corvin-dialog-overlay').classList.add('open');
+    document.getElementById('corvin-dialog-text').innerHTML =
+        '<span>*Corvin Vargan te măsoară din priviri, cu brațele încrucișate.*</span><br>' +
+        '<span>Ai venit să lupți sau să privești? Nu avem loc pentru spectatori fricoși.</span>';
+    document.getElementById('corvin-dialog-actions').innerHTML = '';
+}
+function closeCorvinDialog() {
+    document.getElementById('corvin-dialog-overlay').classList.remove('open');
+}
+document.getElementById('corvin-dialog-overlay').addEventListener('click', (e) => {
+    if (e.target === document.getElementById('corvin-dialog-overlay')) closeCorvinDialog();
+});
+</script>
 {% endblock %}
