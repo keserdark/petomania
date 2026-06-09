@@ -9,7 +9,7 @@ from cogs.petgame_config import SPECIES
 from cogs.petgame_natures import NATURES
 from cogs.petgame_stats import get_stats_at_level, FORM_MULTIPLIERS
 from petgame_room_config import get_item, resolve_file
-from modules.db import get_db
+from modules.db import get_db, update_pet as _update_pet
 
 # Constante gameplay
 DECAY_INTERVAL   = 120
@@ -22,7 +22,7 @@ PLAY_HUNGER_COST = 5
 XP_PER_MINUTE    = 1
 XP_TICK          = 60
 
-GITHUB_BASE = 'https://raw.githubusercontent.com/keserdark/petomania/main/static'
+STATIC_BASE = '/static'
 
 
 # ── FORM / STATE ──────────────────────────────────────────
@@ -49,7 +49,7 @@ def get_state(hunger, happiness, cleanliness, energy, sleeping) -> str:
 # ── IMAGE URLs ────────────────────────────────────────────
 
 def get_image_url(species: str, form: int, state: str, gender: str = 'male') -> str:
-    base = f"{GITHUB_BASE}/00transparent/{species}"
+    base = f"{STATIC_BASE}/00transparent/{species}"
     if species == 'duck' and form == 1:
         return f"{base}/Stage{form}-{state}-Form.png"
     if species in ('blackcat', 'dog', 'duck'):
@@ -64,7 +64,7 @@ def get_room_url(category: str, key: str, room: dict = None) -> str:
     else:
         item = get_item(category, key)
         filename = item['file'] if item else f'{key}.png'
-    return f"{GITHUB_BASE}/room1/{filename}"
+    return f"{STATIC_BASE}/room1/{filename}"
 
 
 # ── AGE ───────────────────────────────────────────────────

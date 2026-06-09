@@ -17,12 +17,12 @@ GENDERED_SPECIES = {
 def _img_url(species, form, gender):
     if species in ('blackcat', 'dog'):
         suffix = 'Male' if gender == 'male' else 'Female'
-        return f"/joc/petomania/companicon-img/00transparent/{species}/Stage{form}-Basic-Form-{suffix}.png"
+        return f"/static/00transparent/{species}/Stage{form}-Basic-Form-{suffix}.png"
     elif species == 'duck' and form > 1:
         suffix = 'Male' if gender == 'male' else 'Female'
-        return f"/joc/petomania/companicon-img/00transparent/{species}/Stage{form}-Basic-Form-{suffix}.png"
+        return f"/static/00transparent/{species}/Stage{form}-Basic-Form-{suffix}.png"
     else:
-        return f"/joc/petomania/companicon-img/00transparent/{species}/Stage{form}-Basic-Form.png"
+        return f"/static/00transparent/{species}/Stage{form}-Basic-Form.png"
 
 
 def sync_companicon_discovered(user_id: int):

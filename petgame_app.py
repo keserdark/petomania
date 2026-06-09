@@ -38,10 +38,10 @@ from modules.pets     import (get_pet, get_menagerie, get_form, get_state, get_i
                                get_room_url, sync_pet, sync_pet_hp, update_pet, build_pet_context,
                                format_age, xp_for_level,
                                DECAY_INTERVAL, FEED_AMOUNT, WASH_AMOUNT,
-                               PLAY_HAPPINESS, PLAY_ENERGY_COST, PLAY_HUNGER_COST, GITHUB_BASE)
+                               PLAY_HAPPINESS, PLAY_ENERGY_COST, PLAY_HUNGER_COST)
 from modules.inventory    import (inv_build_context, inv_add, inv_remove, use_item, rename_pet)
 from modules.loadout      import (get_loadout, save_loadout, build_loadout_slot,
-                                   build_loadout_context, build_menagerie_for_loadout, NEXUS_BASE)
+                                   build_loadout_context, build_menagerie_for_loadout)
 from modules.companicon   import build_companicon_entries, _img_url as companicon_img_url
 from modules.discord_helpers import (get_member_roles, get_lady_interaction,
                                       build_lady_dialog, build_lady_pet_text)
@@ -71,43 +71,32 @@ DISCORD_OAUTH_AUTHORIZE = 'https://discord.com/oauth2/authorize'
 DISCORD_OAUTH_TOKEN     = f'{DISCORD_API}/oauth2/token'
 REDIRECT_URI = os.getenv('PETOMANIA_REDIRECT_URI', 'http://204.168.179.80:5002/joc/petomania/callback')
 
-GITHUB_CITY       = f'{GITHUB_BASE}/city'
-GITHUB_PIATA      = f'{GITHUB_BASE}/piata'
-GITHUB_ASSETS     = f'{GITHUB_BASE}/Assets'
-GITHUB_COMPANICON = GITHUB_BASE
+STATIC_BASE = '/static'
 
 SHOP_ITEMS = {cat: {item['key']: item for item in items} for cat, items in ROOM_ITEMS.items()}
 
 # ── TOKEN STORE (signed image URLs) ──────────────────────────────────
 
-TOKEN_TTL    = 10
-_token_store = {}
-_token_lock  = threading.Lock()
+def get_static_url(path: str) -> str:
+    """Converteste un path relativ la static URL direct."""
+    # path poate fi 'room1/Wall1.png' sau 'static/room1/Wall1.png'
+    if path.startswith('http'):
+        # E un URL GitHub vechi — extragem calea relativa
+        for prefix in [
+            'https://raw.githubusercontent.com/keserdark/petomania/main/static/',
+            'https://raw.githubusercontent.com/keserdark/village-bot/main/PetGame/static/',
+        ]:
+            if path.startswith(prefix):
+                path = path[len(prefix):]
+                break
+    if path.startswith('/static/'):
+        return path
+    return f'/static/{path}'
 
 
-def _cleanup_tokens():
-    now = time.time()
-    with _token_lock:
-        expired = [k for k, v in _token_store.items() if v['expires'] < now]
-        for k in expired:
-            del _token_store[k]
-
-
-def make_token(url: str) -> str:
-    _cleanup_tokens()
-    token = secrets.token_urlsafe(24)
-    with _token_lock:
-        _token_store[token] = {'url': url, 'expires': time.time() + TOKEN_TTL}
-    return token
-
-
-def get_signed_url(url: str) -> str:
-    return f"/joc/petomania/img/{make_token(url)}"
-
-
-# Patch build_pet_context to use our get_signed_url
+# Patch build_pet_context to use our get_static_url
 def _build_pet_context(p):
-    return build_pet_context(p, get_signed_url)
+    return build_pet_context(p, get_static_url)
 
 
 # ── DISK CACHE (PIL render) ───────────────────────────────────────────
@@ -271,38 +260,7 @@ def logout():
     return redirect(url_for('acasa'))
 
 
-@app.route('/joc/petomania/img/<token>')
-@login_required
-def serve_img(token):
-    now = time.time()
-    with _token_lock:
-        entry = _token_store.get(token)
-        if not entry or entry['expires'] < now:
-            abort(403)
-        url = entry['url']
-        del _token_store[token]
-    # Servim din cache disk daca exista
-    from PIL import Image as PILImage
-    try:
-        cached = _fetch_image_cached(url, ttl=300, resize=None)
-        if cached:
-            output = io.BytesIO()
-            cached.save(output, format='PNG')
-            output.seek(0)
-            return Response(output.getvalue(), mimetype='image/png',
-                            headers={'Cache-Control': 'max-age=300'})
-    except Exception:
-        pass
-
-    # Fallback — fetch direct
-    req = urllib.request.Request(url, headers={'User-Agent': 'Petomania/1.0'})
-    try:
-        with urllib.request.urlopen(req, timeout=8) as resp:
-            data = resp.read()
-        return Response(data, mimetype='image/png', headers={'Cache-Control': 'max-age=300'})
-    except Exception as e:
-        print(f"❌ serve_img error: {e} — URL: {url}", flush=True)
-        abort(500)
+# serve_img nu mai e necesar — imaginile sunt servite direct din static/
 
 
 # ── PAGINI ────────────────────────────────────────────────────────────
@@ -318,9 +276,9 @@ def acasa():
     room = get_room_config(uid)
 
     room_urls = {
-        'wall':    get_signed_url(get_room_url('wall',    room['wall'],    room)),
-        'floor':   get_signed_url(get_room_url('floor',   room['floor'],   room)),
-        'chimney': get_signed_url(get_room_url('chimney', room['chimney'], room)),
+        'wall':    get_static_url(get_room_url('wall',    room['wall'],    room)),
+        'floor':   get_static_url(get_room_url('floor',   room['floor'],   room)),
+        'chimney': get_static_url(get_room_url('chimney', room['chimney'], room)),
     }
     owned_items  = room.get('items', {})
     room_objects = []
@@ -329,7 +287,7 @@ def acasa():
             room_objects.append({
                 'key':       obj_key,
                 'file':      obj_cfg.get('file', ''),
-                'url':       get_signed_url(f"{GITHUB_BASE}/room1/{obj_cfg.get('file', '')}"),
+                'url':       get_static_url(f"room1/{obj_cfg.get('file', '')}"),
                 'clickable': obj_cfg.get('clickable', False),
                 'action':    obj_cfg.get('action'),
                 'pos_x':     obj_cfg.get('pos_x', 50),
@@ -338,24 +296,6 @@ def acasa():
                 'z_index':   obj_cfg.get('z_index', 5),
                 'name':      obj_cfg.get('name', ''),
             })
-    # Pre-fetch imagini in cache inainte de a trimite HTML-ul
-    urls_to_prefetch = [
-        get_room_url('wall',    room['wall'],    room),
-        get_room_url('floor',   room['floor'],   room),
-        get_room_url('chimney', room['chimney'], room),
-    ]
-    if p:
-        urls_to_prefetch.append(get_image_url(
-            p['species'], get_form(p['level']),
-            get_state(p['hunger'], p['happiness'], p['cleanliness'], p['energy'], bool(p['sleeping'])),
-            p['gender']
-        ))
-    for obj_key, obj_cfg in SHOP_ITEMS.get('obiecte', {}).items():
-        if obj_key in owned_items:
-            urls_to_prefetch.append(f"{GITHUB_BASE}/room1/{obj_cfg.get('file', '')}")
-    with concurrent.futures.ThreadPoolExecutor(max_workers=6) as executor:
-        list(executor.map(lambda u: _fetch_image_cached(u, ttl=300, resize=None), urls_to_prefetch))
-
     return render_template('acasa.html', pet=pet, room=room, room_urls=room_urls, room_objects=room_objects)
 
 
@@ -437,7 +377,7 @@ def api_action():
                              get_state(p_new['hunger'], p_new['happiness'],
                                        p_new['cleanliness'], p_new['energy'],
                                        bool(p_new['sleeping'])), p_new['gender'])
-    ctx['image_url'] = get_signed_url(raw_url)
+    ctx['image_url'] = get_static_url(raw_url)
     return jsonify({'ok': True, 'msg': msg, 'pet': ctx})
 
 
@@ -592,11 +532,11 @@ def render_pet(user_id: int):
 @login_required
 def oras():
     return render_template('oras.html',
-        city_url     = get_signed_url(f"{GITHUB_CITY}/city.png"),
-        castel_url   = get_signed_url(f"{GITHUB_CITY}/castel.png"),
-        biserica_url = get_signed_url(f"{GITHUB_CITY}/biserica.png"),
-        piata_url    = get_signed_url(f"{GITHUB_CITY}/piata.png"),
-        aventura_url = get_signed_url(f"{GITHUB_CITY}/aventura.png"),
+        city_url     = f"{STATIC_BASE}/city/city.png",
+        castel_url   = f"{STATIC_BASE}/city/castel.png",
+        biserica_url = f"{STATIC_BASE}/city/biserica.png",
+        piata_url    = f"{STATIC_BASE}/city/piata.png",
+        aventura_url = f"{STATIC_BASE}/city/aventura.png",
     )
 
 
@@ -624,34 +564,13 @@ def aventura():
     return render_template('aventura.html')
 
 
-@app.route('/joc/petomania/city/<filename>')
-@login_required
-def city_img(filename):
-    url = f"{GITHUB_CITY}/{filename}"
-    req = urllib.request.Request(url, headers={'User-Agent': 'Petomania/1.0'})
-    with urllib.request.urlopen(req, timeout=8) as resp:
-        data = resp.read()
-    return Response(data, mimetype='image/png', headers={'Cache-Control': 'max-age=3600'})
+# city_img nu mai e necesar — fisierele sunt in static/city/
 
 
-@app.route('/joc/petomania/piata/<filename>')
-@login_required
-def piata_img(filename):
-    url = f"{GITHUB_PIATA}/{filename}"
-    req = urllib.request.Request(url, headers={'User-Agent': 'Petomania/1.0'})
-    with urllib.request.urlopen(req, timeout=8) as resp:
-        data = resp.read()
-    return Response(data, mimetype='image/png', headers={'Cache-Control': 'max-age=3600'})
+# piata_img nu mai e necesar — fisierele sunt in static/piata/
 
 
-@app.route('/joc/petomania/assets-img/<filename>')
-@login_required
-def assets_img(filename):
-    url = f"{GITHUB_ASSETS}/{filename}"
-    req = urllib.request.Request(url, headers={'User-Agent': 'Petomania/1.0'})
-    with urllib.request.urlopen(req, timeout=8) as resp:
-        data = resp.read()
-    return Response(data, mimetype='image/png', headers={'Cache-Control': 'max-age=3600'})
+# assets_img nu mai e necesar — fisierele sunt in static/Assets/
 
 
 @app.route('/joc/petomania/assets')
@@ -725,14 +644,7 @@ def api_lady_name():
 
 # ── COMPANICON ────────────────────────────────────────────────────────
 
-@app.route('/joc/petomania/companicon-img/<path:filepath>')
-@login_required
-def companicon_img(filepath):
-    url = f"{GITHUB_COMPANICON}/{filepath}"
-    req = urllib.request.Request(url, headers={'User-Agent': 'Petomania/1.0'})
-    with urllib.request.urlopen(req, timeout=8) as resp:
-        data = resp.read()
-    return Response(data, mimetype='image/png', headers={'Cache-Control': 'max-age=3600'})
+# companicon_img nu mai e necesar — fisierele sunt in static/
 
 
 @app.route('/joc/petomania/api/companicon')
@@ -889,8 +801,8 @@ def loadout():
     exclude_ids  = [v for v in loadout_data.values() if v]
     menagerie    = build_menagerie_for_loadout(uid, exclude_ids)
     return render_template('loadout.html', slots=slots, menagerie=menagerie,
-                           nexus_inferior=f"{NEXUS_BASE}/NexusInferior.png",
-                           nexus_superior=f"{NEXUS_BASE}/NexusSuperior.png")
+                           nexus_inferior=f"{STATIC_BASE}/items/NexusInferior.png",
+                           nexus_superior=f"{STATIC_BASE}/items/NexusSuperior.png")
 
 
 @app.route('/joc/petomania/api/loadout/set', methods=['POST'])

@@ -8,8 +8,8 @@ from cogs.petgame_stats import get_stats_at_level
 from modules.db import get_db
 from modules.pets import get_form, get_state, get_image_url
 
-GITHUB_BASE = 'https://raw.githubusercontent.com/keserdark/petomania/main/static'
-NEXUS_BASE  = f"{GITHUB_BASE}/items"
+STATIC_BASE = '/static'
+NEXUS_BASE  = f"{STATIC_BASE}/items"
 
 
 def get_loadout(user_id: int) -> dict:
