@@ -301,7 +301,6 @@ document.addEventListener('contextmenu', function(e) {
 .pi-target-title{font-family:'Cinzel',serif;font-size:10px;color:var(--text-muted);letter-spacing:.1em;padding:0 0 6px;border-bottom:1px solid var(--border);margin-bottom:4px}
 .pi-target-list{display:flex;flex-direction:column;gap:5px;overflow-y:auto;max-height:260px}
 .pi-target-list .comp-thumb img{width:40px!important;height:40px!important;object-fit:contain!important}
-.pi-target-img{width:40px!important;height:40px!important;object-fit:contain;flex-shrink:0}
 
 /* ── PANEL HEADER ── */
 .rucsac-panel-header{
@@ -607,40 +606,31 @@ document.getElementById('pi-use').onclick = () => {
 };
 
 function rbRenderTargets() {
-    const list = document.getElementById('pi-target-list');
-    list.innerHTML = '';
-    rbData.companions.forEach((c, i) => {
-        if (!c) return;
+    const comps = rbData.companions;
+    document.getElementById('pi-target-list').innerHTML = comps.map((c, i) => {
+        if (!c) return '';
         const pct = c.hp_max > 0 ? Math.round((c.hp_current / c.hp_max) * 100) : 0;
         const col = pct > 50 ? '#4caf7d' : pct > 25 ? '#e0a052' : '#e05252';
-        const div = document.createElement('div');
-        div.className = 'pi-target-item';
-        div.innerHTML = `
-            <img src="${c.image_url}" alt="${c.name}" class="pi-target-img">
-            <div class="pi-target-info">
-                <span class="pi-target-name">${c.name}${c.active ? ' <em>(activ)</em>' : ''}</span>
-                <div class="pi-target-hp-bar-bg">
-                    <div class="pi-target-hp-bar-fill" style="width:${pct}%;background:${col}"></div>
+        return `<div class="rucsac-comp${c.active ? ' active' : ''}" onclick="rbUseOnTarget(${i})">
+            <div class="comp-top-row">
+                <div class="comp-thumb"><img src="${c.image_url}" alt="${c.name}"></div>
+                <div class="comp-info">
+                    <div class="comp-name">${c.name}</div>
+                    <div class="comp-sub">${c.species} · Nv.${c.level}${c.active ? ' · <strong>ACTIV</strong>' : ''}</div>
                 </div>
-                <span class="pi-target-hp-txt" style="color:${col}">${c.hp_current} / ${c.hp_max}</span>
             </div>
-        `;
-        div.onclick = () => rbUseOnTarget(i);
-        list.appendChild(div);
-    });
-
-    // Buton anulare
-    const cancel = document.createElement('button');
-    cancel.className = 'popup-action-btn';
-    cancel.style.marginTop = '6px';
-    cancel.textContent = '← Înapoi';
-    cancel.onclick = () => {
-        document.getElementById('pi-target-select').style.display = 'none';
-        document.getElementById('pi-use').style.display    = 'flex';
-        document.getElementById('pi-offer').style.display  = 'flex';
-        document.getElementById('pi-drop').style.display   = 'flex';
-    };
-    list.appendChild(cancel);
+            <div class="comp-hp-row">
+                <span class="comp-hp-label">HP</span>
+                <span class="comp-hp-val" style="color:${col}">${c.hp_current} / ${c.hp_max}</span>
+            </div>
+            <div class="comp-hp-bar-bg"><div class="comp-hp-bar-fill" style="width:${pct}%;background:${col}"></div></div>
+        </div>`;
+    }).join('') + `<button class="popup-action-btn" style="margin-top:4px" onclick="
+        document.getElementById('pi-target-select').style.display='none';
+        document.getElementById('pi-use').style.display='flex';
+        document.getElementById('pi-offer').style.display='flex';
+        document.getElementById('pi-drop').style.display='flex';
+    ">← Înapoi</button>`;
 }
 
 async function rbUseOnTarget(slotIdx) {
