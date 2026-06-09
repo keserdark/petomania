@@ -109,6 +109,7 @@ let lastHit = 0;
 let currentHover = false;
 
 canvas.addEventListener('mousemove', (e) => {
+    if (popupOpen) return;
     if (currentHover) {
         tooltip.style.left = (e.clientX - wrap.getBoundingClientRect().left + 14) + 'px';
         tooltip.style.top  = (e.clientY - wrap.getBoundingClientRect().top  - 8)  + 'px';
@@ -185,10 +186,20 @@ canvas.addEventListener('mouseenter', () => { isHovering = true; fadActive = fal
 canvas.addEventListener('mouseleave', () => { isHovering = false; redraw(false); });
 
 // ── Popup principal ──
+let popupOpen = false;
+
 function openPopup() {
+    popupOpen = true;
+    isHovering = true;  // opreste fade loop
+    fadActive  = false;
+    currentHover = false;
+    tooltip.style.opacity = '0';
+    canvas.style.cursor   = 'default';
     document.getElementById('lady-overlay').classList.add('open');
 }
 function closePopup() {
+    popupOpen = false;
+    isHovering = false;
     document.getElementById('lady-overlay').classList.remove('open');
 }
 document.getElementById('lady-overlay').addEventListener('click', (e) => {
