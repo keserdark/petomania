@@ -29,13 +29,18 @@ def init_db():
     ''')
     c.execute('''
         CREATE TABLE IF NOT EXISTS room_config (
-            user_id INTEGER PRIMARY KEY,
-            wall    TEXT NOT NULL DEFAULT "Wall1-Wood",
-            floor   TEXT NOT NULL DEFAULT "Floor1-Wood",
-            chimney TEXT NOT NULL DEFAULT "Chimney1-Stone",
-            items   TEXT NOT NULL DEFAULT "{}"
+            user_id       INTEGER PRIMARY KEY,
+            wall          TEXT NOT NULL DEFAULT "Wall1-Wood",
+            floor         TEXT NOT NULL DEFAULT "Floor1-Wood",
+            chimney       TEXT NOT NULL DEFAULT "Chimney1-Stone",
+            items         TEXT NOT NULL DEFAULT "{}",
+            room_version  INTEGER NOT NULL DEFAULT 1
         )
     ''')
+    try:
+        c.execute('ALTER TABLE room_config ADD COLUMN room_version INTEGER NOT NULL DEFAULT 1')
+    except Exception:
+        pass
     c.execute('''
         CREATE TABLE IF NOT EXISTS lady_interactions (
             user_id           INTEGER PRIMARY KEY,
@@ -137,10 +142,11 @@ def get_room_config(user_id: int) -> dict:
         return {'wall': 'Wall1-Wood', 'floor': 'Floor1-Wood', 'chimney': 'Chimney1-Stone', 'items': {}}
     conn.close()
     return {
-        'wall':    row['wall'],
-        'floor':   row['floor'],
-        'chimney': row['chimney'],
-        'items':   json.loads(row['items'] or '{}'),
+        'wall':         row['wall'],
+        'floor':        row['floor'],
+        'chimney':      row['chimney'],
+        'items':        json.loads(row['items'] or '{}'),
+        'room_version': row['room_version'] if 'room_version' in row.keys() else 1,
     }
 
 
@@ -150,5 +156,13 @@ def save_room_config(user_id: int, wall: str, floor: str, chimney: str, items: d
         'INSERT OR REPLACE INTO room_config (user_id, wall, floor, chimney, items) VALUES (?, ?, ?, ?, ?)',
         (user_id, wall, floor, chimney, json.dumps(items))
     )
+    conn.commit()
+    conn.close()
+
+
+def bump_room_version(user_id: int):
+    """Incrementeaza versiunea camerei pentru cache busting."""
+    conn = get_db()
+    conn.execute('UPDATE room_config SET room_version = room_version + 1 WHERE user_id = ?', (user_id,))
     conn.commit()
     conn.close()

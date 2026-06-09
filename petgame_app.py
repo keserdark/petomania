@@ -33,7 +33,7 @@ from dotenv import load_dotenv
 load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), '.env'))
 
 # ── MODULES ──────────────────────────────────────────────────────────
-from modules.db       import get_db, init_db, get_dacoins, spend_dacoins, get_room_config, save_room_config
+from modules.db       import get_db, init_db, get_dacoins, spend_dacoins, get_room_config, save_room_config, bump_room_version
 from modules.pets     import (get_pet, get_menagerie, get_form, get_state, get_image_url,
                                get_room_url, sync_pet, sync_pet_hp, update_pet, build_pet_context,
                                format_age, xp_for_level,
@@ -275,10 +275,11 @@ def acasa():
     pet  = _build_pet_context(p) if p else None
     room = get_room_config(uid)
 
+    v = room.get('room_version', 1)
     room_urls = {
-        'wall':    get_static_url(get_room_url('wall',    room['wall'],    room)),
-        'floor':   get_static_url(get_room_url('floor',   room['floor'],   room)),
-        'chimney': get_static_url(get_room_url('chimney', room['chimney'], room)),
+        'wall':    get_static_url(get_room_url('wall',    room['wall'],    room)) + f'?v={v}',
+        'floor':   get_static_url(get_room_url('floor',   room['floor'],   room)) + f'?v={v}',
+        'chimney': get_static_url(get_room_url('chimney', room['chimney'], room)) + f'?v={v}',
     }
     owned_items  = room.get('items', {})
     room_objects = []
@@ -448,6 +449,7 @@ def api_cumpara():
             return jsonify({'ok': False, 'error': 'Dacoins insuficienti!'})
         owned_objects[key] = True
         save_room_config(uid, room['wall'], room['floor'], room['chimney'], owned_objects)
+        bump_room_version(uid)
         return jsonify({
             'ok': True, 'msg': f"✅ {item['name']} plasat în cameră!",
             'new_balance': get_dacoins(uid), 'category': category, 'key': key,
@@ -469,6 +471,7 @@ def api_cumpara():
 
     room[category] = key
     save_room_config(uid, room['wall'], room['floor'], room['chimney'], room['items'])
+    bump_room_version(uid)
     _invalidate_cache(get_room_url(category, room[category], room))
     _invalidate_cache(get_room_url(category, key, room))
 
