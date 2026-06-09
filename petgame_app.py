@@ -51,8 +51,8 @@ load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), '.env'))
 
 app = Flask(
     __name__,
-    template_folder='templates_site',
-    static_folder='static_site',
+    template_folder='templates',
+    static_folder='static',
     static_url_path='/static'
 )
 from werkzeug.middleware.proxy_fix import ProxyFix
@@ -793,10 +793,10 @@ def oauth_callback():
     state          = request.args.get('state')
     expected_state = session.pop('oauth_state', None)
     if not state or state != expected_state:
-        return render_template('petomania/error.html', error="State OAuth invalid.")
+        return render_template('error.html', error="State OAuth invalid.")
     code = request.args.get('code')
     if not code:
-        return render_template('petomania/error.html', error="Nu am primit codul OAuth.")
+        return render_template('error.html', error="Nu am primit codul OAuth.")
     try:
         token_resp = requests.post(
             DISCORD_OAUTH_TOKEN,
@@ -811,9 +811,9 @@ def oauth_callback():
             timeout=10,
         )
     except requests.RequestException as e:
-        return render_template('petomania/error.html', error=f"Eroare conexiune Discord: {e}")
+        return render_template('error.html', error=f"Eroare conexiune Discord: {e}")
     if token_resp.status_code != 200:
-        return render_template('petomania/error.html', error="Discord a respins codul OAuth.")
+        return render_template('error.html', error="Discord a respins codul OAuth.")
     token_data   = token_resp.json()
     access_token = token_data['access_token']
     try:
@@ -824,7 +824,7 @@ def oauth_callback():
         )
         user_resp.raise_for_status()
     except requests.RequestException:
-        return render_template('petomania/error.html', error="Nu am putut prelua datele tale Discord.")
+        return render_template('error.html', error="Nu am putut prelua datele tale Discord.")
     user_data           = user_resp.json()
     session['user_id']  = user_data['id']
     session['username'] = user_data.get('global_name') or user_data['username']
@@ -903,7 +903,7 @@ def acasa():
                 'name':      obj_cfg.get('name', ''),
             })
 
-    return render_template('petomania/acasa.html',
+    return render_template('acasa.html',
                            pet=pet,
                            room=room,
                            room_urls=room_urls,
@@ -918,7 +918,7 @@ def menajerie():
     active_ctx = build_pet_context(active) if active else None
     rows     = get_menagerie(uid)
     men_pets = [build_pet_context(dict(r)) for r in rows]
-    return render_template('petomania/menajerie.html',
+    return render_template('menajerie.html',
                            active=active_ctx,
                            men_pets=men_pets)
 
@@ -929,7 +929,7 @@ def imbunatatiri():
     uid     = int(user['id'])
     room    = get_room_config(uid)
     dacoins = get_dacoins(uid)
-    return render_template('petomania/imbunatatiri.html',
+    return render_template('imbunatatiri.html',
                            room=room,
                            dacoins=dacoins,
                            shop=ROOM_ITEMS)
@@ -1307,7 +1307,7 @@ GITHUB_CITY = 'https://raw.githubusercontent.com/keserdark/petomania/main/PetGam
 @app.route('/joc/petomania/oras')
 @login_required
 def oras():
-    return render_template('petomania/oras.html',
+    return render_template('oras.html',
         city_url     = get_signed_url(f"{GITHUB_CITY}/city.png"),
         castel_url   = get_signed_url(f"{GITHUB_CITY}/castel.png"),
         biserica_url = get_signed_url(f"{GITHUB_CITY}/biserica.png"),
@@ -1318,22 +1318,22 @@ def oras():
 @app.route('/joc/petomania/castel')
 @login_required
 def castel():
-    return render_template('petomania/castel.html')
+    return render_template('castel.html')
 
 @app.route('/joc/petomania/biserica')
 @login_required
 def biserica():
-    return render_template('petomania/biserica.html')
+    return render_template('biserica.html')
 
 @app.route('/joc/petomania/piata')
 @login_required
 def piata():
-    return render_template('petomania/piata.html')
+    return render_template('piata.html')
 
 @app.route('/joc/petomania/aventura')
 @login_required
 def aventura():
-    return render_template('petomania/aventura.html')
+    return render_template('aventura.html')
 
 @app.route('/joc/petomania/city/<filename>')
 @login_required  
@@ -1372,7 +1372,7 @@ def assets_img(filename):
 @app.route('/joc/petomania/assets')
 @login_required
 def assets():
-    return render_template('petomania/assets.html')
+    return render_template('assets.html')
 
 def get_member_roles(user_id: int) -> list:
     """Fetch rolurile unui user din serverul Discord."""
@@ -1546,7 +1546,7 @@ def api_lady_name():
 @app.route('/joc/petomania/consumable')
 @login_required
 def consumable():
-    return render_template('petomania/consumable.html')
+    return render_template('consumable.html')
 
 
 GITHUB_COMPANICON = 'https://raw.githubusercontent.com/keserdark/petomania/main/PetGame/static'
@@ -1665,7 +1665,7 @@ def api_companicon():
 @app.route('/joc/petomania/companicon')
 @login_required
 def companicon():
-    return render_template('petomania/companicon.html')
+    return render_template('companicon.html')
 
 
 
