@@ -940,8 +940,8 @@ def api_battle_start():
         if not row:
             return jsonify({'ok': False, 'error': 'Pet negasit.'})
         from modules.pets import get_form
-        pet = dict(row)
-        pet['image_url'] = f'/static/pets/{pet["species"]}/00transparent/form{get_form(pet["level"])}.png'
+        from modules.pets import get_form, get_state
+        pet['image_url'] = get_static_url(get_image_url(pet['species'], get_form(pet['level']), get_state(dict(pet)), pet.get('gender', 'male')))
     else:
         from modules.pets import sync_pet
         pet = sync_pet(uid)
