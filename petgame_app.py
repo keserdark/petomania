@@ -281,6 +281,20 @@ def serve_img(token):
             abort(403)
         url = entry['url']
         del _token_store[token]
+    # Servim din cache disk daca exista
+    from PIL import Image as PILImage
+    try:
+        cached = _fetch_image_cached(url, ttl=300, resize=None)
+        if cached:
+            output = io.BytesIO()
+            cached.save(output, format='PNG')
+            output.seek(0)
+            return Response(output.getvalue(), mimetype='image/png',
+                            headers={'Cache-Control': 'max-age=300'})
+    except Exception:
+        pass
+
+    # Fallback — fetch direct
     req = urllib.request.Request(url, headers={'User-Agent': 'Petomania/1.0'})
     try:
         with urllib.request.urlopen(req, timeout=8) as resp:
