@@ -90,7 +90,7 @@
             bottom: 0; left: 0; right: 0;
             height: 25%;
             display: flex;
-            flex-direction: column;
+            flex-direction: row;
             background: rgba(8,8,8,0.95);
             border-top: 1px solid rgba(255,255,255,0.08);
         }
@@ -101,14 +101,15 @@
             display: flex;
             flex-direction: column;
             gap: 2px;
+            border-right: 1px solid rgba(255,255,255,0.06);
         }
         .blog-line { font-size: clamp(10px, 1vw, 14px); color: #b0a88a; line-height: 1.4; }
         #battle-controls {
-            padding: clamp(6px, 1vh, 12px) clamp(10px, 1.5vw, 20px);
+            width: clamp(220px, 28vw, 420px);
+            padding: clamp(6px, 1vh, 12px) clamp(8px, 1vw, 16px);
             display: flex;
-            align-items: center;
-            gap: clamp(6px, 0.8vw, 12px);
-            border-top: 1px solid rgba(255,255,255,0.06);
+            flex-direction: column;
+            gap: clamp(4px, 0.5vh, 8px);
             flex-shrink: 0;
         }
         #battle-moves {
@@ -142,10 +143,10 @@
         }
         .bmenu-btn {
             display: flex; align-items: center; justify-content: center; gap: 6px;
-            background: #141414; border: 2px solid #2a2a2a;
-            border-radius: 8px; color: #d0c8a8;
+            background: #0e0e0e; border: 2px solid #2a2a2a;
+            border-radius: 10px; color: #d0c8a8;
             cursor: pointer; font-family: 'Cinzel', serif;
-            font-size: clamp(11px, 1.1vw, 15px); font-weight: 700;
+            font-size: clamp(11px, 1.1vw, 14px); font-weight: 700;
             transition: background .15s, border-color .15s, color .15s;
         }
         .bmenu-btn:hover:not(:disabled) { background: rgba(201,168,76,0.12); border-color: rgba(201,168,76,0.5); color: #c9a84c; }
@@ -165,6 +166,7 @@
             flex: 1;
             flex-direction: column;
             gap: 4px;
+            min-height: 0;
         }
         #battle-moves-panel.open { display: flex; }
         #battle-moves-back {
