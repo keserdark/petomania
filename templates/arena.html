@@ -336,20 +336,17 @@ let battleData = { player: null, npc: null, moveset: [], busy: false };
 async function startBattle() {
     closeCorvinPopup();
 
-    // Switch la battle background
-    ctx.clearRect(0, 0, W, H);
-    if (battleBg.complete) ctx.drawImage(battleBg, 0, 0, W, H);
-    else { battleBg.onload = () => ctx.drawImage(battleBg, 0, 0, W, H); }
-
     inBattle = true;
-    // Ascunde sidebar si footbar
+    // Ascunde sidebar si footbar, fullscreen wrap
     const sidebar = document.querySelector('.pet-sidebar');
     const footbar = document.querySelector('.pet-footbar');
     if (sidebar) sidebar.style.display = 'none';
     if (footbar) footbar.style.display = 'none';
-    // Extinde arena-wrap pe tot ecranul
-    wrap.style.maxWidth = '100vw';
-    wrap.style.maxHeight = '100vh';
+    wrap.style.cssText = 'position:fixed;inset:0;width:100vw;height:100vh;max-width:100vw;max-height:100vh;aspect-ratio:unset;z-index:100;background:#0a0a0a;';
+    // Deseneaza battle background
+    ctx.clearRect(0, 0, W, H);
+    if (battleBg.complete && battleBg.naturalWidth > 0) ctx.drawImage(battleBg, 0, 0, W, H);
+    else battleBg.onload = () => ctx.drawImage(battleBg, 0, 0, W, H);
     document.getElementById('battle-ui').style.display = 'flex';
     document.getElementById('btn-back-oras').style.display = 'none';
     document.getElementById('battle-log').innerHTML = '<div class="battle-log-line">Se pregătește lupta...</div>';

@@ -34,10 +34,6 @@ def generate_npc(player_level: int) -> dict:
     moveset   = get_moveset(species, nature, level)
     name      = random.choice(NPC_NAMES)
 
-    gender     = random.choice(['Male', 'Female'])
-    stage      = f'Stage{form}'
-    image_url  = f'/static/00transparent/{species}/{stage}-Basic-Form-{gender}.png'
-
     return {
         'id':           f'npc_{random.randint(10000, 99999)}',
         'name':         name,
@@ -50,7 +46,7 @@ def generate_npc(player_level: int) -> dict:
         'hp_current':   stats['hp'],
         'stats':        stats,
         'moveset':      [m['key'] for m in moveset],
-        'image_url':    image_url,
+        'image_url':    f'/static/pets/{species}/00transparent/form{form}.png',
         'is_npc':       True,
         'status':       None,  # stun, burn, poison, freeze
         'status_turns': 0,
@@ -75,6 +71,10 @@ def build_combatant(pet: dict) -> dict:
     stats   = get_stats_at_level(species, nature, level, form)
     moveset = get_moveset(species, nature, level)
 
+    gender    = pet.get('gender', 'male')
+    g_label   = 'Female' if gender == 'female' else 'Male'
+    image_url = f'/static/00transparent/{species}/Stage{form}-Basic-Form-{g_label}.png'
+
     return {
         'id':           pet.get('id', 0),
         'name':         pet['name'],
@@ -87,7 +87,7 @@ def build_combatant(pet: dict) -> dict:
         'hp_current':   min(pet.get('hp_current', stats['hp']), stats['hp']),
         'stats':        stats,
         'moveset':      [m['key'] for m in moveset],
-        'image_url':    pet.get('image_url', f'/static/pets/{species}/00transparent/form{form}.png'),
+        'image_url':    image_url,
         'is_npc':       False,
         'status':       None,
         'status_turns': 0,
