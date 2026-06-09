@@ -138,6 +138,8 @@ window.shopQtyChange = function(delta) {
     _updateConfirmTotal();
 };
 
+window.shopCancelConfirm = function() { _closeConfirm(); };
+
 window.shopConfirmBuy = async function() {
     if (!_confirmItem) return;
 
