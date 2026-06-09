@@ -32,7 +32,7 @@ SHOPS = {
         'categories': ['nexus', 'potiuni', 'esente'],
         'items': {
             'nexus':   ['nexus_basic'],
-            'potiuni': [],   # de populat
+            'potiuni': ['healing_potion_small'],   # de populat
             'esente':  [],   # de populat
         }
     },

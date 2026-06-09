@@ -65,7 +65,17 @@ INVENTORY_ITEMS = {
 
     # ── POȚIUNI ──────────────────────────────────
     'potiuni': [
-        # Primul item va fi adăugat aici
+    {
+        'key':   'healing_potion_small',
+        'name':  'Poțiune de Vindecare Mică',
+        'desc':  'Restaurează 30 HP companionului activ.',
+        'icon':  '🧪',
+        'img':   '/static/items/inventory_items/HealingPotion_Small.png',
+        'price': 30,
+        'effects': { 'hp': 30 },
+        'usable_outside_battle': True,
+        'quest_item': False,
+    },
     ],
 
     # ── OFRANDE ──────────────────────────────────
