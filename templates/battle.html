@@ -80,6 +80,9 @@
         .bc-hp-bg { height: 7px; background: #1a1a1a; border-radius: 4px; overflow: hidden; margin-bottom: 3px; }
         .bc-hp-fill { height: 100%; border-radius: 4px; background: #4caf7d; transition: width .4s, background .4s; }
         .bc-hp-txt { font-size: clamp(9px, 0.85vw, 13px); color: #888; font-weight: 600; }
+        .bc-player-wrap { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
+        .bc-info-top { width: clamp(130px, 18vw, 240px); }
+        .bc-name-row { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 2px; }
 
         /* Bottom panel */
         #battle-bottom {
@@ -201,24 +204,32 @@
     <div id="battle-scene">
         <!-- Enemy -->
         <div class="bc bc-enemy">
-            <div class="bc-info">
-                <div class="bc-name" id="npc-name">—</div>
-                <div class="bc-level" id="npc-level">Nv.—</div>
-                <div class="bc-status" id="npc-status"></div>
-                <div class="bc-hp-bg"><div class="bc-hp-fill" id="npc-hp-bar" style="width:100%"></div></div>
-                <div class="bc-hp-txt" id="npc-hp-txt">—/—</div>
+            <div class="bc-player-wrap">
+                <div class="bc-info bc-info-top">
+                    <div class="bc-name-row">
+                        <span class="bc-name" id="npc-name">—</span>
+                        <span class="bc-level" id="npc-level">Nv.—</span>
+                    </div>
+                    <div class="bc-status" id="npc-status"></div>
+                    <div class="bc-hp-bg"><div class="bc-hp-fill" id="npc-hp-bar" style="width:100%"></div></div>
+                    <div class="bc-hp-txt" id="npc-hp-txt">—/—</div>
+                </div>
+                <img id="npc-img" src="" alt="" class="bc-img bc-img-enemy">
             </div>
-            <img id="npc-img" src="" alt="" class="bc-img bc-img-enemy">
         </div>
         <!-- Player -->
         <div class="bc bc-player">
-            <img id="player-img" src="" alt="" class="bc-img bc-img-player">
-            <div class="bc-info">
-                <div class="bc-name" id="player-name">—</div>
-                <div class="bc-level" id="player-level">Nv.—</div>
-                <div class="bc-status" id="player-status"></div>
-                <div class="bc-hp-bg"><div class="bc-hp-fill" id="player-hp-bar" style="width:100%"></div></div>
-                <div class="bc-hp-txt" id="player-hp-txt">—/—</div>
+            <div class="bc-player-wrap">
+                <div class="bc-info bc-info-top">
+                    <div class="bc-name-row">
+                        <span class="bc-name" id="player-name">—</span>
+                        <span class="bc-level" id="player-level">Nv.—</span>
+                    </div>
+                    <div class="bc-status" id="player-status"></div>
+                    <div class="bc-hp-bg"><div class="bc-hp-fill" id="player-hp-bar" style="width:100%"></div></div>
+                    <div class="bc-hp-txt" id="player-hp-txt">—/—</div>
+                </div>
+                <img id="player-img" src="" alt="" class="bc-img bc-img-player">
             </div>
         </div>
     </div>
