@@ -1,0 +1,330 @@
+{% extends "petomania/base_joc.html" %}
+{% block content_class %}pet-content-city{% endblock %}
+{% block title %}Assets{% endblock %}
+
+{% block content %}
+<div class="assets-wrap">
+    <canvas id="assets-canvas"></canvas>
+    <div id="assets-tooltip" class="city-tooltip"></div>
+
+    <!-- Popup Lady — meniu principal -->
+    <div class="assets-popup-overlay" id="lady-overlay">
+        <div class="assets-popup">
+            <button class="assets-popup-close" onclick="closePopup()">✕</button>
+            <div class="assets-popup-deco">⚜️</div>
+            <div class="assets-popup-title">👸 Lunara Silvermist</div>
+            <button class="assets-popup-btn" onclick="openDialog()">
+                <span class="assets-popup-btn-icon">💬</span>
+                <span>Vorbește cu Doamna</span>
+            </button>
+            <button class="assets-popup-btn" onclick="closePopup()">
+                <span class="assets-popup-btn-icon">🛒</span>
+                <span>Magazin</span>
+            </button>
+            <button class="assets-popup-btn" onclick="closePopup()">
+                <span class="assets-popup-btn-icon">📜</span>
+                <span>Cere informații suplimentare</span>
+            </button>
+            <button class="assets-popup-btn" onclick="closePopup()">
+                <span class="assets-popup-btn-icon">🎉</span>
+                <span>Eveniment</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Popup Dialog Lunara -->
+    <div class="assets-popup-overlay" id="dialog-overlay">
+        <div class="assets-popup assets-dialog">
+            <button class="assets-popup-close" onclick="closeDialog()">✕</button>
+            <div class="assets-popup-deco">⚜️</div>
+            <div class="assets-popup-title">👸 Lunara Silvermist</div>
+            <div class="assets-dialog-text" id="dialog-text">
+                <div class="assets-dialog-loading">Se încarcă...</div>
+            </div>
+            <div id="dialog-actions"></div>
+        </div>
+    </div>
+
+    <!-- Buton Inapoi -->
+    <a href="{{ url_for('piata') }}" class="room-care-btn"
+       style="z-index:30; top:auto; bottom:14px; right:auto; left:14px;">
+        ← Piață
+    </a>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/assets.css') }}">
+<script>
+const W = 2730;
+const H = 1536;
+const BASE = '/joc/petomania/assets-img/';
+
+const canvas  = document.getElementById('assets-canvas');
+const ctx     = canvas.getContext('2d', { willReadFrequently: true });
+const tooltip = document.getElementById('assets-tooltip');
+const wrap    = canvas.parentElement;
+
+canvas.width  = W;
+canvas.height = H;
+
+const bgImg   = new Image();
+bgImg.crossOrigin = 'anonymous';
+bgImg.src = BASE + 'Assets.png';
+
+const ladyImg = new Image();
+ladyImg.crossOrigin = 'anonymous';
+ladyImg.src = BASE + 'Lady.png';
+
+const ladyOff = document.createElement('canvas');
+ladyOff.width  = W;
+ladyOff.height = H;
+
+let loaded = 0;
+function onLoad() {
+    loaded++;
+    if (loaded < 2) return;
+    ctx.drawImage(bgImg,   0, 0, W, H);
+    ctx.drawImage(ladyImg, 0, 0, W, H);
+    const oc = ladyOff.getContext('2d', { willReadFrequently: true });
+    oc.drawImage(ladyImg, 0, 0, W, H);
+}
+bgImg.onload   = onLoad;
+ladyImg.onload = onLoad;
+
+function redraw(hover) {
+    ctx.clearRect(0, 0, W, H);
+    ctx.drawImage(bgImg, 0, 0, W, H);
+    if (hover) {
+        ctx.save();
+        ctx.filter = 'brightness(1.4) drop-shadow(0 0 18px rgba(255,215,0,1))';
+        ctx.drawImage(ladyImg, 0, 0, W, H);
+        ctx.restore();
+    } else {
+        ctx.drawImage(ladyImg, 0, 0, W, H);
+    }
+}
+
+let lastHit = 0;
+let currentHover = false;
+
+canvas.addEventListener('mousemove', (e) => {
+    if (currentHover) {
+        tooltip.style.left = (e.clientX - wrap.getBoundingClientRect().left + 14) + 'px';
+        tooltip.style.top  = (e.clientY - wrap.getBoundingClientRect().top  - 8)  + 'px';
+    }
+    const now = Date.now();
+    if (now - lastHit < 33) return;
+    lastHit = now;
+    const rect  = canvas.getBoundingClientRect();
+    const x = Math.floor((e.clientX - rect.left) * W / rect.width);
+    const y = Math.floor((e.clientY - rect.top)  * H / rect.height);
+    const oc    = ladyOff.getContext('2d', { willReadFrequently: true });
+    const alpha = oc.getImageData(x, y, 1, 1).data[3];
+    const hit   = alpha > 20;
+    if (hit !== currentHover) {
+        currentHover = hit;
+        canvas.style.cursor   = hit ? 'pointer' : 'default';
+        tooltip.style.opacity = hit ? '1' : '0';
+        if (hit) tooltip.textContent = '👸 Lunara Silvermist';
+        redraw(hit);
+    }
+});
+
+canvas.addEventListener('click', (e) => {
+    const rect  = canvas.getBoundingClientRect();
+    const x = Math.floor((e.clientX - rect.left) * W / rect.width);
+    const y = Math.floor((e.clientY - rect.top)  * H / rect.height);
+    const oc    = ladyOff.getContext('2d', { willReadFrequently: true });
+    const alpha = oc.getImageData(x, y, 1, 1).data[3];
+    if (alpha > 20) openPopup();
+});
+
+canvas.addEventListener('mouseleave', () => {
+    tooltip.style.opacity = '0';
+    canvas.style.cursor   = 'default';
+    currentHover = false;
+    redraw(false);
+});
+
+let isHovering = false;
+let fadeAlpha  = 0;
+let fadeDir    = 1;
+let fadActive  = false;
+
+function fadeStep() {
+    if (isHovering) return;
+    fadeAlpha += fadeDir * 0.05;
+    if (fadeAlpha >= 1) {
+        fadeAlpha = 1; fadeDir = -1;
+    } else if (fadeAlpha <= 0) {
+        fadeAlpha = 0; fadeDir = 1; fadActive = false;
+        ctx.clearRect(0, 0, W, H);
+        ctx.drawImage(bgImg, 0, 0, W, H);
+        ctx.drawImage(ladyImg, 0, 0, W, H);
+        return;
+    }
+    ctx.clearRect(0, 0, W, H);
+    ctx.drawImage(bgImg, 0, 0, W, H);
+    ctx.drawImage(ladyImg, 0, 0, W, H);
+    ctx.save();
+    ctx.globalAlpha = fadeAlpha * 0.35;
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.drawImage(ladyImg, 0, 0, W, H);
+    ctx.restore();
+    requestAnimationFrame(fadeStep);
+}
+
+setInterval(() => {
+    if (isHovering || fadActive) return;
+    fadActive = true; fadeAlpha = 0; fadeDir = 1;
+    requestAnimationFrame(fadeStep);
+}, 3000);
+
+canvas.addEventListener('mouseenter', () => { isHovering = true; fadActive = false; });
+canvas.addEventListener('mouseleave', () => { isHovering = false; redraw(false); });
+
+// ── Popup principal ──
+function openPopup() {
+    document.getElementById('lady-overlay').classList.add('open');
+}
+function closePopup() {
+    document.getElementById('lady-overlay').classList.remove('open');
+}
+document.getElementById('lady-overlay').addEventListener('click', (e) => {
+    if (e.target === document.getElementById('lady-overlay')) closePopup();
+});
+
+// ── Helpers dialog ──
+function formatText(text) {
+    return text.split('\n').map(line =>
+        line.startsWith('*') && line.endsWith('*')
+            ? `<em class="assets-dialog-action">${line.slice(1,-1)}</em>`
+            : `<span>${line}</span>`
+    ).join('<br>');
+}
+
+function appendText(html) {
+    const textEl = document.getElementById('dialog-text');
+    textEl.insertAdjacentHTML('beforeend', '<br>' + html);
+    textEl.scrollTop = textEl.scrollHeight;
+}
+
+function setActions(html) {
+    document.getElementById('dialog-actions').innerHTML = html;
+}
+
+// ── Dialog Lunara — pasi ──
+let dialogStep = 0;
+let dialogData = null;
+
+async function openDialog() {
+    closePopup();
+    document.getElementById('dialog-overlay').classList.add('open');
+    if (dialogStep > 0) return; // deja pornit
+
+    const resp = await fetch('/joc/petomania/api/lady');
+    const data = await resp.json();
+    if (!data.ok) return;
+
+    dialogData = data.dialog;
+    const textEl = document.getElementById('dialog-text');
+    textEl.innerHTML = formatText(dialogData.text);
+
+    if (dialogData.show_name_btn) {
+        // Pasul 1 — confirma numele
+        setActions(`
+            <button class="assets-popup-btn assets-name-btn" onclick="stepName()">
+                <span class="assets-popup-btn-icon">👤</span>
+                <span>${dialogData.username}</span>
+            </button>
+        `);
+        dialogStep = 1;
+    } else {
+        // Revenire — fara pasi
+        setActions('');
+        dialogStep = 99;
+    }
+}
+
+async function stepName() {
+    // Salveaza numele
+    const saveResp = await fetch('/joc/petomania/api/lady/name', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({name: dialogData.username})
+    });
+    const saveData = await saveResp.json();
+    if (!saveData.ok) return;
+
+    appendText(`<span class="assets-dialog-player">— Mă numesc ${saveData.name}.</span>`);
+
+    // Pasul 2 — fetch dialog pet
+    const petResp = await fetch('/joc/petomania/api/lady/pet');
+    const petData = await petResp.json();
+    if (!petData.ok) return;
+
+    appendText(formatText(petData.text));
+    setActions(`
+        <button class="assets-popup-btn" onclick="stepPetReply()">
+            <span class="assets-popup-btn-icon">🤔</span>
+            <span>De unde știi? Ești expertă în companioni?</span>
+        </button>
+    `);
+    dialogStep = 2;
+}
+
+function stepPetReply() {
+    appendText(`<span class="assets-dialog-player">— De unde știi? Ești expertă în companioni?</span>`);
+
+    const compText = [
+        '*Lunara Silvermist zâmbește amuzată și își aranjează o șuviță de păr argintiu după ureche.*',
+        'Expertă în companioni? Nu chiar. Însă am un Companicon.',
+        '*Scoate de sub tejghea un dispozitiv vechi, cu coperți din piele și însemne magice gravate pe margini.*',
+        'Ah, observ că nu porți unul asupra ta. Majoritatea aventurierilor își procură unul mai devreme sau mai târziu.',
+        '*Întoarce obiectul pe toate părțile și oftează ușor.*',
+        'Acesta este un model mai vechi. L-am înlocuit cu unul nou după ce a început să mă scoată din minți. Era mult prea criptic și nu afișa toți companionii descoperiți prin regat. Cu toate acestea, sunt convinsă că încă ascunde multe secrete.',
+        '*Îți întinde Companiconul peste tejghea.*',
+        'Știi ceva? Poate tu îi vei da de cap. Poftim, este al tău acum.'
+    ].join('\n');
+
+    appendText(formatText(compText));
+    setActions(`
+        <button class="assets-popup-btn assets-name-btn" onclick="stepThankYou()">
+            <span class="assets-popup-btn-icon">🙏</span>
+            <span>Mulțumesc frumos.</span>
+        </button>
+    `);
+    dialogStep = 3;
+}
+
+async function stepThankYou() {
+    appendText(`<span class="assets-dialog-player">— Mulțumesc frumos.</span>`);
+    setActions('');
+
+    // Salveaza companicon in DB
+    await fetch('/joc/petomania/api/lady/companicon', {method: 'POST'});
+
+    // Adauga Companicon in sidebar fara reload
+    const nav = document.querySelector('.pet-nav');
+    if (nav && !document.getElementById('nav-companicon')) {
+        const a = document.createElement('a');
+        a.href = '/joc/petomania/companicon';
+        a.id   = 'nav-companicon';
+        a.className = 'pet-nav-item';
+        a.innerHTML = '<span class="pet-nav-icon">📖</span><span>Companicon</span>';
+        nav.appendChild(a);
+    }
+
+    setTimeout(() => closeDialog(), 1500);
+    dialogStep = 99;
+}
+
+function closeDialog() {
+    document.getElementById('dialog-overlay').classList.remove('open');
+}
+document.getElementById('dialog-overlay').addEventListener('click', (e) => {
+    if (e.target === document.getElementById('dialog-overlay')) closeDialog();
+});
+</script>
+{% endblock %}

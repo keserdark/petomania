@@ -1,0 +1,176 @@
+{% extends "petomania/base_joc.html" %}
+{% block content_class %}pet-content-scroll{% endblock %}
+{% block title %}Menajerie{% endblock %}
+
+{% block content %}
+<div class="pet-page-header">
+    <h1 class="pet-page-title">🏛️ Menajerie</h1>
+</div>
+
+<!-- Animal Activ -->
+<section class="pet-section">
+    <h2 class="pet-section-title">🌟 Animal Activ</h2>
+
+    {% if active %}
+    <div class="pet-men-card pet-men-active">
+        <div class="pet-men-image-wrap">
+            <img src="{{ active.image_url }}" alt="{{ active.name }}" class="pet-men-image">
+            {% if active.sleeping %}
+            <div class="pet-men-sleep">😴</div>
+            {% endif %}
+        </div>
+        <div class="pet-men-info">
+            <div class="pet-men-name">{{ active.gender_icon }} {{ active.name }}</div>
+            <div class="pet-men-badges">
+                <span class="pet-badge pet-badge-species">{{ active.species_name }}</span>
+                <span class="pet-badge pet-badge-form">Forma {{ active.form }}/{{ active.form_max }}</span>
+                {% if active.nat_data %}
+                <span class="pet-badge pet-badge-nature"
+                      style="background: {{ active.nat_data.color }}22; border-color: {{ active.nat_data.color }}55; color: {{ active.nat_data.color }}">
+                    {{ active.nat_data.icon }} {{ active.nat_data.name }}
+                </span>
+                {% endif %}
+            </div>
+            <div class="pet-men-meta">
+                <span>Nivel {{ active.level }}</span>
+                <span>🎂 {{ active.age }}</span>
+                <span>{{ active.state_label[0] }} {{ active.state_label[1] }}</span>
+            </div>
+            <div class="pet-men-bars">
+                <div class="pet-men-bar-row">
+                    <span>🍖</span>
+                    <div class="pet-stat-bar-wrap">
+                        <div class="pet-stat-bar" style="width:{{ active.hunger }}%; background:var(--stat-hunger)"></div>
+                    </div>
+                    <span>{{ active.hunger }}</span>
+                </div>
+                <div class="pet-men-bar-row">
+                    <span>😊</span>
+                    <div class="pet-stat-bar-wrap">
+                        <div class="pet-stat-bar" style="width:{{ active.happiness }}%; background:var(--stat-happiness)"></div>
+                    </div>
+                    <span>{{ active.happiness }}</span>
+                </div>
+                <div class="pet-men-bar-row">
+                    <span>🧼</span>
+                    <div class="pet-stat-bar-wrap">
+                        <div class="pet-stat-bar" style="width:{{ active.cleanliness }}%; background:var(--stat-clean)"></div>
+                    </div>
+                    <span>{{ active.cleanliness }}</span>
+                </div>
+                <div class="pet-men-bar-row">
+                    <span>⚡</span>
+                    <div class="pet-stat-bar-wrap">
+                        <div class="pet-stat-bar" style="width:{{ active.energy }}%; background:var(--stat-energy)"></div>
+                    </div>
+                    <span>{{ active.energy }}</span>
+                </div>
+            </div>
+        </div>
+        <div class="pet-men-action">
+            <a href="{{ url_for('acasa') }}" class="pet-btn pet-btn-feed">🏠 Îngrijește</a>
+        </div>
+    </div>
+    {% else %}
+    <div class="pet-empty-state pet-empty-sm">
+        <p>Nu ai un animal activ. Activează unul din menajerie sau adoptă pe Discord.</p>
+    </div>
+    {% endif %}
+</section>
+
+<!-- Menajerie -->
+<section class="pet-section">
+    <h2 class="pet-section-title">📦 În Menajerie
+        <span class="pet-section-count">{{ men_pets | length }}</span>
+    </h2>
+
+    {% if men_pets %}
+    <div class="pet-men-grid" id="men-grid">
+        {% for p in men_pets %}
+        <div class="pet-men-card" id="men-card-{{ p.id }}">
+            <div class="pet-men-image-wrap">
+                <img src="{{ p.image_url }}" alt="{{ p.name }}" class="pet-men-image">
+            </div>
+            <div class="pet-men-info">
+                <div class="pet-men-name">{{ p.gender_icon }} {{ p.name }}</div>
+                <div class="pet-men-badges">
+                    <span class="pet-badge pet-badge-species">{{ p.species_name }}</span>
+                    <span class="pet-badge pet-badge-form">Forma {{ p.form }}/{{ p.form_max }}</span>
+                    {% if p.nat_data %}
+                    <span class="pet-badge pet-badge-nature"
+                          style="background: {{ p.nat_data.color }}22; border-color: {{ p.nat_data.color }}55; color: {{ p.nat_data.color }}">
+                        {{ p.nat_data.icon }} {{ p.nat_data.name }}
+                    </span>
+                    {% endif %}
+                </div>
+                <div class="pet-men-meta">
+                    <span>Nivel {{ p.level }}</span>
+                    <span>🎂 {{ p.age }}</span>
+                </div>
+            </div>
+            <div class="pet-men-action">
+                <button class="pet-btn pet-btn-activa"
+                        data-id="{{ p.id }}"
+                        data-name="{{ p.name }}">
+                    ⚡ Activează
+                </button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="pet-empty-state pet-empty-sm">
+        <p>Menajeria e goală. Adoptă mai multe animale pe Discord!</p>
+    </div>
+    {% endif %}
+</section>
+
+<!-- Toast notificare -->
+<div class="pet-toast" id="pet-toast"></div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+const API_ACTIVA = "{{ url_for('api_activa') }}";
+
+document.querySelectorAll('.pet-btn-activa').forEach(btn => {
+    btn.addEventListener('click', async () => {
+        const id   = btn.dataset.id;
+        const name = btn.dataset.name;
+
+        btn.disabled    = true;
+        btn.textContent = '⏳ ...';
+
+        try {
+            const resp = await fetch(API_ACTIVA, {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({id: parseInt(id)})
+            });
+            const data = await resp.json();
+
+            if (data.ok) {
+                showToast('✅ ' + data.msg, 'ok');
+                setTimeout(() => location.reload(), 1200);
+            } else {
+                showToast('❌ ' + data.error, 'err');
+                btn.disabled    = false;
+                btn.textContent = '⚡ Activează';
+            }
+        } catch(e) {
+            showToast('❌ Eroare de rețea.', 'err');
+            btn.disabled    = false;
+            btn.textContent = '⚡ Activează';
+        }
+    });
+});
+
+function showToast(msg, type) {
+    const t = document.getElementById('pet-toast');
+    t.textContent = msg;
+    t.className   = 'pet-toast pet-toast-' + type + ' pet-toast-show';
+    setTimeout(() => t.className = 'pet-toast', 3000);
+}
+</script>
+{% endblock %}
