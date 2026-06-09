@@ -1,0 +1,154 @@
+"""
+modules/db.py
+Conexiune DB, init_db, dacoins, room_config.
+"""
+import sqlite3
+import json
+from datetime import datetime
+
+DB_PATH = '/root/village-bot/village-bot/stats.db'
+
+
+def get_db():
+    conn = sqlite3.connect(DB_PATH, timeout=10)
+    conn.row_factory = sqlite3.Row
+    conn.execute('PRAGMA journal_mode=WAL')
+    return conn
+
+
+def init_db():
+    conn = get_db()
+    c = conn.cursor()
+
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS dacoins (
+            user_id    INTEGER PRIMARY KEY,
+            balance    INTEGER NOT NULL DEFAULT 300,
+            updated_at TEXT
+        )
+    ''')
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS room_config (
+            user_id INTEGER PRIMARY KEY,
+            wall    TEXT NOT NULL DEFAULT "Wall1-Wood",
+            floor   TEXT NOT NULL DEFAULT "Floor1-Wood",
+            chimney TEXT NOT NULL DEFAULT "Chimney1-Stone",
+            items   TEXT NOT NULL DEFAULT "{}"
+        )
+    ''')
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS lady_interactions (
+            user_id           INTEGER PRIMARY KEY,
+            first_interaction INTEGER NOT NULL DEFAULT 1,
+            player_name       TEXT,
+            has_companicon    INTEGER NOT NULL DEFAULT 0
+        )
+    ''')
+    try:
+        c.execute('ALTER TABLE lady_interactions ADD COLUMN has_companicon INTEGER NOT NULL DEFAULT 0')
+    except Exception:
+        pass
+
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS inventory (
+            id          INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id     INTEGER NOT NULL,
+            category    TEXT NOT NULL,
+            item_key    TEXT NOT NULL,
+            quantity    INTEGER NOT NULL DEFAULT 1,
+            UNIQUE(user_id, category, item_key)
+        )
+    ''')
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS badges (
+            id        INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id   INTEGER NOT NULL,
+            badge_key TEXT NOT NULL,
+            earned_at INTEGER NOT NULL DEFAULT (strftime('%s','now')),
+            UNIQUE(user_id, badge_key)
+        )
+    ''')
+    for col in ('hp', 'hp_current'):
+        try:
+            c.execute(f'ALTER TABLE pets ADD COLUMN {col} INTEGER NOT NULL DEFAULT 0')
+        except Exception:
+            pass
+    for col in ('hp', 'hp_current'):
+        try:
+            c.execute(f'ALTER TABLE menagerie ADD COLUMN {col} INTEGER NOT NULL DEFAULT 0')
+        except Exception:
+            pass
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS loadout (
+            user_id    INTEGER PRIMARY KEY,
+            slot_2     INTEGER,
+            slot_3     INTEGER,
+            slot_4     INTEGER,
+            slot_5     INTEGER
+        )
+    ''')
+
+    conn.commit()
+    conn.close()
+
+
+# ── DACOINS ──────────────────────────────────────────────
+
+def get_dacoins(user_id: int) -> int:
+    conn = get_db()
+    row = conn.execute('SELECT balance FROM dacoins WHERE user_id = ?', (user_id,)).fetchone()
+    conn.close()
+    if not row:
+        conn = get_db()
+        conn.execute(
+            'INSERT OR IGNORE INTO dacoins (user_id, balance, updated_at) VALUES (?, 300, ?)',
+            (user_id, datetime.now().isoformat())
+        )
+        conn.commit()
+        conn.close()
+        return 300
+    return row['balance']
+
+
+def spend_dacoins(user_id: int, amount: int) -> bool:
+    conn = get_db()
+    row = conn.execute('SELECT balance FROM dacoins WHERE user_id = ?', (user_id,)).fetchone()
+    if not row or row['balance'] < amount:
+        conn.close()
+        return False
+    conn.execute(
+        'UPDATE dacoins SET balance = balance - ?, updated_at = ? WHERE user_id = ?',
+        (amount, datetime.now().isoformat(), user_id)
+    )
+    conn.commit()
+    conn.close()
+    return True
+
+
+# ── ROOM CONFIG ──────────────────────────────────────────
+
+def get_room_config(user_id: int) -> dict:
+    conn = get_db()
+    row = conn.execute('SELECT * FROM room_config WHERE user_id = ?', (user_id,)).fetchone()
+    if not row:
+        conn.execute('INSERT OR IGNORE INTO room_config (user_id) VALUES (?)', (user_id,))
+        conn.commit()
+        conn.close()
+        return {'wall': 'Wall1-Wood', 'floor': 'Floor1-Wood', 'chimney': 'Chimney1-Stone', 'items': {}}
+    conn.close()
+    return {
+        'wall':    row['wall'],
+        'floor':   row['floor'],
+        'chimney': row['chimney'],
+        'items':   json.loads(row['items'] or '{}'),
+    }
+
+
+def save_room_config(user_id: int, wall: str, floor: str, chimney: str, items: dict):
+    conn = get_db()
+    conn.execute(
+        'INSERT OR REPLACE INTO room_config (user_id, wall, floor, chimney, items) VALUES (?, ?, ?, ?, ?)',
+        (user_id, wall, floor, chimney, json.dumps(items))
+    )
+    conn.commit()
+    conn.close()
