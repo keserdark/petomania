@@ -338,6 +338,24 @@ def acasa():
                 'z_index':   obj_cfg.get('z_index', 5),
                 'name':      obj_cfg.get('name', ''),
             })
+    # Pre-fetch imagini in cache inainte de a trimite HTML-ul
+    urls_to_prefetch = [
+        get_room_url('wall',    room['wall'],    room),
+        get_room_url('floor',   room['floor'],   room),
+        get_room_url('chimney', room['chimney'], room),
+    ]
+    if p:
+        urls_to_prefetch.append(get_image_url(
+            p['species'], get_form(p['level']),
+            get_state(p['hunger'], p['happiness'], p['cleanliness'], p['energy'], bool(p['sleeping'])),
+            p['gender']
+        ))
+    for obj_key, obj_cfg in SHOP_ITEMS.get('obiecte', {}).items():
+        if obj_key in owned_items:
+            urls_to_prefetch.append(f"{GITHUB_BASE}/room1/{obj_cfg.get('file', '')}")
+    with concurrent.futures.ThreadPoolExecutor(max_workers=6) as executor:
+        list(executor.map(lambda u: _fetch_image_cached(u, ttl=300, resize=None), urls_to_prefetch))
+
     return render_template('acasa.html', pet=pet, room=room, room_urls=room_urls, room_objects=room_objects)
 
 
