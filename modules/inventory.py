@@ -190,7 +190,17 @@ def use_item(user_id: int, category: str, item_key: str, target_slot: int = 0) -
         conn.commit()
         conn.close()
         inv_remove(user_id, category, item_key, 1)
-        return {'ok': True, 'msg': '✅ ' + ' · '.join(changed), 'new_hp': p['hp_current']}
+        return {
+            'ok': True,
+            'msg': '✅ ' + ' · '.join(changed),
+            'new_hp': p['hp_current'],
+            'new_stats': {
+                'hunger':      p.get('hunger', 0),
+                'happiness':   p.get('happiness', 0),
+                'cleanliness': p.get('cleanliness', 0),
+                'energy':      p.get('energy', 0),
+            }
+        }
 
     # ── Target slot 1-4 = menajerie din loadout ──
     loadout = get_loadout(user_id)
