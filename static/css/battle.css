@@ -15,8 +15,12 @@
 
 /* ── Scene cu combatanti ── */
 .battle-scene {
-    flex: 1;
-    position: relative;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    /* Lasa loc pentru log + controls jos (~30% din inaltime) */
+    bottom: 30%;
     min-height: 0;
 }
 
