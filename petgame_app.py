@@ -920,6 +920,127 @@ def api_corvin_talked():
     return jsonify({'ok': True})
 
 
+
+# ── BATTLE ARENA ─────────────────────────────────────────────────────
+
+@app.route('/joc/petomania/api/battle/start', methods=['POST'])
+@login_required
+def api_battle_start():
+    from modules.battle import build_combatant, generate_npc
+    from moves_config import get_move
+    user = get_current_user()
+    uid  = int(user['id'])
+    data = request.json or {}
+    pet_id = data.get('pet_id')
+
+    if pet_id:
+        conn = get_db()
+        row  = conn.execute('SELECT * FROM menagerie WHERE id = ? AND user_id = ?', (pet_id, uid)).fetchone()
+        conn.close()
+        if not row:
+            return jsonify({'ok': False, 'error': 'Pet negasit.'})
+        from modules.pets import get_form
+        pet = dict(row)
+        pet['image_url'] = f'/static/pets/{pet["species"]}/00transparent/form{get_form(pet["level"])}.png'
+    else:
+        from modules.pets import sync_pet
+        pet = sync_pet(uid)
+        if not pet:
+            return jsonify({'ok': False, 'error': 'Nu ai un companion activ.'})
+        pet = dict(pet)
+
+    player = build_combatant(pet)
+    npc    = generate_npc(player['level'])
+
+    moveset_data = []
+    for mk in player['moveset']:
+        m = get_move(mk)
+        if m:
+            moveset_data.append({'key': m['key'], 'name': m['name'], 'icon': m['icon'], 'type': m['type'], 'power': m['power']})
+
+    session['battle_player'] = player
+    session['battle_npc']    = npc
+
+    return jsonify({
+        'ok': True,
+        'player': {
+            'id': player['id'], 'name': player['name'], 'species': player['species'],
+            'nature': player['nature'], 'level': player['level'],
+            'hp_max': player['hp_max'], 'hp_current': player['hp_current'],
+            'image_url': player['image_url'], 'moveset': moveset_data,
+            'status': None, 'shield': 0,
+        },
+        'npc': {
+            'id': npc['id'], 'name': npc['name'], 'species': npc['species'],
+            'nature': npc['nature'], 'level': npc['level'],
+            'hp_max': npc['hp_max'], 'hp_current': npc['hp_current'],
+            'image_url': npc['image_url'], 'status': None, 'shield': 0,
+        },
+    })
+
+
+@app.route('/joc/petomania/api/battle/turn', methods=['POST'])
+@login_required
+def api_battle_turn():
+    from modules.battle import execute_turn, calculate_reward
+    user   = get_current_user()
+    uid    = int(user['id'])
+    player = session.get('battle_player')
+    npc    = session.get('battle_npc')
+    if not player or not npc:
+        return jsonify({'ok': False, 'error': 'Nicio bătălie activă.'})
+
+    move_key = (request.json or {}).get('move_key', 'scratch')
+    result   = execute_turn(player, npc, move_key)
+
+    session['battle_player'] = player
+    session['battle_npc']    = npc
+
+    reward = 0
+    if result['winner'] == 'player':
+        reward = calculate_reward(player['level'], npc['level'], True)
+        if reward > 0:
+            conn = get_db()
+            conn.execute('UPDATE users SET dacoins = dacoins + ? WHERE discord_id = ?', (reward, uid))
+            conn.commit()
+            conn.close()
+        conn = get_db()
+        conn.execute('UPDATE pets SET hp_current = ? WHERE user_id = ?', (player['hp_current'], uid))
+        conn.commit()
+        conn.close()
+        session.pop('battle_player', None)
+        session.pop('battle_npc', None)
+    elif result['winner'] == 'npc':
+        conn = get_db()
+        conn.execute('UPDATE pets SET hp_current = ? WHERE user_id = ?', (max(1, player['hp_current']), uid))
+        conn.commit()
+        conn.close()
+        session.pop('battle_player', None)
+        session.pop('battle_npc', None)
+
+    return jsonify({
+        'ok': True, 'log': result['log'],
+        'player': result['player'], 'npc': result['npc'],
+        'winner': result['winner'], 'reward': reward,
+    })
+
+
+@app.route('/joc/petomania/api/battle/flee', methods=['POST'])
+@login_required
+def api_battle_flee():
+    user   = get_current_user()
+    uid    = int(user['id'])
+    player = session.get('battle_player')
+    if player:
+        conn = get_db()
+        conn.execute('UPDATE pets SET hp_current = ? WHERE user_id = ?', (max(1, player['hp_current']), uid))
+        conn.commit()
+        conn.close()
+    session.pop('battle_player', None)
+    session.pop('battle_npc', None)
+    return jsonify({'ok': True})
+
+
 # ── RUN ───────────────────────────────────────────────────────────────
 
 if __name__ == '__main__':

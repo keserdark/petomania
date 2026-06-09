@@ -3,7 +3,7 @@
 {% block title %}Arenă{% endblock %}
 
 {% block content %}
-<div class="arena-wrap">
+<div class="arena-wrap" id="arena-wrap">
     <canvas id="arena-canvas"></canvas>
     <div id="arena-tooltip" class="city-tooltip"></div>
 
@@ -17,7 +17,7 @@
                 <span class="assets-popup-btn-icon">💬</span>
                 <span>Vorbește cu omul</span>
             </button>
-            <button class="assets-popup-btn" onclick="closeCorvinPopup()">
+            <button class="assets-popup-btn" onclick="startBattle()">
                 <span class="assets-popup-btn-icon">⚔️</span>
                 <span>Luptă în Arenă</span>
             </button>
@@ -41,8 +41,65 @@
         </div>
     </div>
 
+    <!-- BATTLE UI -->
+    <div id="battle-ui" style="display:none">
+        <div class="battle-scene">
+
+            <!-- NPC — dreapta sus -->
+            <div class="battle-combatant battle-enemy">
+                <div class="battle-info battle-info-enemy">
+                    <div class="battle-name" id="npc-name">—</div>
+                    <div class="battle-level" id="npc-level">Nv.—</div>
+                    <div class="battle-status" id="npc-status"></div>
+                    <div class="battle-hp-bar-bg">
+                        <div class="battle-hp-bar-fill" id="npc-hp-bar" style="width:100%"></div>
+                    </div>
+                    <div class="battle-hp-text" id="npc-hp-text">—/—</div>
+                </div>
+                <img id="npc-img" src="" alt="" class="battle-pet-img battle-enemy-img">
+            </div>
+
+            <!-- PLAYER — stanga jos -->
+            <div class="battle-combatant battle-player">
+                <img id="player-img" src="" alt="" class="battle-pet-img battle-player-img">
+                <div class="battle-info battle-info-player">
+                    <div class="battle-name" id="player-name">—</div>
+                    <div class="battle-level" id="player-level">Nv.—</div>
+                    <div class="battle-status" id="player-status"></div>
+                    <div class="battle-hp-bar-bg">
+                        <div class="battle-hp-bar-fill" id="player-hp-bar" style="width:100%"></div>
+                    </div>
+                    <div class="battle-hp-text" id="player-hp-text">—/—</div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- LOG -->
+        <div class="battle-log" id="battle-log"></div>
+
+        <!-- CONTROLS -->
+        <div class="battle-controls" id="battle-controls">
+            <div class="battle-moves" id="battle-moves"></div>
+            <button class="battle-flee-btn" onclick="fleeBattle()">🏃 Fugi</button>
+        </div>
+
+        <!-- RESULT overlay -->
+        <div class="battle-result" id="battle-result" style="display:none">
+            <div class="battle-result-box">
+                <div class="battle-result-icon" id="result-icon"></div>
+                <div class="battle-result-title" id="result-title"></div>
+                <div class="battle-result-reward" id="result-reward"></div>
+                <button class="assets-popup-btn" onclick="closeBattle()">
+                    <span class="assets-popup-btn-icon">🏟️</span>
+                    <span>Înapoi la Arenă</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Buton Inapoi -->
-    <a href="{{ url_for('oras') }}" class="room-care-btn"
+    <a href="{{ url_for('oras') }}" class="room-care-btn" id="btn-back-oras"
        style="z-index:30; top:auto; bottom:14px; right:auto; left:14px;">
         ← Oraș
     </a>
@@ -51,26 +108,7 @@
 
 {% block scripts %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/assets.css') }}">
-<style>
-.arena-wrap {
-    position: relative;
-    height: calc(100vh - var(--footbar-h));
-    width: auto;
-    aspect-ratio: 1287 / 816;
-    max-width: calc(100vw - var(--sidebar-w));
-    min-width: 0;
-    max-height: calc((100vw - var(--sidebar-w)) * 816 / 1287);
-    overflow: hidden;
-    background: #0a0a0a;
-    flex-shrink: 0;
-}
-#arena-canvas {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-}
-</style>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/battle.css') }}">
 <script>
 const W = 1287;
 const H = 816;
@@ -79,7 +117,7 @@ const BASE = '/static/arena/';
 const canvas  = document.getElementById('arena-canvas');
 const ctx     = canvas.getContext('2d', { willReadFrequently: true });
 const tooltip = document.getElementById('arena-tooltip');
-const wrap    = canvas.parentElement;
+const wrap    = document.getElementById('arena-wrap');
 
 canvas.width  = W;
 canvas.height = H;
@@ -92,6 +130,11 @@ const corvinImg = new Image();
 corvinImg.crossOrigin = 'anonymous';
 corvinImg.src = BASE + 'CorvinVargan@0.5x.png';
 
+// Battle background
+const battleBg = new Image();
+battleBg.crossOrigin = 'anonymous';
+battleBg.src = BASE + 'battle.png';
+
 const corvinOff = document.createElement('canvas');
 corvinOff.width  = W;
 corvinOff.height = H;
@@ -100,13 +143,14 @@ let loaded = 0;
 function onLoad() {
     loaded++;
     if (loaded < 2) return;
-    ctx.drawImage(bgImg,     0, 0, W, H);
+    ctx.drawImage(bgImg, 0, 0, W, H);
     ctx.drawImage(corvinImg, 0, 0, W, H);
     const oc = corvinOff.getContext('2d', { willReadFrequently: true });
     oc.drawImage(corvinImg, 0, 0, W, H);
 }
 bgImg.onload     = onLoad;
 corvinImg.onload = onLoad;
+battleBg.onload  = () => {};  // preload
 
 function redraw(hover) {
     ctx.clearRect(0, 0, W, H);
@@ -124,9 +168,10 @@ function redraw(hover) {
 let lastHit      = 0;
 let currentHover = false;
 let popupOpen    = false;
+let inBattle     = false;
 
 canvas.addEventListener('mousemove', (e) => {
-    if (popupOpen) return;
+    if (popupOpen || inBattle) return;
     if (currentHover) {
         tooltip.style.left = (e.clientX - wrap.getBoundingClientRect().left + 14) + 'px';
         tooltip.style.top  = (e.clientY - wrap.getBoundingClientRect().top  - 8)  + 'px';
@@ -150,6 +195,7 @@ canvas.addEventListener('mousemove', (e) => {
 });
 
 canvas.addEventListener('click', (e) => {
+    if (inBattle) return;
     const rect  = canvas.getBoundingClientRect();
     const x = Math.floor((e.clientX - rect.left) * W / rect.width);
     const y = Math.floor((e.clientY - rect.top)  * H / rect.height);
@@ -162,21 +208,18 @@ canvas.addEventListener('mouseleave', () => {
     tooltip.style.opacity = '0';
     canvas.style.cursor   = 'default';
     currentHover = false;
-    redraw(false);
+    if (!inBattle) redraw(false);
 });
 
-// ── Fade pulse ──
+// Fade pulse
 let isHovering = false;
-let fadeAlpha  = 0;
-let fadeDir    = 1;
-let fadActive  = false;
+let fadeAlpha = 0, fadeDir = 1, fadActive = false;
 
 function fadeStep() {
-    if (isHovering) return;
+    if (isHovering || inBattle) return;
     fadeAlpha += fadeDir * 0.05;
-    if (fadeAlpha >= 1) {
-        fadeAlpha = 1; fadeDir = -1;
-    } else if (fadeAlpha <= 0) {
+    if (fadeAlpha >= 1) { fadeAlpha = 1; fadeDir = -1; }
+    else if (fadeAlpha <= 0) {
         fadeAlpha = 0; fadeDir = 1; fadActive = false;
         ctx.clearRect(0, 0, W, H);
         ctx.drawImage(bgImg, 0, 0, W, H);
@@ -195,191 +238,85 @@ function fadeStep() {
 }
 
 setInterval(() => {
-    if (isHovering || fadActive) return;
+    if (isHovering || fadActive || inBattle) return;
     fadActive = true; fadeAlpha = 0; fadeDir = 1;
     requestAnimationFrame(fadeStep);
 }, 3000);
 
 canvas.addEventListener('mouseenter', () => { isHovering = true; fadActive = false; });
-canvas.addEventListener('mouseleave', () => { isHovering = false; redraw(false); });
+canvas.addEventListener('mouseleave', () => { isHovering = false; if (!inBattle) redraw(false); });
 
 // ── Popup Corvin ──
 async function openCorvinPopup() {
-    popupOpen    = true;
-    isHovering   = true;
-    fadActive    = false;
+    popupOpen = true; isHovering = true; fadActive = false;
     currentHover = false;
     tooltip.style.opacity = '0';
-    canvas.style.cursor   = 'default';
-
-    // Verifica daca a vorbit deja
+    canvas.style.cursor = 'default';
     const resp = await fetch('/joc/petomania/api/corvin');
     const data = await resp.json();
-    if (data.ok && !data.first_time) {
-        document.getElementById('btn-vorbeste').style.display = 'none';
-    } else {
-        document.getElementById('btn-vorbeste').style.display = 'flex';
-    }
-
+    document.getElementById('btn-vorbeste').style.display = (!data.ok || !data.first_time) ? 'none' : 'flex';
     document.getElementById('corvin-overlay').classList.add('open');
 }
 function closeCorvinPopup() {
-    popupOpen  = false;
-    isHovering = false;
+    popupOpen = false; isHovering = false;
     document.getElementById('corvin-overlay').classList.remove('open');
 }
 document.getElementById('corvin-overlay').addEventListener('click', (e) => {
     if (e.target === document.getElementById('corvin-overlay')) closeCorvinPopup();
 });
 
-// ── Dialog helpers ──
+// ── Dialog Corvin ──
 function formatText(text) {
-    return text.split('\n').map(line =>
-        line.startsWith('*') && line.endsWith('*')
-            ? `<em class="assets-dialog-action">${line.slice(1,-1)}</em>`
-            : `<span>${line}</span>`
+    return text.split('\n').map(l =>
+        l.startsWith('*') && l.endsWith('*')
+            ? `<em class="assets-dialog-action">${l.slice(1,-1)}</em>`
+            : `<span>${l}</span>`
     ).join('<br>');
 }
-function setDialogText(html) {
-    document.getElementById('corvin-dialog-text').innerHTML = html;
-}
-function setDialogActions(html) {
-    document.getElementById('corvin-dialog-actions').innerHTML = html;
-}
-function playerLine(text) {
-    return `<span class="assets-dialog-player">— ${text}</span>`;
-}
-function corvinLine(text) {
-    return `<span>${text}</span>`;
-}
-function actionLine(text) {
-    return `<em class="assets-dialog-action">${text}</em>`;
-}
+function setDialogText(html) { document.getElementById('corvin-dialog-text').innerHTML = html; }
+function setDialogActions(html) { document.getElementById('corvin-dialog-actions').innerHTML = html; }
+function playerLine(t) { return `<span class="assets-dialog-player">— ${t}</span>`; }
+function corvinLine(t) { return `<span>${t}</span>`; }
+function actionLine(t) { return `<em class="assets-dialog-action">${t}</em>`; }
 
-// ── Dialog pas cu pas ──
 let dialogStep = 0;
 
 function openCorvinDialog() {
     closeCorvinPopup();
     dialogStep = 0;
     document.getElementById('corvin-dialog-overlay').classList.add('open');
-    setDialogText(actionLine('Corvin Vargan te măsoară din priviri, cu brațele încrucișate. Ai venit sa lupti sau sa privesti?'));
-    setDialogActions(`
-        <button class="assets-popup-btn" onclick="corvinStep(1)">
-            <span class="assets-popup-btn-icon">🤔</span>
-            <span>Cum adică?</span>
-        </button>
-    `);
+    setDialogText(actionLine('Corvin Vargan te măsoară din priviri, cu brațele încrucișate.'));
+    setDialogActions(`<button class="assets-popup-btn" onclick="corvinStep(1)"><span class="assets-popup-btn-icon">🤔</span><span>Cum adică?</span></button>`);
 }
 
 function corvinStep(step) {
     const textEl = document.getElementById('corvin-dialog-text');
-    function append(html) {
-        textEl.insertAdjacentHTML('beforeend', '<br>' + html);
-        textEl.scrollTop = textEl.scrollHeight;
-    }
-
-    if (step === 1) {
-        append(playerLine('Cum adică?'));
-        append(corvinLine('Zâmbește doar într-un colț al gurii. Cum adică? Simplu. Unii oameni vin aici să privească și să-și imagineze cum ar fi fost dacă aveau curaj. Alții intră în arenă și află.'));
-        setDialogActions(`
-            <button class="assets-popup-btn" onclick="corvinStep(2)">
-                <span class="assets-popup-btn-icon">️</span>
-                <span>Și dacă vreau doar să văd despre ce e vorba?</span>
-            </button>
-        `);
-    } else if (step === 2) {
-        append(playerLine('Și dacă vreau doar să văd despre ce e vorba?'));
-        append(corvinLine('Atunci ai venit în locul greșit. Privitul naște îndoială. Îndoiala naște frică. Iar frica îi face pe oameni să plece exact când ar fi putut câștiga.'));
-        setDialogActions(`
-            <button class="assets-popup-btn" onclick="corvinStep(3)">
-                <span class="assets-popup-btn-icon"></span>
-                <span>Nu pare foarte primitor.</span>
-            </button>
-        `);
-    } else if (step === 3) {
-        append(playerLine('Nu pare foarte primitor.'));
-        append(actionLine('Râde scurt.'));
-        append(corvinLine('Nu conduc o tavernă. Ofer oportunități. Diferența e că într-o tavernă plătești pentru o poveste. Aici ai șansa să devii una.'));
-        setDialogActions(`
-            <button class="assets-popup-btn" onclick="corvinStep(4)">
-                <span class="assets-popup-btn-icon"></span>
-                <span>Și dacă pierd?</span>
-            </button>
-        `);
-    } else if (step === 4) {
-        append(playerLine('Și dacă pierd?'));
-        append(corvinLine('Toți pierd ceva. Timp, bani, mândrie. Întrebarea adevărată este ce câștigi dacă reușești. Cei care stau prea mult să cântărească riscurile ajung să privească de pe margine toată viața.'));
-        setDialogActions(`
-            <button class="assets-popup-btn" onclick="corvinStep(5)">
-                <span class="assets-popup-btn-icon"></span>
-                <span>Parcă încerci să mă convingi.</span>
-            </button>
-        `);
-    } else if (step === 5) {
-        append(playerLine('Parcă încerci să mă convingi.'));
-        append(corvinLine('Nu. Dacă ar trebui să te conving, n-ai ce căuta aici. Eu doar îți arăt ușa. Tu decizi dacă intri... sau dacă pleci și te întrebi mai târziu ce s-ar fi întâmplat.'));
-        setDialogActions(`
-            <button class="assets-popup-btn" onclick="corvinStep(6)">
-                <span class="assets-popup-btn-icon"></span>
-                <span>Și dacă nu sunt pregătit?</span>
-            </button>
-        `);
-    } else if (step === 6) {
-        append(playerLine('Și dacă nu sunt pregătit?'));
-        append(actionLine('Își încrucișează brațele și te privește fix.'));
-        append(corvinLine('Nimeni nu este pregătit. Cei care spun asta încearcă doar să-și cumpere timp. Întrebarea este: Companionul tău știe că stăpânul lui caută scuze? Sau încă mai crede că ai sânge de luptător?'));
-        setDialogActions(`
-            <button class="assets-popup-btn" onclick="corvinStep(7)">
-                <span class="assets-popup-btn-icon"></span>
-                <span>Ce câștig dacă intru?</span>
-            </button>
-        `);
-    } else if (step === 7) {
-        append(playerLine('Ce câștig dacă intru?'));
-        append(actionLine('Își netezește mâneca și îți aruncă o privire calculată.'));
-        append(corvinLine('Dacoins. Mai multe decât ai face într-o săptămână de muncă cinstită... dacă Companionul tău este pe cât de puternic crezi.'));
-        setDialogActions(`
-            <button class="assets-popup-btn" onclick="corvinStep(8)">
-                <span class="assets-popup-btn-icon"></span>
-                <span>Și cât de multe?</span>
-            </button>
-        `);
-    } else if (step === 8) {
-        append(playerLine('Și cât de multe?'));
-        append(corvinLine('Depinde de tine. Începătorii pleacă de obicei cu câteva sute. Cei buni cu mii. Iar cei despre care se vorbește prin oraș nu mai întreabă cât câștigă.'));
-        setDialogActions(`
-            <button class="assets-popup-btn" onclick="corvinStep(9)">
-                <span class="assets-popup-btn-icon"></span>
-                <span>Sună prea frumos.</span>
-            </button>
-        `);
-    } else if (step === 9) {
-        append(playerLine('Sună prea frumos.'));
-        append(actionLine('Zâmbește ușor.'));
-        append(corvinLine('Atunci nu intra. Păstrează-ți îndoielile și lasă pe altcineva să ia Dacoins-ii care te așteptau pe tine.'));
-        setDialogActions(`
-            <button class="assets-popup-btn" onclick="corvinStep(10)">
-                <span class="assets-popup-btn-icon"></span>
-                <span>Și dacă pierd?</span>
-            </button>
-        `);
-    } else if (step === 10) {
-        append(playerLine('Și dacă pierd?'));
-        append(corvinLine('Atunci afli cât valorează încrederea pe care o ai în Companionul tău. Dar spune-mi... dacă ești atât de sigur că vei pierde, de ce ai venit până aici?'));
-        setDialogActions(`
-            <button class="assets-popup-btn assets-name-btn" onclick="corvinStep(11)">
-                <span class="assets-popup-btn-icon"></span>
-                <span>Prea bine. Pune-mă pe foaie.</span>
-            </button>
-        `);
-    } else if (step === 11) {
-        append(playerLine('Prea bine. Pune-mă pe foaie.'));
-        append(corvinLine('Sânge proaspăt, deci. Foarte bine.'));
+    function append(html) { textEl.insertAdjacentHTML('beforeend', '<br>' + html); textEl.scrollTop = textEl.scrollHeight; }
+    const steps = {
+        1: [playerLine('Cum adică?'), corvinLine('Zâmbește doar într-un colț al gurii. Cum adică? Simplu. Unii oameni vin aici să privească și să-și imagineze cum ar fi fost dacă aveau curaj. Alții intră în arenă și află.'), `<button class="assets-popup-btn" onclick="corvinStep(2)"><span class="assets-popup-btn-icon">👁️</span><span>Și dacă vreau doar să văd despre ce e vorba?</span></button>`],
+        2: [playerLine('Și dacă vreau doar să văd despre ce e vorba?'), corvinLine('Atunci ai venit în locul greșit. Privitul naște îndoială. Îndoiala naște frică. Iar frica îi face pe oameni să plece exact când ar fi putut câștiga.'), `<button class="assets-popup-btn" onclick="corvinStep(3)"><span class="assets-popup-btn-icon">😒</span><span>Nu pare foarte primitor.</span></button>`],
+        3: [playerLine('Nu pare foarte primitor.'), actionLine('Râde scurt.'), corvinLine('Nu conduc o tavernă. Ofer oportunități. Diferența e că într-o tavernă plătești pentru o poveste. Aici ai șansa să devii una.'), `<button class="assets-popup-btn" onclick="corvinStep(4)"><span class="assets-popup-btn-icon">😟</span><span>Și dacă pierd?</span></button>`],
+        4: [playerLine('Și dacă pierd?'), corvinLine('Toți pierd ceva. Timp, bani, mândrie. Întrebarea adevărată este ce câștigi dacă reușești. Cei care stau prea mult să cântărească riscurile ajung să privească de pe margine toată viața.'), `<button class="assets-popup-btn" onclick="corvinStep(5)"><span class="assets-popup-btn-icon">🧐</span><span>Parcă încerci să mă convingi.</span></button>`],
+        5: [playerLine('Parcă încerci să mă convingi.'), corvinLine('Nu. Dacă ar trebui să te conving, n-ai ce căuta aici. Eu doar îți arăt ușa. Tu decizi dacă intri... sau dacă pleci și te întrebi mai târziu ce s-ar fi întâmplat.'), `<button class="assets-popup-btn" onclick="corvinStep(6)"><span class="assets-popup-btn-icon">🛡️</span><span>Și dacă nu sunt pregătit?</span></button>`],
+        6: [playerLine('Și dacă nu sunt pregătit?'), actionLine('Își încrucișează brațele și te privește fix.'), corvinLine('Nimeni nu este pregătit. Cei care spun asta încearcă doar să-și cumpere timp. Întrebarea este: Companionul tău știe că stăpânul lui caută scuze? Sau încă mai crede că ai sânge de luptător?'), `<button class="assets-popup-btn" onclick="corvinStep(7)"><span class="assets-popup-btn-icon">💰</span><span>Ce câștig dacă intru?</span></button>`],
+        7: [playerLine('Ce câștig dacă intru?'), actionLine('Își netezește mâneca și îți aruncă o privire calculată.'), corvinLine('Dacoins. Mai multe decât ai face într-o săptămână de muncă cinstită... dacă Companionul tău este pe cât de puternic crezi.'), `<button class="assets-popup-btn" onclick="corvinStep(8)"><span class="assets-popup-btn-icon">🤑</span><span>Și cât de multe?</span></button>`],
+        8: [playerLine('Și cât de multe?'), corvinLine('Depinde de tine. Începătorii pleacă de obicei cu câteva sute. Cei buni cu mii. Iar cei despre care se vorbește prin oraș nu mai întreabă cât câștigă.'), `<button class="assets-popup-btn" onclick="corvinStep(9)"><span class="assets-popup-btn-icon">🤨</span><span>Sună prea frumos.</span></button>`],
+        9: [playerLine('Sună prea frumos.'), actionLine('Zâmbește ușor.'), corvinLine('Atunci nu intra. Păstrează-ți îndoielile și lasă pe altcineva să ia Dacoins-ii care te așteptau pe tine.'), `<button class="assets-popup-btn" onclick="corvinStep(10)"><span class="assets-popup-btn-icon">😰</span><span>Și dacă pierd?</span></button>`],
+        10:[playerLine('Și dacă pierd?'), corvinLine('Atunci afli cât valorează încrederea pe care o ai în Companionul tău. Dar spune-mi... dacă ești atât de sigur că vei pierde, de ce ai venit până aici?'), `<button class="assets-popup-btn assets-name-btn" onclick="corvinStep(11)"><span class="assets-popup-btn-icon">✍️</span><span>Prea bine. Pune-mă pe foaie.</span></button>`],
+        11:[playerLine('Prea bine. Pune-mă pe foaie.'), corvinLine('Sânge proaspăt, deci. Foarte bine.'), null],
+    };
+    const s = steps[step];
+    if (!s) return;
+    const [p, c, a, extra] = s.length === 4 ? s : [...s.slice(0,-1), null, s[s.length-1]];
+    // Adauga liniile
+    s.slice(0, -1).forEach(html => { if (html) append(html); });
+    const action = s[s.length - 1];
+    if (action === null) {
         setDialogActions('');
-        // Salveaza in DB
         fetch('/joc/petomania/api/corvin/talked', {method: 'POST'});
         setTimeout(() => closeCorvinDialog(), 1500);
+    } else {
+        setDialogActions(action);
     }
 }
 
@@ -390,5 +327,140 @@ function closeCorvinDialog() {
 document.getElementById('corvin-dialog-overlay').addEventListener('click', (e) => {
     if (e.target === document.getElementById('corvin-dialog-overlay')) closeCorvinDialog();
 });
+
+// ════════════════════════════════════════
+// BATTLE SYSTEM
+// ════════════════════════════════════════
+let battleData = { player: null, npc: null, moveset: [], busy: false };
+
+async function startBattle() {
+    closeCorvinPopup();
+
+    // Switch la battle background
+    ctx.clearRect(0, 0, W, H);
+    if (battleBg.complete) ctx.drawImage(battleBg, 0, 0, W, H);
+    else { battleBg.onload = () => ctx.drawImage(battleBg, 0, 0, W, H); }
+
+    inBattle = true;
+    document.getElementById('battle-ui').style.display = 'flex';
+    document.getElementById('btn-back-oras').style.display = 'none';
+    document.getElementById('battle-log').innerHTML = '<div class="battle-log-line">Se pregătește lupta...</div>';
+    document.getElementById('battle-moves').innerHTML = '';
+    document.getElementById('battle-result').style.display = 'none';
+
+    const resp = await fetch('/joc/petomania/api/battle/start', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({})
+    });
+    const data = await resp.json();
+    if (!data.ok) {
+        addLog('❌ ' + data.error);
+        return;
+    }
+
+    battleData.player  = data.player;
+    battleData.npc     = data.npc;
+    battleData.moveset = data.player.moveset;
+
+    updateCombatantUI('player', data.player);
+    updateCombatantUI('npc', data.npc);
+    renderMoves(data.player.moveset);
+    clearLog();
+    addLog('⚔️ Lupta începe!');
+}
+
+function updateCombatantUI(side, c) {
+    const pct = c.hp_max > 0 ? Math.round((c.hp_current / c.hp_max) * 100) : 0;
+    const col = pct > 50 ? '#4caf7d' : pct > 25 ? '#e0a052' : '#e05252';
+    document.getElementById(`${side}-name`).textContent  = c.name;
+    document.getElementById(`${side}-level`).textContent = `Nv.${c.level}`;
+    document.getElementById(`${side}-hp-bar`).style.width      = pct + '%';
+    document.getElementById(`${side}-hp-bar`).style.background = col;
+    document.getElementById(`${side}-hp-text`).textContent = `${c.hp_current} / ${c.hp_max}`;
+    if (c.image_url) document.getElementById(`${side}-img`).src = c.image_url;
+    const statusEl = document.getElementById(`${side}-status`);
+    statusEl.textContent = c.status ? `[${c.status.toUpperCase()}]` : '';
+}
+
+function renderMoves(moveset) {
+    const el = document.getElementById('battle-moves');
+    el.innerHTML = moveset.map(m => `
+        <button class="battle-move-btn" onclick="doTurn('${m.key}')">
+            <span class="battle-move-icon">${m.icon}</span>
+            <span class="battle-move-name">${m.name}</span>
+        </button>
+    `).join('');
+}
+
+function addLog(msg) {
+    const el = document.getElementById('battle-log');
+    el.insertAdjacentHTML('beforeend', `<div class="battle-log-line">${msg}</div>`);
+    el.scrollTop = el.scrollHeight;
+}
+
+function clearLog() {
+    document.getElementById('battle-log').innerHTML = '';
+}
+
+async function doTurn(moveKey) {
+    if (battleData.busy) return;
+    battleData.busy = true;
+    document.getElementById('battle-moves').querySelectorAll('button').forEach(b => b.disabled = true);
+
+    const resp = await fetch('/joc/petomania/api/battle/turn', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({move_key: moveKey})
+    });
+    const data = await resp.json();
+
+    if (!data.ok) {
+        addLog('❌ Eroare server.');
+        battleData.busy = false;
+        return;
+    }
+
+    data.log.forEach(l => addLog(l));
+    updateCombatantUI('player', data.player);
+    updateCombatantUI('npc', data.npc);
+
+    if (data.winner) {
+        showResult(data.winner, data.reward);
+    } else {
+        document.getElementById('battle-moves').querySelectorAll('button').forEach(b => b.disabled = false);
+        battleData.busy = false;
+    }
+}
+
+function showResult(winner, reward) {
+    const el = document.getElementById('battle-result');
+    el.style.display = 'flex';
+    if (winner === 'player') {
+        document.getElementById('result-icon').textContent  = '🏆';
+        document.getElementById('result-title').textContent = 'Victorie!';
+        document.getElementById('result-reward').textContent = reward > 0 ? `+${reward} ✦ Dacoins` : '';
+    } else {
+        document.getElementById('result-icon').textContent  = '💀';
+        document.getElementById('result-title').textContent = 'Înfrângere...';
+        document.getElementById('result-reward').textContent = 'Pregătește-te mai bine data viitoare.';
+    }
+}
+
+async function fleeBattle() {
+    await fetch('/joc/petomania/api/battle/flee', {method: 'POST'});
+    closeBattle();
+}
+
+function closeBattle() {
+    inBattle = false;
+    document.getElementById('battle-ui').style.display = 'none';
+    document.getElementById('btn-back-oras').style.display = '';
+    // Revino la background normal
+    ctx.clearRect(0, 0, W, H);
+    ctx.drawImage(bgImg, 0, 0, W, H);
+    ctx.drawImage(corvinImg, 0, 0, W, H);
+    battleData = { player: null, npc: null, moveset: [], busy: false };
+}
 </script>
 {% endblock %}

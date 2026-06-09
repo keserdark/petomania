@@ -1,0 +1,247 @@
+/* =====================================================
+   battle.css — UI lupta Arena
+   static/css/battle.css
+   ===================================================== */
+
+/* ── Battle UI container ── */
+#battle-ui {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    z-index: 20;
+    pointer-events: auto;
+}
+
+/* ── Scene cu combatanti ── */
+.battle-scene {
+    flex: 1;
+    position: relative;
+    min-height: 0;
+}
+
+/* ── Combatant (comun) ── */
+.battle-combatant {
+    position: absolute;
+    display: flex;
+    align-items: flex-end;
+    gap: clamp(6px, 0.8vw, 12px);
+}
+
+/* Enemy — dreapta sus */
+.battle-enemy {
+    top: 8%;
+    right: 4%;
+    flex-direction: row-reverse;
+}
+
+/* Player — stanga jos */
+.battle-player {
+    bottom: 2%;
+    left: 4%;
+    flex-direction: row;
+}
+
+.battle-pet-img {
+    object-fit: contain;
+    filter: drop-shadow(0 4px 12px rgba(0,0,0,0.7));
+}
+
+.battle-player-img {
+    width: clamp(80px, 12vw, 180px);
+    height: clamp(80px, 12vw, 180px);
+}
+
+.battle-enemy-img {
+    width: clamp(70px, 10vw, 150px);
+    height: clamp(70px, 10vw, 150px);
+    transform: scaleX(-1);
+}
+
+/* ── Info box ── */
+.battle-info {
+    background: rgba(10, 10, 10, 0.82);
+    border: 1px solid var(--border-strong);
+    border-radius: 10px;
+    padding: clamp(6px, 0.8vh, 12px) clamp(8px, 1vw, 16px);
+    min-width: clamp(120px, 16vw, 220px);
+    backdrop-filter: blur(4px);
+}
+
+.battle-name {
+    font-family: 'Cinzel', serif;
+    font-size: clamp(11px, 1.1vw, 16px);
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.battle-level {
+    font-size: clamp(9px, 0.85vw, 12px);
+    color: var(--text-muted);
+    margin-bottom: 4px;
+}
+
+.battle-status {
+    font-size: clamp(8px, 0.75vw, 11px);
+    color: var(--danger);
+    font-weight: 600;
+    min-height: 14px;
+    margin-bottom: 2px;
+}
+
+.battle-hp-bar-bg {
+    height: 6px;
+    background: var(--bg-deep);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 3px;
+}
+
+.battle-hp-bar-fill {
+    height: 100%;
+    border-radius: 3px;
+    background: #4caf7d;
+    transition: width 0.4s ease, background 0.4s;
+}
+
+.battle-hp-text {
+    font-size: clamp(9px, 0.8vw, 12px);
+    color: var(--text-muted);
+    font-weight: 600;
+}
+
+/* ── Log ── */
+.battle-log {
+    background: rgba(10,10,10,0.88);
+    border-top: 1px solid var(--border);
+    padding: clamp(6px, 0.8vh, 10px) clamp(10px, 1.2vw, 16px);
+    height: clamp(70px, 12vh, 110px);
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    flex-shrink: 0;
+}
+
+.battle-log-line {
+    font-size: clamp(10px, 1vw, 13px);
+    color: var(--text-secondary);
+    line-height: 1.4;
+}
+
+/* ── Controls ── */
+.battle-controls {
+    background: rgba(10,10,10,0.92);
+    border-top: 1px solid var(--border-strong);
+    padding: clamp(6px, 0.8vh, 12px) clamp(10px, 1.2vw, 16px);
+    display: flex;
+    align-items: center;
+    gap: clamp(6px, 0.8vw, 12px);
+    flex-shrink: 0;
+}
+
+.battle-moves {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: clamp(4px, 0.5vw, 8px);
+    flex: 1;
+}
+
+.battle-move-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    padding: clamp(6px, 0.8vh, 10px) 4px;
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: background 0.15s, border-color 0.15s;
+    font-size: clamp(9px, 0.85vw, 12px);
+    font-family: 'Cinzel', serif;
+    font-weight: 600;
+}
+
+.battle-move-btn:hover:not(:disabled) {
+    background: var(--gold-soft);
+    border-color: var(--gold-dim);
+    color: var(--gold);
+}
+
+.battle-move-btn:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+}
+
+.battle-move-icon {
+    font-size: clamp(14px, 1.5vw, 22px);
+}
+
+.battle-move-name {
+    text-align: center;
+    line-height: 1.2;
+}
+
+.battle-flee-btn {
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    padding: clamp(6px, 0.8vh, 10px) clamp(10px, 1vw, 16px);
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: clamp(10px, 0.9vw, 13px);
+    font-weight: 600;
+    transition: color 0.15s, border-color 0.15s;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.battle-flee-btn:hover {
+    color: var(--danger);
+    border-color: var(--danger);
+}
+
+/* ── Result overlay ── */
+.battle-result {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.82);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 30;
+}
+
+.battle-result-box {
+    background: var(--bg-card);
+    border: 1px solid var(--border-strong);
+    border-radius: 16px;
+    padding: clamp(24px, 3vh, 44px) clamp(28px, 3vw, 52px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    text-align: center;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.7);
+    min-width: 260px;
+}
+
+.battle-result-icon {
+    font-size: clamp(36px, 4vw, 56px);
+}
+
+.battle-result-title {
+    font-family: 'Cinzel', serif;
+    font-size: clamp(16px, 1.8vw, 26px);
+    font-weight: 700;
+    color: var(--gold);
+}
+
+.battle-result-reward {
+    font-size: clamp(12px, 1.2vw, 16px);
+    color: var(--gold);
+    font-weight: 600;
+    min-height: 20px;
+}
