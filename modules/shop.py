@@ -85,8 +85,8 @@ def shop_buy(user_id: int, shop_id: str, category: str, item_key: str, qty: int 
         return {'ok': False, 'error': add_result['error']}
 
     # Scade dacoins
-    spend_result = spend_dacoins(user_id, total_cost)
-    if not spend_result['ok']:
+    spent = spend_dacoins(user_id, total_cost)
+    if not spent:
         # Rollback inventar
         from modules.inventory import inv_remove
         inv_remove(user_id, category, item_key, qty)
@@ -95,8 +95,8 @@ def shop_buy(user_id: int, shop_id: str, category: str, item_key: str, qty: int 
     return {
         'ok':        True,
         'item_name': item_cfg['name'],
-        'item_icon': item_cfg['icon'],
+        'item_icon': item_cfg.get('img') or item_cfg['icon'],
         'qty':       qty,
         'cost':      total_cost,
-        'balance':   spend_result['balance'],
+        'balance':   get_dacoins(user_id),
     }
