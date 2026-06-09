@@ -297,17 +297,8 @@ document.addEventListener('contextmenu', function(e) {
     .rucsac-grid{ grid-template-columns:repeat(5,1fr); gap:5px; }
     .rslot{ border-radius:7px; }
     .rslot-icon{ font-size:16px; } .rslot-img{ width:32px; height:32px; object-fit:contain; display:block; }
-.pi-target-title{font-family:'Cinzel',serif;font-size:12px;color:var(--gold);margin-bottom:8px;text-align:center}
-.pi-target-list{display:flex;flex-direction:column;gap:6px;max-height:200px;overflow-y:auto}
-.pi-target-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;background:var(--bg-elev);border:1px solid var(--border);cursor:pointer;transition:background .15s,border-color .15s}
-.pi-target-item:hover{background:var(--gold-soft);border-color:var(--gold-dim)}
-.pi-target-img{width:36px;height:36px;object-fit:contain;flex-shrink:0}
-.pi-target-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
-.pi-target-name{font-size:12px;font-weight:600;color:var(--text-primary)}
-.pi-target-name em{font-size:10px;color:var(--text-muted);font-style:normal}
-.pi-target-hp-bar-bg{height:4px;background:var(--bg-deep);border-radius:2px;overflow:hidden}
-.pi-target-hp-bar-fill{height:100%;border-radius:2px;transition:width .3s}
-.pi-target-hp-txt{font-size:10px;font-weight:600}
+.pi-target-title{font-family:'Cinzel',serif;font-size:10px;color:var(--text-muted);letter-spacing:.1em;padding:0 0 6px;border-bottom:1px solid var(--border);margin-bottom:4px}
+.pi-target-list{display:flex;flex-direction:column;gap:5px;overflow-y:auto;padding:2px 0}
 }
 
 /* ── PANEL HEADER ── */
@@ -614,40 +605,37 @@ document.getElementById('pi-use').onclick = () => {
 };
 
 function rbRenderTargets() {
-    const list = document.getElementById('pi-target-list');
-    list.innerHTML = '';
-    rbData.companions.forEach((c, i) => {
-        if (!c) return;
+    const comps = rbData.companions;
+    document.getElementById('pi-target-list').innerHTML = comps.map((c, i) => {
+        if (!c) return '';
         const pct = c.hp_max > 0 ? Math.round((c.hp_current / c.hp_max) * 100) : 0;
         const col = pct > 50 ? '#4caf7d' : pct > 25 ? '#e0a052' : '#e05252';
-        const div = document.createElement('div');
-        div.className = 'pi-target-item';
-        div.innerHTML = `
-            <img src="${c.image_url}" alt="${c.name}" class="pi-target-img">
-            <div class="pi-target-info">
-                <span class="pi-target-name">${c.name}${c.active ? ' <em>(activ)</em>' : ''}</span>
-                <div class="pi-target-hp-bar-bg">
-                    <div class="pi-target-hp-bar-fill" style="width:${pct}%;background:${col}"></div>
+        return `<div class="rucsac-comp${c.active ? ' active' : ''}" onclick="rbUseOnTarget(${i})" style="cursor:pointer">
+            <div class="comp-top-row">
+                <div class="comp-thumb"><img src="${c.image_url}" alt="${c.name}" style="width:40px;height:40px;object-fit:contain"></div>
+                <div class="comp-info">
+                    <div class="comp-name">${c.name}</div>
+                    <div class="comp-sub">${c.species} · Nv.${c.level}</div>
                 </div>
-                <span class="pi-target-hp-txt" style="color:${col}">${c.hp_current} / ${c.hp_max}</span>
+                ${c.active ? '<span class="comp-active-badge">ACTIV</span>' : ''}
             </div>
-        `;
-        div.onclick = () => rbUseOnTarget(i);
-        list.appendChild(div);
-    });
+            <div class="comp-hp-row">
+                <span class="comp-hp-label">HP</span>
+                <span class="comp-hp-val" style="color:${col}">${c.hp_current} / ${c.hp_max}</span>
+            </div>
+            <div class="comp-hp-bar-bg"><div class="comp-hp-bar-fill" style="width:${pct}%;background:${col}"></div></div>
+        </div>`;
+    }).join('');
 
-    // Buton anulare
-    const cancel = document.createElement('button');
-    cancel.className = 'popup-action-btn';
-    cancel.style.marginTop = '6px';
-    cancel.textContent = '← Înapoi';
-    cancel.onclick = () => {
-        document.getElementById('pi-target-select').style.display = 'none';
-        document.getElementById('pi-use').style.display    = 'flex';
-        document.getElementById('pi-offer').style.display  = 'flex';
-        document.getElementById('pi-drop').style.display   = 'flex';
-    };
-    list.appendChild(cancel);
+    // Buton înapoi
+    document.getElementById('pi-target-list').insertAdjacentHTML('beforeend',
+        `<button class="popup-action-btn" style="margin-top:4px" onclick="
+            document.getElementById('pi-target-select').style.display='none';
+            document.getElementById('pi-use').style.display='flex';
+            document.getElementById('pi-offer').style.display='flex';
+            document.getElementById('pi-drop').style.display='flex';
+        ">← Înapoi</button>`
+    );
 }
 
 async function rbUseOnTarget(slotIdx) {
