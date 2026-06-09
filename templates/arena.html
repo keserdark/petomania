@@ -13,7 +13,7 @@
             <button class="assets-popup-close" onclick="closeCorvinPopup()">✕</button>
             <div class="assets-popup-deco">⚔️</div>
             <div class="assets-popup-title">🗡️ Corvin Vargan</div>
-            <button class="assets-popup-btn" onclick="openCorvinDialog()">
+            <button class="assets-popup-btn" id="btn-vorbeste" onclick="openCorvinDialog()">
                 <span class="assets-popup-btn-icon">💬</span>
                 <span>Vorbește cu omul</span>
             </button>
@@ -204,13 +204,23 @@ canvas.addEventListener('mouseenter', () => { isHovering = true; fadActive = fal
 canvas.addEventListener('mouseleave', () => { isHovering = false; redraw(false); });
 
 // ── Popup Corvin ──
-function openCorvinPopup() {
+async function openCorvinPopup() {
     popupOpen    = true;
     isHovering   = true;
     fadActive    = false;
     currentHover = false;
     tooltip.style.opacity = '0';
     canvas.style.cursor   = 'default';
+
+    // Verifica daca a vorbit deja
+    const resp = await fetch('/joc/petomania/api/corvin');
+    const data = await resp.json();
+    if (data.ok && !data.first_time) {
+        document.getElementById('btn-vorbeste').style.display = 'none';
+    } else {
+        document.getElementById('btn-vorbeste').style.display = 'flex';
+    }
+
     document.getElementById('corvin-overlay').classList.add('open');
 }
 function closeCorvinPopup() {
@@ -222,17 +232,160 @@ document.getElementById('corvin-overlay').addEventListener('click', (e) => {
     if (e.target === document.getElementById('corvin-overlay')) closeCorvinPopup();
 });
 
-// ── Dialog Corvin ──
+// ── Dialog helpers ──
+function formatText(text) {
+    return text.split('\n').map(line =>
+        line.startsWith('*') && line.endsWith('*')
+            ? `<em class="assets-dialog-action">${line.slice(1,-1)}</em>`
+            : `<span>${line}</span>`
+    ).join('<br>');
+}
+function setDialogText(html) {
+    document.getElementById('corvin-dialog-text').innerHTML = html;
+}
+function setDialogActions(html) {
+    document.getElementById('corvin-dialog-actions').innerHTML = html;
+}
+function playerLine(text) {
+    return `<span class="assets-dialog-player">— ${text}</span>`;
+}
+function corvinLine(text) {
+    return `<span>${text}</span>`;
+}
+function actionLine(text) {
+    return `<em class="assets-dialog-action">${text}</em>`;
+}
+
+// ── Dialog pas cu pas ──
+let dialogStep = 0;
+
 function openCorvinDialog() {
     closeCorvinPopup();
+    dialogStep = 0;
     document.getElementById('corvin-dialog-overlay').classList.add('open');
-    document.getElementById('corvin-dialog-text').innerHTML =
-        '<span>*Corvin Vargan te măsoară din priviri, cu brațele încrucișate.*</span><br>' +
-        '<span>Ai venit să lupți sau să privești? Nu avem loc pentru spectatori fricoși.</span>';
-    document.getElementById('corvin-dialog-actions').innerHTML = '';
+    setDialogText(actionLine('Corvin Vargan te măsoară din priviri, cu brațele încrucișate.'));
+    setDialogActions(`
+        <button class="assets-popup-btn" onclick="corvinStep(1)">
+            <span class="assets-popup-btn-icon">🤔</span>
+            <span>Cum adică?</span>
+        </button>
+    `);
 }
+
+function corvinStep(step) {
+    const textEl = document.getElementById('corvin-dialog-text');
+    function append(html) {
+        textEl.insertAdjacentHTML('beforeend', '<br>' + html);
+        textEl.scrollTop = textEl.scrollHeight;
+    }
+
+    if (step === 1) {
+        append(playerLine('Cum adică?'));
+        append(corvinLine('Zâmbește doar într-un colț al gurii. Cum adică? Simplu. Unii oameni vin aici să privească și să-și imagineze cum ar fi fost dacă aveau curaj. Alții intră în arenă și află.'));
+        setDialogActions(`
+            <button class="assets-popup-btn" onclick="corvinStep(2)">
+                <span class="assets-popup-btn-icon">👁️</span>
+                <span>Și dacă vreau doar să văd despre ce e vorba?</span>
+            </button>
+        `);
+    } else if (step === 2) {
+        append(playerLine('Și dacă vreau doar să văd despre ce e vorba?'));
+        append(corvinLine('Atunci ai venit în locul greșit. Privitul naște îndoială. Îndoiala naște frică. Iar frica îi face pe oameni să plece exact când ar fi putut câștiga.'));
+        setDialogActions(`
+            <button class="assets-popup-btn" onclick="corvinStep(3)">
+                <span class="assets-popup-btn-icon">😒</span>
+                <span>Nu pare foarte primitor.</span>
+            </button>
+        `);
+    } else if (step === 3) {
+        append(playerLine('Nu pare foarte primitor.'));
+        append(actionLine('Râde scurt.'));
+        append(corvinLine('Nu conduc o tavernă. Ofer oportunități. Diferența e că într-o tavernă plătești pentru o poveste. Aici ai șansa să devii una.'));
+        setDialogActions(`
+            <button class="assets-popup-btn" onclick="corvinStep(4)">
+                <span class="assets-popup-btn-icon">😟</span>
+                <span>Și dacă pierd?</span>
+            </button>
+        `);
+    } else if (step === 4) {
+        append(playerLine('Și dacă pierd?'));
+        append(corvinLine('Toți pierd ceva. Timp, bani, mândrie. Întrebarea adevărată este ce câștigi dacă reușești. Cei care stau prea mult să cântărească riscurile ajung să privească de pe margine toată viața.'));
+        setDialogActions(`
+            <button class="assets-popup-btn" onclick="corvinStep(5)">
+                <span class="assets-popup-btn-icon">🧐</span>
+                <span>Parcă încerci să mă convingi.</span>
+            </button>
+        `);
+    } else if (step === 5) {
+        append(playerLine('Parcă încerci să mă convingi.'));
+        append(corvinLine('Nu. Dacă ar trebui să te conving, n-ai ce căuta aici. Eu doar îți arăt ușa. Tu decizi dacă intri... sau dacă pleci și te întrebi mai târziu ce s-ar fi întâmplat.'));
+        setDialogActions(`
+            <button class="assets-popup-btn" onclick="corvinStep(6)">
+                <span class="assets-popup-btn-icon">🛡️</span>
+                <span>Și dacă nu sunt pregătit?</span>
+            </button>
+        `);
+    } else if (step === 6) {
+        append(playerLine('Și dacă nu sunt pregătit?'));
+        append(actionLine('Își încrucișează brațele și te privește fix.'));
+        append(corvinLine('Nimeni nu este pregătit. Cei care spun asta încearcă doar să-și cumpere timp. Întrebarea este: Companionul tău știe că stăpânul lui caută scuze? Sau încă mai crede că ai sânge de luptător?'));
+        setDialogActions(`
+            <button class="assets-popup-btn" onclick="corvinStep(7)">
+                <span class="assets-popup-btn-icon">💰</span>
+                <span>Ce câștig dacă intru?</span>
+            </button>
+        `);
+    } else if (step === 7) {
+        append(playerLine('Ce câștig dacă intru?'));
+        append(actionLine('Își netezește mâneca și îți aruncă o privire calculată.'));
+        append(corvinLine('Dacoins. Mai multe decât ai face într-o săptămână de muncă cinstită... dacă Companionul tău este pe cât de puternic crezi.'));
+        setDialogActions(`
+            <button class="assets-popup-btn" onclick="corvinStep(8)">
+                <span class="assets-popup-btn-icon">🤑</span>
+                <span>Și cât de multe?</span>
+            </button>
+        `);
+    } else if (step === 8) {
+        append(playerLine('Și cât de multe?'));
+        append(corvinLine('Depinde de tine. Începătorii pleacă de obicei cu câteva sute. Cei buni cu mii. Iar cei despre care se vorbește prin oraș nu mai întreabă cât câștigă.'));
+        setDialogActions(`
+            <button class="assets-popup-btn" onclick="corvinStep(9)">
+                <span class="assets-popup-btn-icon">🤨</span>
+                <span>Sună prea frumos.</span>
+            </button>
+        `);
+    } else if (step === 9) {
+        append(playerLine('Sună prea frumos.'));
+        append(actionLine('Zâmbește ușor.'));
+        append(corvinLine('Atunci nu intra. Păstrează-ți îndoielile și lasă pe altcineva să ia Dacoins-ii care te așteptau pe tine.'));
+        setDialogActions(`
+            <button class="assets-popup-btn" onclick="corvinStep(10)">
+                <span class="assets-popup-btn-icon">😰</span>
+                <span>Și dacă pierd?</span>
+            </button>
+        `);
+    } else if (step === 10) {
+        append(playerLine('Și dacă pierd?'));
+        append(corvinLine('Atunci afli cât valorează încrederea pe care o ai în Companionul tău. Dar spune-mi... dacă ești atât de sigur că vei pierde, de ce ai venit până aici?'));
+        setDialogActions(`
+            <button class="assets-popup-btn assets-name-btn" onclick="corvinStep(11)">
+                <span class="assets-popup-btn-icon">✍️</span>
+                <span>Prea bine. Pune-mă pe foaie.</span>
+            </button>
+        `);
+    } else if (step === 11) {
+        append(playerLine('Prea bine. Pune-mă pe foaie.'));
+        append(corvinLine('Sânge proaspăt, deci. Foarte bine.'));
+        setDialogActions('');
+        // Salveaza in DB
+        fetch('/joc/petomania/api/corvin/talked', {method: 'POST'});
+        setTimeout(() => closeCorvinDialog(), 1500);
+    }
+}
+
 function closeCorvinDialog() {
     document.getElementById('corvin-dialog-overlay').classList.remove('open');
+    dialogStep = 0;
 }
 document.getElementById('corvin-dialog-overlay').addEventListener('click', (e) => {
     if (e.target === document.getElementById('corvin-dialog-overlay')) closeCorvinDialog();

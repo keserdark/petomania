@@ -889,6 +889,37 @@ def arena():
     return render_template('arena.html')
 
 
+
+# ── CORVIN VARGAN ─────────────────────────────────────────────────────
+
+@app.route('/joc/petomania/api/corvin')
+@login_required
+def api_corvin():
+    user = get_current_user()
+    uid  = int(user['id'])
+    conn = get_db()
+    row  = conn.execute('SELECT talked FROM corvin_interactions WHERE user_id = ?', (uid,)).fetchone()
+    conn.close()
+    first_time = (row is None or not row['talked'])
+    return jsonify({'ok': True, 'first_time': first_time})
+
+
+@app.route('/joc/petomania/api/corvin/talked', methods=['POST'])
+@login_required
+def api_corvin_talked():
+    user = get_current_user()
+    uid  = int(user['id'])
+    conn = get_db()
+    conn.execute('''
+        INSERT INTO corvin_interactions (user_id, talked)
+        VALUES (?, 1)
+        ON CONFLICT(user_id) DO UPDATE SET talked = 1
+    ''', (uid,))
+    conn.commit()
+    conn.close()
+    return jsonify({'ok': True})
+
+
 # ── RUN ───────────────────────────────────────────────────────────────
 
 if __name__ == '__main__':
