@@ -263,7 +263,7 @@ function openCorvinDialog() {
     closeCorvinPopup();
     dialogStep = 0;
     document.getElementById('corvin-dialog-overlay').classList.add('open');
-    setDialogText(actionLine('Corvin Vargan te măsoară din priviri, cu brațele încrucișate.'));
+    setDialogText(actionLine('Corvin Vargan te măsoară din priviri, cu brațele încrucișate. Ai venit sa lupti sau sa privesti?'));
     setDialogActions(`
         <button class="assets-popup-btn" onclick="corvinStep(1)">
             <span class="assets-popup-btn-icon">🤔</span>
@@ -284,7 +284,7 @@ function corvinStep(step) {
         append(corvinLine('Zâmbește doar într-un colț al gurii. Cum adică? Simplu. Unii oameni vin aici să privească și să-și imagineze cum ar fi fost dacă aveau curaj. Alții intră în arenă și află.'));
         setDialogActions(`
             <button class="assets-popup-btn" onclick="corvinStep(2)">
-                <span class="assets-popup-btn-icon">👁️</span>
+                <span class="assets-popup-btn-icon">️</span>
                 <span>Și dacă vreau doar să văd despre ce e vorba?</span>
             </button>
         `);
@@ -293,7 +293,7 @@ function corvinStep(step) {
         append(corvinLine('Atunci ai venit în locul greșit. Privitul naște îndoială. Îndoiala naște frică. Iar frica îi face pe oameni să plece exact când ar fi putut câștiga.'));
         setDialogActions(`
             <button class="assets-popup-btn" onclick="corvinStep(3)">
-                <span class="assets-popup-btn-icon">😒</span>
+                <span class="assets-popup-btn-icon"></span>
                 <span>Nu pare foarte primitor.</span>
             </button>
         `);
@@ -303,7 +303,7 @@ function corvinStep(step) {
         append(corvinLine('Nu conduc o tavernă. Ofer oportunități. Diferența e că într-o tavernă plătești pentru o poveste. Aici ai șansa să devii una.'));
         setDialogActions(`
             <button class="assets-popup-btn" onclick="corvinStep(4)">
-                <span class="assets-popup-btn-icon">😟</span>
+                <span class="assets-popup-btn-icon"></span>
                 <span>Și dacă pierd?</span>
             </button>
         `);
@@ -312,7 +312,7 @@ function corvinStep(step) {
         append(corvinLine('Toți pierd ceva. Timp, bani, mândrie. Întrebarea adevărată este ce câștigi dacă reușești. Cei care stau prea mult să cântărească riscurile ajung să privească de pe margine toată viața.'));
         setDialogActions(`
             <button class="assets-popup-btn" onclick="corvinStep(5)">
-                <span class="assets-popup-btn-icon">🧐</span>
+                <span class="assets-popup-btn-icon"></span>
                 <span>Parcă încerci să mă convingi.</span>
             </button>
         `);
@@ -321,7 +321,7 @@ function corvinStep(step) {
         append(corvinLine('Nu. Dacă ar trebui să te conving, n-ai ce căuta aici. Eu doar îți arăt ușa. Tu decizi dacă intri... sau dacă pleci și te întrebi mai târziu ce s-ar fi întâmplat.'));
         setDialogActions(`
             <button class="assets-popup-btn" onclick="corvinStep(6)">
-                <span class="assets-popup-btn-icon">🛡️</span>
+                <span class="assets-popup-btn-icon"></span>
                 <span>Și dacă nu sunt pregătit?</span>
             </button>
         `);
@@ -331,7 +331,7 @@ function corvinStep(step) {
         append(corvinLine('Nimeni nu este pregătit. Cei care spun asta încearcă doar să-și cumpere timp. Întrebarea este: Companionul tău știe că stăpânul lui caută scuze? Sau încă mai crede că ai sânge de luptător?'));
         setDialogActions(`
             <button class="assets-popup-btn" onclick="corvinStep(7)">
-                <span class="assets-popup-btn-icon">💰</span>
+                <span class="assets-popup-btn-icon"></span>
                 <span>Ce câștig dacă intru?</span>
             </button>
         `);
@@ -341,7 +341,7 @@ function corvinStep(step) {
         append(corvinLine('Dacoins. Mai multe decât ai face într-o săptămână de muncă cinstită... dacă Companionul tău este pe cât de puternic crezi.'));
         setDialogActions(`
             <button class="assets-popup-btn" onclick="corvinStep(8)">
-                <span class="assets-popup-btn-icon">🤑</span>
+                <span class="assets-popup-btn-icon"></span>
                 <span>Și cât de multe?</span>
             </button>
         `);
@@ -350,7 +350,7 @@ function corvinStep(step) {
         append(corvinLine('Depinde de tine. Începătorii pleacă de obicei cu câteva sute. Cei buni cu mii. Iar cei despre care se vorbește prin oraș nu mai întreabă cât câștigă.'));
         setDialogActions(`
             <button class="assets-popup-btn" onclick="corvinStep(9)">
-                <span class="assets-popup-btn-icon">🤨</span>
+                <span class="assets-popup-btn-icon"></span>
                 <span>Sună prea frumos.</span>
             </button>
         `);
@@ -360,7 +360,7 @@ function corvinStep(step) {
         append(corvinLine('Atunci nu intra. Păstrează-ți îndoielile și lasă pe altcineva să ia Dacoins-ii care te așteptau pe tine.'));
         setDialogActions(`
             <button class="assets-popup-btn" onclick="corvinStep(10)">
-                <span class="assets-popup-btn-icon">😰</span>
+                <span class="assets-popup-btn-icon"></span>
                 <span>Și dacă pierd?</span>
             </button>
         `);
@@ -369,7 +369,7 @@ function corvinStep(step) {
         append(corvinLine('Atunci afli cât valorează încrederea pe care o ai în Companionul tău. Dar spune-mi... dacă ești atât de sigur că vei pierde, de ce ai venit până aici?'));
         setDialogActions(`
             <button class="assets-popup-btn assets-name-btn" onclick="corvinStep(11)">
-                <span class="assets-popup-btn-icon">✍️</span>
+                <span class="assets-popup-btn-icon"></span>
                 <span>Prea bine. Pune-mă pe foaie.</span>
             </button>
         `);
