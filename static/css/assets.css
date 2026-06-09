@@ -121,21 +121,22 @@
     border-radius: 10px;
     background: var(--bg-elev);
     border: 1px solid var(--border);
+    border-left: 3px solid var(--border);
     color: var(--text-primary);
     font-family: 'Cinzel', serif;
     font-size: clamp(11px, 1.1vw, 16px);
     font-weight: 600;
     cursor: pointer;
     text-decoration: none;
-    transition: all 0.15s;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
     text-align: left;
     width: 100%;
 }
 .assets-popup-btn:hover {
     background: var(--gold-soft);
     border-color: var(--gold-dim);
+    border-left-color: var(--gold);
     color: var(--gold);
-    transform: translateX(4px);
 }
 .assets-popup-btn-icon {
     font-size: clamp(16px, 1.6vw, 24px);
