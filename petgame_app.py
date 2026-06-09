@@ -850,6 +850,37 @@ def api_loadout_clear():
     return jsonify({'ok': True})
 
 
+
+# ── MAGAZIN ───────────────────────────────────────────────────────────
+
+@app.route('/joc/petomania/api/shop/<shop_id>')
+@login_required
+def api_shop_data(shop_id):
+    from shop_config import get_shop
+    from modules.shop import build_shop_context
+    ctx = build_shop_context(shop_id)
+    if not ctx:
+        return jsonify({'ok': False, 'error': 'Magazin inexistent.'})
+    user    = get_current_user()
+    dacoins = get_dacoins(int(user['id']))
+    return jsonify({'ok': True, 'shop': ctx, 'dacoins': dacoins})
+
+
+@app.route('/joc/petomania/api/shop/<shop_id>/buy', methods=['POST'])
+@login_required
+def api_shop_buy(shop_id):
+    from modules.shop import shop_buy
+    user     = get_current_user()
+    uid      = int(user['id'])
+    data     = request.json or {}
+    category = data.get('category', '')
+    item_key = data.get('item_key', '')
+    qty      = int(data.get('qty', 1))
+    if not category or not item_key:
+        return jsonify({'ok': False, 'error': 'Date lipsă.'})
+    return jsonify(shop_buy(uid, shop_id, category, item_key, qty))
+
+
 # ── RUN ───────────────────────────────────────────────────────────────
 
 if __name__ == '__main__':
