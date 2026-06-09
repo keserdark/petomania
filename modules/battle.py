@@ -34,6 +34,10 @@ def generate_npc(player_level: int) -> dict:
     moveset   = get_moveset(species, nature, level)
     name      = random.choice(NPC_NAMES)
 
+    gender     = random.choice(['Male', 'Female'])
+    stage      = f'Stage{form}'
+    image_url  = f'/static/00transparent/{species}/{stage}-Basic-Form-{gender}.png'
+
     return {
         'id':           f'npc_{random.randint(10000, 99999)}',
         'name':         name,
@@ -46,7 +50,7 @@ def generate_npc(player_level: int) -> dict:
         'hp_current':   stats['hp'],
         'stats':        stats,
         'moveset':      [m['key'] for m in moveset],
-        'image_url':    f'/static/pets/{species}/00transparent/form{form}.png',
+        'image_url':    image_url,
         'is_npc':       True,
         'status':       None,  # stun, burn, poison, freeze
         'status_turns': 0,

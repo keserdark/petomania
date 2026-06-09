@@ -342,6 +342,14 @@ async function startBattle() {
     else { battleBg.onload = () => ctx.drawImage(battleBg, 0, 0, W, H); }
 
     inBattle = true;
+    // Ascunde sidebar si footbar
+    const sidebar = document.querySelector('.pet-sidebar');
+    const footbar = document.querySelector('.pet-footbar');
+    if (sidebar) sidebar.style.display = 'none';
+    if (footbar) footbar.style.display = 'none';
+    // Extinde arena-wrap pe tot ecranul
+    wrap.style.maxWidth = '100vw';
+    wrap.style.maxHeight = '100vh';
     document.getElementById('battle-ui').style.display = 'flex';
     document.getElementById('btn-back-oras').style.display = 'none';
     document.getElementById('battle-log').innerHTML = '<div class="battle-log-line">Se pregătește lupta...</div>';
@@ -456,6 +464,13 @@ function closeBattle() {
     inBattle = false;
     document.getElementById('battle-ui').style.display = 'none';
     document.getElementById('btn-back-oras').style.display = '';
+    // Restaureaza sidebar si footbar
+    const sidebar = document.querySelector('.pet-sidebar');
+    const footbar = document.querySelector('.pet-footbar');
+    if (sidebar) sidebar.style.display = '';
+    if (footbar) footbar.style.display = '';
+    wrap.style.maxWidth = '';
+    wrap.style.maxHeight = '';
     // Revino la background normal
     ctx.clearRect(0, 0, W, H);
     ctx.drawImage(bgImg, 0, 0, W, H);
