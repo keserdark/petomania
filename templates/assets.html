@@ -6,7 +6,7 @@
 <div class="assets-wrap">
     <canvas id="assets-canvas"></canvas>
     <div id="assets-tooltip" class="city-tooltip"></div>
-<!-- test -->
+
     <!-- Popup Lady — meniu principal -->
     <div class="assets-popup-overlay" id="lady-overlay">
         <div class="assets-popup">
@@ -17,7 +17,7 @@
                 <span class="assets-popup-btn-icon">💬</span>
                 <span>Vorbește cu Doamna</span>
             </button>
-            <button class="assets-popup-btn" onclick="closePopup()">
+            <button class="assets-popup-btn" onclick="closePopup(); openShop('lunara')">
                 <span class="assets-popup-btn-icon">🛒</span>
                 <span>Magazin</span>
             </button>
@@ -190,7 +190,7 @@ let popupOpen = false;
 
 function openPopup() {
     popupOpen = true;
-    isHovering = true;  // opreste fade loop
+    isHovering = true;
     fadActive  = false;
     currentHover = false;
     tooltip.style.opacity = '0';
@@ -232,7 +232,7 @@ let dialogData = null;
 async function openDialog() {
     closePopup();
     document.getElementById('dialog-overlay').classList.add('open');
-    if (dialogStep > 0) return; // deja pornit
+    if (dialogStep > 0) return;
 
     const resp = await fetch('/joc/petomania/api/lady');
     const data = await resp.json();
@@ -243,7 +243,6 @@ async function openDialog() {
     textEl.innerHTML = formatText(dialogData.text);
 
     if (dialogData.show_name_btn) {
-        // Pasul 1 — confirma numele
         setActions(`
             <button class="assets-popup-btn assets-name-btn" onclick="stepName()">
                 <span class="assets-popup-btn-icon">👤</span>
@@ -252,14 +251,12 @@ async function openDialog() {
         `);
         dialogStep = 1;
     } else {
-        // Revenire — fara pasi
         setActions('');
         dialogStep = 99;
     }
 }
 
 async function stepName() {
-    // Salveaza numele
     const saveResp = await fetch('/joc/petomania/api/lady/name', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
@@ -270,7 +267,6 @@ async function stepName() {
 
     appendText(`<span class="assets-dialog-player">— Mă numesc ${saveData.name}.</span>`);
 
-    // Pasul 2 — fetch dialog pet
     const petResp = await fetch('/joc/petomania/api/lady/pet');
     const petData = await petResp.json();
     if (!petData.ok) return;
@@ -313,10 +309,8 @@ async function stepThankYou() {
     appendText(`<span class="assets-dialog-player">— Mulțumesc frumos.</span>`);
     setActions('');
 
-    // Salveaza companicon in DB
     await fetch('/joc/petomania/api/lady/companicon', {method: 'POST'});
 
-    // Adauga Companicon in sidebar fara reload
     const nav = document.querySelector('.pet-nav');
     if (nav && !document.getElementById('nav-companicon')) {
         const a = document.createElement('a');
