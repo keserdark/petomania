@@ -852,9 +852,12 @@ def serve_img(token):
         if not entry or entry['expires'] < now:
             abort(403)
         url = entry['url']
-        # Token single-use — sterge dupa prima folosire
         del _token_store[token]
-    return redirect(url)
+    
+    req = urllib.request.Request(url, headers={'User-Agent': 'Petomania/1.0'})
+    with urllib.request.urlopen(req, timeout=8) as resp:
+        data = resp.read()
+    return Response(data, mimetype='image/png', headers={'Cache-Control': 'max-age=300'})
 
 # ─────────────────────────────────────────────
 # PAGINI
