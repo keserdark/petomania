@@ -137,7 +137,7 @@ def use_item(user_id: int, category: str, item_key: str) -> dict:
         return {'ok': False, 'msg': 'Acest item nu poate fi folosit direct.'}
     if item_cfg.get('usable_in_zone'):
         return {'ok': False, 'msg': USE_STUB_MESSAGES.get(category, 'Necesită zonă specifică.')}
-    if category in USE_STUB_MESSAGES and category not in ('mancare', 'medical'):
+    if category in USE_STUB_MESSAGES and category not in ('mancare', 'medical', 'potiuni'):
         return {'ok': False, 'msg': USE_STUB_MESSAGES[category]}
 
     pet = get_pet(user_id)
@@ -169,6 +169,23 @@ def use_item(user_id: int, category: str, item_key: str) -> dict:
                 return {'ok': False, 'msg': 'HP-ul companionului este deja plin.'}
             p['hp_current'] = new_hp
             changed.append(f"HP +{healed}")
+
+    elif category == 'potiuni':
+        if 'hp' in effects:
+            hp_max = _get_hp_max(p)
+            old_hp = p['hp_current']
+            new_hp = min(hp_max, old_hp + effects['hp'])
+            healed = new_hp - old_hp
+            if healed <= 0:
+                return {'ok': False, 'msg': 'HP-ul companionului este deja plin.'}
+            p['hp_current'] = new_hp
+            changed.append(f"HP +{healed}")
+        if 'hunger' in effects:
+            p['hunger'] = min(100, p['hunger'] + effects['hunger'])
+            changed.append(f"Foame +{effects['hunger']}")
+        if 'energy' in effects:
+            p['energy'] = min(100, p['energy'] + effects['energy'])
+            changed.append(f"Energie +{effects['energy']}")
 
     if not changed:
         return {'ok': False, 'msg': 'Acest item nu are efect momentan.'}
