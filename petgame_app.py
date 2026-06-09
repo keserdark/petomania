@@ -46,6 +46,8 @@ from modules.companicon   import build_companicon_entries, _img_url as companico
 from modules.discord_helpers import (get_member_roles, get_lady_interaction,
                                       build_lady_dialog, build_lady_pet_text)
 from inventory_config     import get_item as inv_get_item
+from shop_config          import get_shop
+from modules.shop         import build_shop_context, shop_buy
 from petgame_room_config  import ROOM_ITEMS
 from cogs.petgame_config  import SPECIES
 from cogs.petgame_natures import NATURES
@@ -309,7 +311,8 @@ def menajerie():
     active_ctx = _build_pet_context(active) if active else None
     rows       = get_menagerie(uid)
     men_pets   = [_build_pet_context(dict(r)) for r in rows]
-    return render_template('menajerie.html', active=active_ctx, men_pets=men_pets)
+    loadout_slots = build_loadout_context(uid)
+    return render_template('menajerie.html', active=active_ctx, men_pets=men_pets, loadout_slots=loadout_slots)
 
 
 @app.route('/joc/petomania/imbunatatiri')
@@ -725,15 +728,14 @@ def api_rucsac_data():
 @app.route('/joc/petomania/api/rucsac/use', methods=['POST'])
 @login_required
 def api_rucsac_use():
-    user        = get_current_user()
-    uid         = int(user['id'])
-    data        = request.json or {}
-    category    = data.get('category', '')
-    item_key    = data.get('item_key', '')
-    target_slot = int(data.get('target_slot', 0))
+    user     = get_current_user()
+    uid      = int(user['id'])
+    data     = request.json or {}
+    category = data.get('category', '')
+    item_key = data.get('item_key', '')
     if not category or not item_key:
         return jsonify({'ok': False, 'msg': 'Date lipsă.'})
-    return jsonify(use_item(uid, category, item_key, target_slot))
+    return jsonify(use_item(uid, category, item_key))
 
 
 @app.route('/joc/petomania/api/rucsac/drop', methods=['POST'])
@@ -857,8 +859,6 @@ def api_loadout_clear():
 @app.route('/joc/petomania/api/shop/<shop_id>')
 @login_required
 def api_shop_data(shop_id):
-    from shop_config import get_shop
-    from modules.shop import build_shop_context
     ctx = build_shop_context(shop_id)
     if not ctx:
         return jsonify({'ok': False, 'error': 'Magazin inexistent.'})
@@ -870,7 +870,6 @@ def api_shop_data(shop_id):
 @app.route('/joc/petomania/api/shop/<shop_id>/buy', methods=['POST'])
 @login_required
 def api_shop_buy(shop_id):
-    from modules.shop import shop_buy
     user     = get_current_user()
     uid      = int(user['id'])
     data     = request.json or {}
