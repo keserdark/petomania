@@ -98,6 +98,37 @@ def save_combatant_mp(combatant: dict, user_id: int):
 
 
 # ─────────────────────────────────────────────
+# ACTIVE MOVES — citeste din DB sau fallback get_moveset
+# ─────────────────────────────────────────────
+
+def _get_active_moveset(user_id: int, pet_id: int, species: str, nature: str, level: int) -> list:
+    """
+    Returneaza moveset-ul activ al unui pet.
+    Daca are active_moves in DB, le foloseste.
+    Altfel fallback la get_moveset (self-taught bazat pe nivel).
+    """
+    from modules.db import get_db
+    conn = get_db()
+    rows = conn.execute(
+        'SELECT slot, move_key FROM active_moves WHERE user_id = ? AND pet_id = ? ORDER BY slot',
+        (user_id, pet_id)
+    ).fetchall()
+    conn.close()
+
+    if rows:
+        moves = []
+        for r in rows:
+            m = get_move(r['move_key'])
+            if m:
+                moves.append(m)
+        if moves:
+            return moves
+
+    # Fallback: get_moveset standard
+    return get_moveset(species, nature, level)
+
+
+# ─────────────────────────────────────────────
 # BUILD COMBATANT din pet DB
 # ─────────────────────────────────────────────
 
@@ -109,7 +140,7 @@ def build_combatant(pet: dict) -> dict:
     nature  = pet.get('nature')
     primary_nature = _get_primary_nature(nature)
     stats   = get_stats_at_level(species, primary_nature, level, form)
-    moveset = get_moveset(species, primary_nature, level)
+    moveset = _get_active_moveset(pet.get('user_id', 0), pet.get('id', 0), species, primary_nature, level)
 
     gender    = pet.get('gender', 'male')
     image_url = get_image_url(species, form, 'Basic', gender)

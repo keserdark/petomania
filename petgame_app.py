@@ -967,6 +967,8 @@ def api_battle_start():
     if not pet:
         return jsonify({'ok': False, 'error': 'Nu ai un companion activ.'})
     pet = dict(pet)
+    pet.setdefault('id', 0)
+    pet.setdefault('user_id', uid)
 
     player = build_combatant(pet)
 
@@ -1022,7 +1024,9 @@ def api_battle_start():
         conn_b.close()
         if not row_b:
             return jsonify({'ok': False, 'error': 'Companion negăsit.'})
-        player = build_combatant(dict(row_b))
+        row_b_dict = dict(row_b)
+        row_b_dict.setdefault('user_id', uid)
+        player = build_combatant(row_b_dict)
         # Reconstruieste bench fara noul player
         bench = []
         for slot in loadout_raw:
@@ -1228,14 +1232,16 @@ def api_battle_switch():
     from modules.db import get_db
     conn = get_db()
     if pet_data.get('from_pets') or str(pet_data['id']) == '0':
-        row = conn.execute('SELECT * FROM pets WHERE user_id = ?', (uid,)).fetchone()
+        row = conn.execute('SELECT *, ? as user_id, 0 as id FROM pets WHERE user_id = ?', (uid, uid)).fetchone()
     else:
         row = conn.execute('SELECT * FROM menagerie WHERE id = ? AND user_id = ?', (pet_data['id'], uid)).fetchone()
     conn.close()
     if not row:
         return jsonify({'ok': False, 'error': 'Pet negasit în DB.'})
 
-    new_player = build_combatant(dict(row))
+    new_player_dict = dict(row)
+    new_player_dict.setdefault('user_id', uid)
+    new_player = build_combatant(new_player_dict)
     moveset_data = []
     for mk in new_player['moveset']:
         m = get_move(mk)
