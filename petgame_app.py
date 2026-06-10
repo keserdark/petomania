@@ -1141,6 +1141,7 @@ def api_battle_turn():
         # Ultimul NPC doborat — victorie finala
         reward = calculate_reward(player['level'], npc['level'], True)
         reward += session.get('battle_accumulated_reward', 0)
+        reward *= session.get('battle_size', 1)
         if reward > 0:
             conn = get_db()
             conn.execute('UPDATE dacoins SET balance = balance + ? WHERE user_id = ?', (reward, uid))
