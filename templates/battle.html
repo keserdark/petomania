@@ -185,6 +185,51 @@
             flex: 1;
         }
 
+        /* Bag overlay */
+        #bag-overlay {
+            position: absolute; inset: 0;
+            background: rgba(0,0,0,0.88);
+            display: none; align-items: center; justify-content: center;
+            z-index: 50;
+        }
+        #bag-overlay.open { display: flex; }
+        .bag-box {
+            background: #111; border: 1px solid #2a2a2a;
+            border-radius: 14px; padding: 20px 24px;
+            display: flex; flex-direction: column; gap: 10px;
+            min-width: 300px; max-width: 500px; max-height: 70vh;
+        }
+        .bag-title {
+            font-family: 'Cinzel', serif; font-size: 15px;
+            font-weight: 700; color: #c9a84c; text-align: center;
+        }
+        .bag-list {
+            display: flex; flex-direction: column; gap: 6px;
+            overflow-y: auto; flex: 1;
+        }
+        .bag-item {
+            display: flex; align-items: center; gap: 10px;
+            padding: 8px 12px; background: #1a1a1a;
+            border: 1px solid #2a2a2a; border-radius: 8px;
+            cursor: pointer; transition: background .15s, border-color .15s;
+        }
+        .bag-item:hover { background: rgba(201,168,76,0.1); border-color: rgba(201,168,76,0.4); }
+        .bag-item img { width: 36px; height: 36px; object-fit: contain; }
+        .bag-item-icon { font-size: 28px; width: 36px; text-align: center; }
+        .bag-item-info { flex: 1; }
+        .bag-item-name { font-size: 13px; font-weight: 600; color: #f0e6c8; }
+        .bag-item-desc { font-size: 11px; color: #888; }
+        .bag-item-qty { font-size: 12px; color: #c9a84c; font-weight: 700; }
+        .bag-empty { font-size: 12px; color: #666; font-style: italic; text-align: center; padding: 16px 0; }
+        .bag-close-btn {
+            background: #1a1a1a; border: 1px solid #2a2a2a;
+            color: #888; padding: 8px; border-radius: 8px;
+            cursor: pointer; font-family: 'Cinzel', serif;
+            font-size: 12px; font-weight: 600;
+            transition: color .15s, border-color .15s;
+        }
+        .bag-close-btn:hover { color: #e05252; border-color: #e05252; }
+
         /* Switch overlay */
         #switch-overlay {
             position: absolute; inset: 0;
@@ -304,6 +349,15 @@
         <div class="switch-box">
             <div class="switch-title">⚔️ Trimite un companion</div>
             <div class="switch-list" id="switch-list"></div>
+        </div>
+    </div>
+
+    <!-- Bag overlay -->
+    <div id="bag-overlay">
+        <div class="bag-box">
+            <div class="bag-title">🎒 Rucsac</div>
+            <div class="bag-list" id="bag-list"></div>
+            <button class="bag-close-btn" onclick="closeBag()">← Înapoi</button>
         </div>
     </div>
 
@@ -481,8 +535,61 @@ function openSwitchMenu() {
     openSwitch(bench, true);  // true = switch voluntar, nu fortat
 }
 
-function openBag() {
-    addLog('🎒 Rucsacul nu e disponibil încă în luptă.');
+async function openBag() {
+    const resp = await fetch('/joc/petomania/api/rucsac');
+    const data = await resp.json();
+    const list = document.getElementById('bag-list');
+
+    if (!data.ok) { addLog('❌ Eroare rucsac.'); return; }
+
+    // Colecteaza toate itemele usable in lupta (non-null, usable_outside_battle sau tip medical/potiuni)
+    const items = [];
+    for (const cat of data.categories) {
+        for (const slot of cat.slots) {
+            if (slot && slot.quantity > 0 && slot.usable_outside_battle !== false) {
+                items.push({ ...slot, category: cat.key });
+            }
+        }
+    }
+
+    if (items.length === 0) {
+        list.innerHTML = '<div class="bag-empty">Nu ai iteme folosibile în luptă.</div>';
+    } else {
+        list.innerHTML = items.map(item => `
+            <div class="bag-item" onclick="useBagItem('${item.category}', '${item.item_key}')">
+                ${item.is_img
+                    ? `<img src="${item.icon}" alt="${item.name}">`
+                    : `<span class="bag-item-icon">${item.icon}</span>`}
+                <div class="bag-item-info">
+                    <div class="bag-item-name">${item.name}</div>
+                    <div class="bag-item-desc">${item.desc || ''}</div>
+                </div>
+                <span class="bag-item-qty">×${item.quantity}</span>
+            </div>
+        `).join('');
+    }
+
+    document.getElementById('bag-overlay').classList.add('open');
+}
+
+function closeBag() {
+    document.getElementById('bag-overlay').classList.remove('open');
+}
+
+async function useBagItem(category, itemKey) {
+    closeBag();
+    const resp = await fetch('/joc/petomania/api/rucsac/use', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ category, item_key: itemKey, target_slot: 0 })
+    });
+    const data = await resp.json();
+    addLog(data.ok ? `✅ ${data.msg}` : `❌ ${data.msg}`);
+    if (data.ok && data.new_hp !== undefined && battleData.player) {
+        battleData.player.hp_current = data.new_hp;
+        updateUI('player', battleData.player);
+    }
+    showMenu();
 }
 
 async function tryFlee() {
