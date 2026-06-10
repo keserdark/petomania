@@ -106,6 +106,16 @@ NATURES = {
         'resists_from': ['light', 'fire', 'nature'],
         'immune_to': [], 'evo_line': ['Licarix', 'Auroraan', 'Radioss'],
     },
+    'dragon': {
+        'name': 'Dragon', 'icon': '🐉', 'color': '#dc2626',
+        'flavor': 'Primordial, devastator, descendent din cei mai vechi stăpâni ai lumii.',
+        'bonus_stat': 'Atac',
+        'strong_against': ['nature', 'steel', 'earth', 'water'],
+        'weak_against': ['ice', 'crystal'],
+        'vulnerable_to': ['ice', 'crystal'],
+        'resists_from': ['fire', 'nature', 'steel'],
+        'immune_to': ['fire'], 'evo_line': ['Drakling', 'Draconix', 'Drakonar'],
+    },
 }
 
 # ─────────────────────────────────────────────
