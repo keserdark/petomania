@@ -55,7 +55,7 @@
             <div id="battle-menu">
                 <button class="bmenu-btn fight" onclick="showMoves()">⚔️ Luptă</button>
                 <button class="bmenu-btn bag"   onclick="openBag()" id="btn-bag">🎒 Rucsac</button>
-                <button class="bmenu-btn pet"   onclick="openSwitchMenu()" id="btn-pet">🐾 Pet</button>
+                <button class="bmenu-btn pet"   onclick="openSwitchMenu()" id="btn-pet" style="display:none">🐾 Pet</button>
                 <button class="bmenu-btn run"   onclick="tryFlee()" id="btn-run">🏃 Fugi</button>
             </div>
             <div id="battle-moves-panel">
@@ -154,6 +154,7 @@ async function initBattle() {
         renderMoves(stateData.player.moveset);
         clearLog();
         addLog('⚔️ Lupta continuă...');
+        updatePetBtn();
         return;
     }
 
