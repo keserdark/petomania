@@ -21,7 +21,7 @@
                 <span class="assets-popup-btn-icon">🛒</span>
                 <span>Magazin</span>
             </button>
-            <button class="assets-popup-btn" onclick="closePopup()">
+            <button class="assets-popup-btn" onclick="closePopup(); openNatureTable()">
                 <span class="assets-popup-btn-icon">📜</span>
                 <span>Cere informații suplimentare</span>
             </button>
@@ -42,6 +42,23 @@
                 <div class="assets-dialog-loading">Se încarcă...</div>
             </div>
             <div id="dialog-actions"></div>
+        </div>
+    </div>
+
+    <!-- Popup Tabel Naturi -->
+    <div class="assets-popup-overlay" id="nature-overlay">
+        <div class="assets-popup" style="max-width:520px;width:95vw">
+            <button class="assets-popup-close" onclick="closeNatureTable()">✕</button>
+            <div class="assets-popup-title">⚔️ Tabel Interacțiuni Naturi</div>
+            <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;text-align:center">Linii = atacator · Coloane = țintă</div>
+            <div style="overflow-x:auto">
+                <table id="nature-mat" style="border-collapse:collapse;font-size:11px;margin:0 auto"></table>
+            </div>
+            <div style="display:flex;gap:12px;justify-content:center;margin-top:10px;font-size:11px;color:var(--text-muted)">
+                <span><span style="display:inline-block;width:10px;height:10px;background:#1D9E75;border-radius:2px;margin-right:3px"></span>2× super eficace</span>
+                <span><span style="display:inline-block;width:10px;height:10px;background:#378ADD;border-radius:2px;margin-right:3px"></span>½× ineficace</span>
+                <span><span style="display:inline-block;width:10px;height:10px;background:#444;border-radius:2px;margin-right:3px"></span>0× imun</span>
+            </div>
         </div>
     </div>
 
@@ -330,6 +347,59 @@ function closeDialog() {
 }
 document.getElementById('dialog-overlay').addEventListener('click', (e) => {
     if (e.target === document.getElementById('dialog-overlay')) closeDialog();
+});
+
+// ── Tabel Naturi ──
+const NATURES_DATA = [
+    {icon:'🔥',name:'Foc'}, {icon:'💧',name:'Apă'}, {icon:'🌿',name:'Natură'},
+    {icon:'⛰️',name:'Pământ'}, {icon:'⚡',name:'Furtună'}, {icon:'❄️',name:'Gheață'},
+    {icon:'🌑',name:'Umbră'}, {icon:'💎',name:'Cristal'}, {icon:'⚙️',name:'Metal'},
+    {icon:'✨',name:'Lumină'}
+];
+const NAT_MATRIX = [
+    [1.0,0.5,2.0,0.5,0.5,2.0,2.0,1.0,2.0,1.0],
+    [2.0,1.0,0.5,2.0,1.0,1.0,1.0,2.0,1.0,1.0],
+    [0.5,2.0,1.0,2.0,0.5,2.0,0.5,2.0,0.5,1.0],
+    [2.0,0.5,0.5,1.0,2.0,0.5,2.0,1.0,2.0,1.0],
+    [1.0,2.0,2.0,0.0,1.0,0.5,2.0,0.5,2.0,1.0],
+    [0.5,1.0,2.0,0.5,0.5,1.0,2.0,2.0,0.5,1.0],
+    [2.0,1.0,0.5,0.5,2.0,0.5,1.0,2.0,1.0,0.5],
+    [0.5,0.5,0.5,1.0,2.0,2.0,2.0,1.0,1.0,2.0],
+    [0.5,1.0,2.0,0.5,0.5,2.0,1.0,2.0,1.0,1.0],
+    [1.0,1.0,1.0,0.5,1.0,2.0,2.0,2.0,0.5,1.0]
+];
+
+function buildNatureTable() {
+    const t = document.getElementById('nature-mat');
+    if (t.innerHTML) return;
+    const cellStyle = 'width:32px;height:32px;text-align:center;border:1px solid rgba(255,255,255,0.1);font-size:11px;';
+    let html = '<tr><th style="' + cellStyle + 'background:rgba(255,255,255,0.05)">↘</th>';
+    NATURES_DATA.forEach(n => { html += `<th style="${cellStyle}background:rgba(255,255,255,0.05)" title="${n.name}">${n.icon}</th>`; });
+    html += '</tr>';
+    NAT_MATRIX.forEach((row, i) => {
+        html += `<tr><th style="${cellStyle}background:rgba(255,255,255,0.05)" title="${NATURES_DATA[i].name}">${NATURES_DATA[i].icon}</th>`;
+        row.forEach(val => {
+            let bg, label;
+            if (val === 2.0)      { bg = '#1D9E75'; label = '2×'; }
+            else if (val === 0.5) { bg = '#378ADD'; label = '½×'; }
+            else if (val === 0.0) { bg = '#444441'; label = '✕'; }
+            else                  { bg = 'transparent'; label = '1×'; }
+            html += `<td style="${cellStyle}background:${bg};color:${bg==='transparent'?'rgba(255,255,255,0.4)':'#fff'}">${label}</td>`;
+        });
+        html += '</tr>';
+    });
+    t.innerHTML = html;
+}
+
+function openNatureTable() {
+    buildNatureTable();
+    document.getElementById('nature-overlay').classList.add('open');
+}
+function closeNatureTable() {
+    document.getElementById('nature-overlay').classList.remove('open');
+}
+document.getElementById('nature-overlay').addEventListener('click', (e) => {
+    if (e.target === document.getElementById('nature-overlay')) closeNatureTable();
 });
 </script>
 {% endblock %}
