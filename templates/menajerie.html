@@ -14,13 +14,13 @@
     </h2>
     <div class="men-loadout-grid">
         {% for slot in loadout_slots %}
-        <div class="men-loadout-slot {% if slot.slot == 1 %}men-slot-active{% endif %} {% if slot.empty %}men-slot-empty{% endif %}">
+        <div class="men-loadout-slot {% if slot.slot == 1 %}men-slot-active{% endif %} {% if slot.empty %}men-slot-empty{% endif %}"{% if slot.empty and slot.slot > 1 %} onclick="openSlotPicker({{ slot.slot }})" style="cursor:pointer"{% endif %}>
             {% if not slot.empty %}
             <img src="{{ slot.image_url }}" alt="{{ slot.name }}" class="men-slot-img">
             <div class="men-slot-name">{{ slot.name }}</div>
             <div class="men-slot-sub">Nv.{{ slot.level }}</div>
             {% else %}
-            <div class="men-slot-plus" onclick="openSlotPicker({{ slot.slot }})" style="cursor:pointer">+</div>
+            <div class="men-slot-plus">+</div>
             <div class="men-slot-name men-slot-empty-label">Gol</div>
             {% endif %}
         </div>
