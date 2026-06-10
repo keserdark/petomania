@@ -222,6 +222,7 @@ async function doTurn(moveKey) {
     data.log.forEach(l => addLog(l));
     updateUI('player', data.player);
     updateUI('npc', data.npc);
+    if (data.bench !== undefined) battleData.bench = data.bench;
     if (data.next_npc) {
         battleData.npc = data.npc;
         addLog('⚔️ Urmează următorul adversar!');

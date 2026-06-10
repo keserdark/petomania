@@ -1063,18 +1063,26 @@ def api_battle_turn():
         session.pop('battle_npc_index', None)
     elif result['winner'] == 'npc':
         conn = get_db()
-        conn.execute('UPDATE pets SET hp_current = ? WHERE user_id = ?', (max(1, player['hp_current']), uid))
+        conn.execute('UPDATE pets SET hp_current = 0 WHERE user_id = ?', (uid,))
         conn.commit()
         conn.close()
-        session.pop('battle_player', None)
-        session.pop('battle_npc', None)
-        session.pop('battle_size', None)
-        session.pop('battle_npc_index', None)
+        bench = session.get('battle_bench', [])
+        alive = [p for p in bench if p.get('hp_current', 0) > 0]
+        if alive:
+            # Mai sunt pets in bench — lasa sesiunea activa pentru switch
+            session['battle_player'] = player
+        else:
+            # Niciun pet disponibil — lupta pierduta
+            session.pop('battle_player', None)
+            session.pop('battle_npc', None)
+            session.pop('battle_size', None)
+            session.pop('battle_npc_index', None)
 
     return jsonify({
         'ok': True, 'log': result['log'],
         'player': result['player'], 'npc': result['npc'],
         'winner': result['winner'], 'reward': reward,
+        'bench': session.get('battle_bench', []),
     })
 
 
