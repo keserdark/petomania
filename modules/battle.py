@@ -232,10 +232,7 @@ def process_status_tick(combatant: dict) -> list[str]:
         if combatant['status_turns'] == 0:
             combatant['status'] = None
 
-    elif status in ('stun', 'freeze') and combatant['status_turns'] > 0:
-        combatant['status_turns'] -= 1
-        if combatant['status_turns'] == 0:
-            combatant['status'] = None
+    # stun si freeze NU sunt procesate aici — execute_move le consuma
 
     return log
 
@@ -255,9 +252,13 @@ def execute_move(attacker: dict, defender: dict, move_key: str) -> dict:
     log    = []
     result = {'log': log, 'hit': False, 'damage': 0, 'effectiveness': '', 'effect_msg': None}
 
-    # Stun/freeze blocheaza atacul
+    # Stun/freeze blocheaza atacul si consuma un tur
     if attacker.get('status') in ('stun', 'freeze'):
         log.append(f'{attacker["name"]} nu poate acționa! ({attacker["status"]})')
+        attacker['status_turns'] -= 1
+        if attacker['status_turns'] <= 0:
+            attacker['status'] = None
+            attacker['status_turns'] = 0
         return result
 
     # Accuracy check
