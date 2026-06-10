@@ -22,7 +22,10 @@
                     <div class="bc-hp-bg"><div class="bc-hp-fill" id="npc-hp-bar" style="width:100%"></div></div>
                     <div class="bc-hp-txt" id="npc-hp-txt">—/—</div>
                 </div>
-                <img id="npc-img" src="" alt="" class="bc-img bc-img-enemy">
+                <div class="bc-ground-wrap">
+                    <img id="npc-img" src="" alt="" class="bc-img bc-img-enemy">
+                    <img src="/static/arena/groundpatch.png" class="bc-ground-patch bc-ground-patch-enemy" alt="">
+                </div>
             </div>
         </div>
         <!-- Player -->
@@ -37,7 +40,10 @@
                     <div class="bc-hp-bg"><div class="bc-hp-fill" id="player-hp-bar" style="width:100%"></div></div>
                     <div class="bc-hp-txt" id="player-hp-txt">—/—</div>
                 </div>
-                <img id="player-img" src="" alt="" class="bc-img bc-img-player">
+                <div class="bc-ground-wrap">
+                    <img id="player-img" src="" alt="" class="bc-img bc-img-player">
+                    <img src="/static/arena/groundpatch.png" class="bc-ground-patch" alt="">
+                </div>
             </div>
         </div>
     </div>
@@ -93,6 +99,23 @@
     display: flex;
     flex-direction: column;
 }
+.bc-ground-wrap {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+.bc-ground-patch {
+    width: 90%;
+    opacity: 0.85;
+    margin-top: -12%;
+    pointer-events: none;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
+}
+.bc-ground-patch-enemy {
+    transform: scaleX(-1);
+}
+
 #battle-canvas {
     position: absolute;
     inset: 0;
