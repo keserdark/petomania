@@ -108,7 +108,26 @@
 
 {% block scripts %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/assets.css') }}">
-<link rel="stylesheet" href="{{ url_for('static', filename='css/battle.css') }}">
+<style>
+.arena-wrap {
+    position: relative;
+    height: calc(100vh - var(--footbar-h));
+    width: auto;
+    aspect-ratio: 1287 / 816;
+    max-width: calc(100vw - var(--sidebar-w));
+    min-width: 0;
+    max-height: calc((100vw - var(--sidebar-w)) * 816 / 1287);
+    overflow: hidden;
+    background: #0a0a0a;
+    flex-shrink: 0;
+}
+#arena-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+}
+</style>
 <script>
 const W = 1287;
 const H = 816;
