@@ -1931,6 +1931,37 @@ def api_battle_capture():
     })
 
 
+@app.route('/joc/petomania/api/menajerie/delete', methods=['POST'])
+@login_required
+def api_menajerie_delete():
+    user   = get_current_user()
+    uid    = int(user['id'])
+    data   = request.json or {}
+    men_id = data.get('id')
+    if not men_id:
+        return jsonify({'ok': False, 'error': 'ID lipsă.'})
+    conn = get_db()
+    row = conn.execute('SELECT id FROM menagerie WHERE id = ? AND user_id = ?', (men_id, uid)).fetchone()
+    if not row:
+        conn.close()
+        return jsonify({'ok': False, 'error': 'Companion negăsit.'})
+    # Scoate din loadout daca e acolo
+    conn.execute('''UPDATE loadout SET
+        slot_2 = CASE WHEN slot_2 = ? THEN NULL ELSE slot_2 END,
+        slot_3 = CASE WHEN slot_3 = ? THEN NULL ELSE slot_3 END,
+        slot_4 = CASE WHEN slot_4 = ? THEN NULL ELSE slot_4 END,
+        slot_5 = CASE WHEN slot_5 = ? THEN NULL ELSE slot_5 END
+        WHERE user_id = ?''', (men_id, men_id, men_id, men_id, uid))
+    # Sterge known_moves si active_moves
+    conn.execute('DELETE FROM known_moves WHERE user_id = ? AND pet_id = ?', (uid, men_id))
+    conn.execute('DELETE FROM active_moves WHERE user_id = ? AND pet_id = ?', (uid, men_id))
+    # Sterge din menajerie
+    conn.execute('DELETE FROM menagerie WHERE id = ? AND user_id = ?', (men_id, uid))
+    conn.commit()
+    conn.close()
+    return jsonify({'ok': True})
+
+
 if __name__ == '__main__':
     init_db()
     app.run(host='0.0.0.0', port=5002, debug=False)
