@@ -251,23 +251,21 @@ async function doTurn(moveKey) {
     updateUI('player', data.player);
     updateUI('npc', data.npc);
     if (data.bench !== undefined) { battleData.bench = data.bench; updatePetBtn(); }
-    // Actualizeaza MP
-    if (data.player) {
-        battleData.player = Object.assign(battleData.player || {}, data.player);
-    }
-    if (data.player && data.player.mp && battleData.player) {
+    // Actualizeaza MP din response
+    if (data.player && data.player.mp) {
+        if (!battleData.player) battleData.player = {};
         battleData.player.mp = data.player.mp;
-        // Update mp pe fiecare buton fara re-render complet
+        // Update mp pe fiecare buton
         document.querySelectorAll('.bmove').forEach(btn => {
             const key = btn.getAttribute('onclick').match(/'([^']+)'/)?.[1];
-            if (key && data.player.mp[key] !== undefined) {
-                const mp = data.player.mp[key];
-                const mpEl = btn.querySelector('.bmove-mp');
-                const moveData = battleData.player && battleData.player.moveset ? battleData.player.moveset.find(m => m.key === key) : null;
-                const maxMp = moveData ? (moveData.max_mp || 15) : 15;
-                if (mpEl) mpEl.textContent = mp + '/' + maxMp;
-                if (mp <= 0) { btn.disabled = true; btn.classList.add('bmove-empty'); }
-            }
+            if (!key) return;
+            const mp = data.player.mp[key] !== undefined ? data.player.mp[key] : 15;
+            const mpEl = btn.querySelector('.bmove-mp');
+            const moveData = battleData.player.moveset ? battleData.player.moveset.find(m => m.key === key) : null;
+            const maxMp = moveData ? (moveData.max_mp || 15) : 15;
+            if (mpEl) mpEl.textContent = mp + '/' + maxMp;
+            btn.disabled = (mp <= 0);
+            btn.classList.toggle('bmove-empty', mp <= 0);
         });
     }
     if (data.next_npc) {
