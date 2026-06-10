@@ -1664,8 +1664,9 @@ def api_training_swap():
             break
 
     if slot_to_replace is None:
-        conn.close()
-        return jsonify({'ok': False, 'error': 'Abilitatea veche nu a fost găsită în slot-urile active.'})
+        # old_move_key nu e in active_moves — poate fi un move self-taught care n-a fost niciodata in DB
+        # Inlocuim slot 1 ca fallback
+        slot_to_replace = active_rows[0]['slot'] if active_rows else 1
 
     conn.execute('UPDATE active_moves SET move_key = ? WHERE user_id = ? AND pet_id = ? AND slot = ?',
                  (new_move_key, uid, pet_id, slot_to_replace))
