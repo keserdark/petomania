@@ -555,7 +555,10 @@ def castel():
 @app.route('/joc/petomania/biserica')
 @login_required
 def biserica():
-    return render_template('biserica.html')
+    user    = get_current_user()
+    uid     = int(user['id'])
+    dacoins = get_dacoins(uid)
+    return render_template('biserica.html', dacoins=dacoins)
 
 
 @app.route('/joc/petomania/piata')
@@ -1689,6 +1692,96 @@ def api_training_swap():
     conn.commit()
     conn.close()
     return jsonify({'ok': True})
+
+
+
+
+@app.route('/joc/petomania/api/biserica/vindeca', methods=['POST'])
+@login_required
+def api_biserica_vindeca():
+    import json
+    from moves_config import get_moveset, MOVES
+    from modules.pets import get_pet
+    from cogs.petgame_stats import get_stats_at_level
+    from modules.pets import get_form
+
+    user = get_current_user()
+    uid  = int(user['id'])
+    COST = 500
+
+    if not spend_dacoins(uid, COST):
+        return jsonify({'ok': False, 'error': 'Dacoins insuficienți. Ai nevoie de 500 Dacoins.'})
+
+    conn = get_db()
+
+    # Vindeca pet activ
+    pet = get_pet(uid)
+    if pet:
+        p      = dict(pet)
+        form   = get_form(p['level'])
+        stats  = get_stats_at_level(p['species'], p.get('nature'), p['level'], form)
+        hp_max = stats['hp']
+
+        # Reseteaza MP la max
+        moveset  = get_moveset(p['species'], p.get('nature'), p['level'])
+        mp_dict  = {m['key']: m.get('max_mp', 15) for m in moveset}
+        # Include si active_moves custom
+        active_rows = conn.execute(
+            'SELECT move_key FROM active_moves WHERE user_id = ? AND pet_id = 0', (uid,)
+        ).fetchall()
+        for r in active_rows:
+            m = MOVES.get(r['move_key'])
+            if m:
+                mp_dict[r['move_key']] = m.get('max_mp', 15)
+        # Include known_moves
+        known_rows = conn.execute(
+            'SELECT move_key FROM known_moves WHERE user_id = ? AND pet_id = 0', (uid,)
+        ).fetchall()
+        for r in known_rows:
+            m = MOVES.get(r['move_key'])
+            if m:
+                mp_dict[r['move_key']] = m.get('max_mp', 15)
+
+        conn.execute(
+            'UPDATE pets SET hp_current = ?, mp_json = ? WHERE user_id = ?',
+            (hp_max, json.dumps(mp_dict), uid)
+        )
+
+    # Vindeca toti din menajerie
+    men_rows = conn.execute('SELECT * FROM menagerie WHERE user_id = ?', (uid,)).fetchall()
+    for row in men_rows:
+        p      = dict(row)
+        form   = get_form(p['level'])
+        stats  = get_stats_at_level(p['species'], p.get('nature'), p['level'], form)
+        hp_max = stats['hp']
+        men_id = p['id']
+
+        moveset = get_moveset(p['species'], p.get('nature'), p['level'])
+        mp_dict = {m['key']: m.get('max_mp', 15) for m in moveset}
+        active_rows = conn.execute(
+            'SELECT move_key FROM active_moves WHERE user_id = ? AND pet_id = ?', (uid, men_id)
+        ).fetchall()
+        for r in active_rows:
+            m = MOVES.get(r['move_key'])
+            if m:
+                mp_dict[r['move_key']] = m.get('max_mp', 15)
+        known_rows = conn.execute(
+            'SELECT move_key FROM known_moves WHERE user_id = ? AND pet_id = ?', (uid, men_id)
+        ).fetchall()
+        for r in known_rows:
+            m = MOVES.get(r['move_key'])
+            if m:
+                mp_dict[r['move_key']] = m.get('max_mp', 15)
+
+        conn.execute(
+            'UPDATE menagerie SET hp_current = ?, mp_json = ? WHERE id = ? AND user_id = ?',
+            (hp_max, json.dumps(mp_dict), men_id, uid)
+        )
+
+    conn.commit()
+    conn.close()
+
+    return jsonify({'ok': True, 'new_balance': get_dacoins(uid)})
 
 
 if __name__ == '__main__':
