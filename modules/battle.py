@@ -76,6 +76,13 @@ def _load_mp(mp_json: str, moveset: list) -> dict:
     return {m['key']: saved.get(m['key'], m.get('max_mp', 15)) for m in moveset}
 
 
+def _get_primary_nature(nature):
+    """Returneaza natura primara pentru moveset (primul element daca e lista)."""
+    if isinstance(nature, list):
+        return nature[0] if nature else None
+    return nature
+
+
 def save_combatant_mp(combatant: dict, user_id: int):
     """Salveaza MP-ul combatantului in DB."""
     import json
@@ -100,8 +107,9 @@ def build_combatant(pet: dict) -> dict:
     form    = get_form(level)
     species = pet['species']
     nature  = pet.get('nature')
-    stats   = get_stats_at_level(species, nature, level, form)
-    moveset = get_moveset(species, nature, level)
+    primary_nature = _get_primary_nature(nature)
+    stats   = get_stats_at_level(species, primary_nature, level, form)
+    moveset = get_moveset(species, primary_nature, level)
 
     gender    = pet.get('gender', 'male')
     image_url = get_image_url(species, form, 'Basic', gender)
@@ -147,13 +155,24 @@ def calculate_damage(attacker: dict, defender: dict, move: dict) -> tuple[int, s
     base_defense = max(1, defender['stats']['defense'])
     power        = move['power']
 
-    # Interactiune natura
+    # Interactiune natura (suporta single string sau lista pentru dual-nature)
     effectiveness = 1.0
     label = ''
     if move.get('nature') and defender.get('nature'):
-        result = get_interaction(move['nature'], defender['nature'])
-        effectiveness = result['multiplier']
-        label = result['label']
+        def_natures = defender['nature'] if isinstance(defender['nature'], list) else [defender['nature']]
+        for def_nat in def_natures:
+            result = get_interaction(move['nature'], def_nat)
+            effectiveness *= result['multiplier']
+        if effectiveness == 0.0:
+            label = 'Imun!'
+        elif effectiveness >= 4.0:
+            label = 'Super eficace!'
+        elif effectiveness == 2.0:
+            label = 'Super eficace!'
+        elif effectiveness <= 0.25:
+            label = 'Ineficace!'
+        elif effectiveness == 0.5:
+            label = 'Ineficace!'
         if effectiveness == 0.0:
             return 0, label
 
