@@ -661,6 +661,7 @@ async function rbUseOnTarget(slotIdx) {
     document.getElementById('pi-offer').style.display = 'flex';
     document.getElementById('pi-drop').style.display  = 'flex';
     if (res.ok) {
+        if (!rbActiveItem) return;  // captură a închis popup-ul deja
         rbActiveItem.quantity--;
         document.getElementById('pi-qty').textContent = rbActiveItem.quantity;
         // Actualizeaza HP in companions panel
