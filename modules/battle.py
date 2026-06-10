@@ -26,9 +26,11 @@ NPC_NAMES      = [
 
 def generate_npc(player_level: int) -> dict:
     """Genereaza un NPC random cu nivel apropriat (+-3 fata de player)."""
+    from cogs.petgame_config import SPECIES as SPECIES_CONFIG
     level     = max(1, player_level + random.randint(-3, 3))
     species   = random.choice(SPECIES_LIST)
-    nature    = random.choice(NATURES_LIST)
+    available = SPECIES_CONFIG.get(species, {}).get('available_natures', NATURES_LIST)
+    nature    = random.choice(available) if available else random.choice(NATURES_LIST)
     form      = get_form(level)
     stats     = get_stats_at_level(species, nature, level, form)
     moveset   = get_moveset(species, nature, level)
