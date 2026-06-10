@@ -35,7 +35,7 @@
             <div class="assets-popup-deco">⚔️</div>
             <div class="assets-popup-title">⚔️ Alege formatul</div>
             <div id="arena-format-msg" style="font-size:12px;color:var(--danger);text-align:center;min-height:16px;margin-bottom:4px;"></div>
-            <button class="assets-popup-btn" onclick="startArena(1)">
+            <button class="assets-popup-btn" id="btn-arena-1v1" onclick="startArena(1)">
                 <span class="assets-popup-btn-icon">🐾</span>
                 <span>1 vs 1</span>
             </button>
@@ -304,9 +304,8 @@ async function openArenaMenu() {
     if (alive === 0) {
         btn2.disabled = true; btn2.style.opacity = '0.4'; btn2.style.cursor = 'not-allowed';
         btn3.disabled = true; btn3.style.opacity = '0.4'; btn3.style.cursor = 'not-allowed';
-        document.getElementById('btn-arena-1v1') && (document.getElementById('btn-arena-1v1').disabled = true);
-        document.getElementById('btn-arena-1v1') && (document.getElementById('btn-arena-1v1').style.opacity = '0.4');
-        document.getElementById('btn-arena-1v1') && (document.getElementById('btn-arena-1v1').style.cursor = 'not-allowed');
+        const btn1 = document.getElementById('btn-arena-1v1');
+        btn1.disabled = true; btn1.style.opacity = '0.4'; btn1.style.cursor = 'not-allowed';
         msg.textContent = 'Toți companionii tăi sunt KO. Vindecă-i înainte de luptă.';
     } else if (alive < 2) {
         btn2.disabled = true; btn2.style.opacity = '0.4'; btn2.style.cursor = 'not-allowed';
@@ -330,6 +329,8 @@ function closeArenaMenu() {
 }
 
 function startArena(size) {
+    const btn = document.getElementById('btn-arena-' + (size === 1 ? '1v1' : size === 2 ? '2v2' : '3v3'));
+    if (btn && btn.disabled) return;
     closeArenaMenu();
     window.location = '/joc/petomania/battle?size=' + size;
 }
