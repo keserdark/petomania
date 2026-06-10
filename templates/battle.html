@@ -404,24 +404,72 @@ function openSwitchMenu() {
 function openBag() {
     if (typeof rucsacToggle === 'function') {
         rucsacToggle();
-        // Dupa inchiderea rucsacului, re-sync HP din battle state
         const checkClose = setInterval(async () => {
             if (typeof rbOpen !== 'undefined' && !rbOpen) {
                 clearInterval(checkClose);
-                // Re-fetch HP din sesiune (care e syncronizat cu DB)
+                // Verifica daca a fost o captura
                 try {
-                    const resp = await fetch('/joc/petomania/api/battle/state');
-                    const data = await resp.json();
-                    if (data.ok && data.active && battleData.player) {
-                        battleData.player.hp_current = data.player.hp_current;
-                        updateUI('player', data.player);
-                        addLog('💊 HP actualizat.');
+                    const stateResp = await fetch('/joc/petomania/api/battle/state');
+                    const stateData = await stateResp.json();
+
+                    // Daca sesiunea de battle nu mai e activa -> captura reusita
+                    if (!stateData.active) {
+                        // Afiseaza ecran de captura reusita
+                        if (window._lastCaptureResult && window._lastCaptureResult.caught) {
+                            const r = window._lastCaptureResult;
+                            showVictory([],
+                                `🔮 ${r.name} a fost capturat!`,
+                                `<div style="margin-top:8px;font-size:13px;opacity:0.7">${r.species} · Nv.${r.level} · ${r.nature || 'fără natură'}</div>`
+                            );
+                        }
+                        return;
+                    }
+
+                    // Altfel sync HP normal
+                    if (stateData.ok && battleData.player) {
+                        battleData.player.hp_current = stateData.player.hp_current;
+                        updateUI('player', stateData.player);
+                        if (window._lastCaptureResult && !window._lastCaptureResult.caught) {
+                            addLog(`🔮 ${window._lastCaptureResult.msg}`);
+                            window._lastCaptureResult = null;
+                        } else {
+                            addLog('💊 HP actualizat.');
+                        }
                     }
                 } catch(e) {}
             }
         }, 300);
     }
 }
+
+// Interceptor pentru captură — rucsac_widget.js apeleaza /api/rucsac/use
+// Suprascriem fetch global ca sa detectam raspunsuri de captura
+const _origFetch = window.fetch;
+window.fetch = async function(...args) {
+    const resp = await _origFetch(...args);
+    const url  = typeof args[0] === 'string' ? args[0] : '';
+    if (url.includes('/api/rucsac/use')) {
+        const clone = resp.clone();
+        try {
+            const data = await clone.json();
+            if (data.caught !== undefined) {
+                window._lastCaptureResult = data;
+                if (data.caught) {
+                    // Inchide rucsacul automat
+                    if (typeof rucsacToggle === 'function' && typeof rbOpen !== 'undefined' && rbOpen) {
+                        rucsacToggle();
+                    }
+                } else if (!data.caught) {
+                    // Esec — NPC continua lupta, doar log
+                    addLog(`🔮 ${data.msg}`);
+                    window._lastCaptureResult = null;
+                }
+            }
+        } catch(e) {}
+        return resp;
+    }
+    return resp;
+};
 
 async function tryFlee() {
     const playerLvl = battleData.player ? battleData.player.level : 1;

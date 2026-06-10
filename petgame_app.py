@@ -739,6 +739,14 @@ def api_rucsac_use():
     target_slot = int(data.get('target_slot', 0))
     if not category or not item_key:
         return jsonify({'ok': False, 'msg': 'Date lipsă.'})
+
+    # Nexus in battle -> redirectioneaza catre captură
+    if category == 'nexus' and session.get('battle_npc'):
+        from flask import redirect
+        # Apelam direct logica de captură
+        request._cached_json = (data | {'item_key': item_key}, True)
+        return api_battle_capture()
+
     return jsonify(use_item(uid, category, item_key, target_slot=target_slot))
 
 
@@ -1782,6 +1790,145 @@ def api_biserica_vindeca():
     conn.close()
 
     return jsonify({'ok': True, 'new_balance': get_dacoins(uid)})
+
+
+# ── CAPTURĂ NEXUS ────────────────────────────────────────────────────────
+
+@app.route('/joc/petomania/api/battle/capture', methods=['POST'])
+@login_required
+def api_battle_capture():
+    import json, random, time
+    from cogs.petgame_config import SPECIES
+    from inventory_config import INVENTORY_ITEMS
+
+    user = get_current_user()
+    uid  = int(user['id'])
+
+    # Verifica ca suntem in lupta
+    npc = session.get('battle_npc')
+    if not npc:
+        return jsonify({'ok': False, 'msg': 'Nu ești în luptă.'})
+
+    data     = request.json or {}
+    item_key = data.get('item_key', 'nexus_basic')
+
+    # Verifica ca playerul are nexus in inventar
+    conn = get_db()
+    inv_row = conn.execute(
+        'SELECT quantity FROM inventory WHERE user_id = ? AND category = ? AND item_key = ?',
+        (uid, 'nexus', item_key)
+    ).fetchone()
+    if not inv_row or inv_row['quantity'] < 1:
+        conn.close()
+        return jsonify({'ok': False, 'msg': 'Nu ai acest Nexus în inventar.'})
+
+    # Nexus multiplier
+    NEXUS_MULTIPLIERS = {
+        'nexus_basic': 1.0,
+    }
+    nexus_mult = NEXUS_MULTIPLIERS.get(item_key, 1.0)
+
+    # NPC stats
+    hp_current = npc.get('hp_current', 1)
+    hp_max     = npc.get('hp_max', 1)
+    status     = npc.get('status')
+
+    # Calcul rata de captură
+    # Base: 30% × nexus_mult
+    base_rate = 0.30 * nexus_mult
+
+    # HP modifier: cu cat mai mic HP, cu atat mai mare sansa (max +50%)
+    hp_ratio    = hp_current / max(hp_max, 1)
+    hp_modifier = (1.0 - hp_ratio) * 0.50
+
+    # Status modifier
+    STATUS_BONUSES = {
+        'stun':       0.15,
+        'freeze':     0.15,
+        'sleep':      0.15,
+        'burn':       0.10,
+        'poison':     0.10,
+        'speed_down': 0.05,
+    }
+    status_modifier = STATUS_BONUSES.get(status, 0.0)
+
+    capture_rate = min(0.90, base_rate + hp_modifier + status_modifier)
+    roll         = random.random()
+    success      = roll <= capture_rate
+
+    # Scade nexus din inventar indiferent de rezultat
+    new_qty = inv_row['quantity'] - 1
+    if new_qty == 0:
+        conn.execute('DELETE FROM inventory WHERE user_id = ? AND category = ? AND item_key = ?',
+                     (uid, 'nexus', item_key))
+    else:
+        conn.execute('UPDATE inventory SET quantity = ? WHERE user_id = ? AND category = ? AND item_key = ?',
+                     (new_qty, uid, 'nexus', item_key))
+    conn.commit()
+
+    if not success:
+        conn.close()
+        return jsonify({
+            'ok':      True,
+            'caught':  False,
+            'rate':    round(capture_rate * 100),
+            'msg':     f'Nexusul s-a spart! {npc["name"]} a scăpat. (Șansă: {round(capture_rate*100)}%)',
+        })
+
+    # Capturat — adauga in menajerie
+    species = npc.get('species', 'cat')
+    nature  = npc.get('nature')
+    level   = npc.get('level', 1)
+    gender  = random.choice(['male', 'female'])
+
+    # Genereaza nume din species
+    species_data = SPECIES.get(species, {})
+    from modules.pets import get_form
+    form = get_form(level)
+    entry = species_data.get('entries', {}).get(form, {})
+    default_name = entry.get('name', species_data.get('name', 'Companion'))
+
+    # Stats initiale
+    from cogs.petgame_stats import get_stats_at_level
+    stats  = get_stats_at_level(species, nature, level, form)
+    hp_max_new = stats['hp']
+
+    now = int(time.time())
+    conn.execute(
+        """INSERT INTO menagerie
+           (user_id, species, nature, name, level, xp, gender,
+            hunger, happiness, cleanliness, energy, sleeping,
+            born_at, stored_at, hp, hp_current)
+           VALUES (?,?,?,?,?,0,?,100,100,100,100,0,?,?,?,?)""",
+        (uid, species, nature, default_name, level, gender,
+         now, now, hp_max_new, hp_max_new)
+    )
+    conn.commit()
+    men_id = conn.execute('SELECT last_insert_rowid() as id').fetchone()['id']
+    conn.close()
+
+    # Sync companicon
+    from modules.companicon import sync_companicon_discovered
+    sync_companicon_discovered(uid)
+
+    # Termina lupta
+    session.pop('battle_npc', None)
+    session.pop('battle_bench', None)
+    session.pop('battle_accumulated_reward', None)
+    session.pop('battle_participants', None)
+    session.pop('battle_size', None)
+
+    return jsonify({
+        'ok':      True,
+        'caught':  True,
+        'rate':    round(capture_rate * 100),
+        'name':    default_name,
+        'species': species_data.get('name', species),
+        'nature':  nature,
+        'level':   level,
+        'gender':  gender,
+        'msg':     f'{default_name} a fost capturat!',
+    })
 
 
 if __name__ == '__main__':
