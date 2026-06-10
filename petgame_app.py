@@ -1349,8 +1349,9 @@ def api_battle_abandon():
 def api_loadout_count():
     uid   = int(get_current_user()['id'])
     slots = build_loadout_context(uid)
-    count = sum(1 for s in slots if not s.get('empty'))
-    return jsonify({'ok': True, 'count': count})
+    count       = sum(1 for s in slots if not s.get('empty'))
+    alive_count = sum(1 for s in slots if not s.get('empty') and s.get('hp_current', 0) > 0)
+    return jsonify({'ok': True, 'count': count, 'alive': alive_count})
 
 
 # ── RUN ───────────────────────────────────────────────────────────────
