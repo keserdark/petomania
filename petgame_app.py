@@ -1175,6 +1175,18 @@ def api_battle_abandon():
     return jsonify({'ok': True})
 
 
+
+# ── LOADOUT COUNT ────────────────────────────────────────────────────
+
+@app.route('/joc/petomania/api/loadout/count')
+@login_required
+def api_loadout_count():
+    uid   = int(get_current_user()['id'])
+    slots = build_loadout_context(uid)
+    count = sum(1 for s in slots if not s.get('empty'))
+    return jsonify({'ok': True, 'count': count})
+
+
 # ── RUN ───────────────────────────────────────────────────────────────
 
 if __name__ == '__main__':
