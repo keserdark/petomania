@@ -130,6 +130,20 @@
     cursor: not-allowed;
     filter: grayscale(1);
 }
+.bmove-nature {
+    position: absolute;
+    top: 5px;
+    left: 5px;
+    font-size: 11px;
+    line-height: 1;
+    background: rgba(0,0,0,0.4);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 4px;
+    padding: 2px 4px;
+}
+.bmove {
+    position: relative;
+}
 
 #battle-canvas {
     position: absolute;
@@ -150,6 +164,12 @@ bgImg.src   = '/static/arena/battle.png';
 bgImg.onload = () => ctx.drawImage(bgImg, 0, 0, W, H);
 
 let battleData = { player: null, npc: null, bench: [], busy: false };
+
+const NATURE_ICONS = {
+    fire:'🔥', water:'💧', nature:'🌿', earth:'⛰️',
+    storm:'⚡', ice:'❄️', shadow:'🌑', crystal:'💎',
+    steel:'⚙️', light:'✨'
+};
 
 async function initBattle() {
     // Verifica daca exista o lupta activa in sesiune
@@ -207,7 +227,9 @@ function renderMoves(moveset) {
         const mp = m.mp !== undefined ? m.mp : (m.max_mp || 15);
         const maxMp = m.max_mp || 15;
         const disabled = mp <= 0;
+        const natIcon = m.nature && NATURE_ICONS[m.nature] ? `<span class="bmove-nature">${NATURE_ICONS[m.nature]}</span>` : '';
         return `<button class="bmove${disabled ? ' bmove-empty' : ''}" onclick="doTurn('${m.key}')" ${disabled ? 'disabled' : ''}>
+            ${natIcon}
             <span class="bmove-icon">${m.icon}</span>
             <span class="bmove-name">${m.name}</span>
             <span class="bmove-mp">${mp}/${maxMp}</span>

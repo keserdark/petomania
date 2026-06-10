@@ -35,7 +35,7 @@ NATURES = {
     },
     'earth': {
         'name': 'Pământ',
-        'icon': '🪨',
+        'icon': '⛰️',
         'color': '#a16207',
         'flavor': 'Stabil, apărare ridicată, lent dar implacabil.',
         'bonus_stat': 'defense',
