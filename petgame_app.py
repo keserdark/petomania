@@ -1231,25 +1231,32 @@ def api_battle_switch():
         old_hp = max(0, old_player.get('hp_current', 0))
         conn2 = get_db()
         if old_id and old_id != 0:
-            # Pet din menagerie
             conn2.execute('UPDATE menagerie SET hp_current = ? WHERE id = ?', (old_hp, old_id))
         else:
-            # Pet activ din pets
             conn2.execute('UPDATE pets SET hp_current = ? WHERE user_id = ?', (old_hp, uid))
         conn2.commit()
         conn2.close()
-        # Actualizeaza HP si in bench daca e acolo
-        updated_bench = []
-        for p in bench:
-            if str(p['id']) != str(pet_id):
-                if str(p.get('id')) == str(old_id):
-                    p = dict(p)
-                    p['hp_current'] = old_hp
-                updated_bench.append(p)
-        bench = updated_bench
+
+        # Daca petul care iese e viu (switch voluntar), il adaugam inapoi in bench
+        new_bench = [p for p in bench if str(p['id']) != str(pet_id)]
+        if old_hp > 0:
+            already_in_bench = any(str(p.get('id')) == str(old_id) for p in new_bench)
+            if not already_in_bench:
+                new_bench.append({
+                    'id':        old_player.get('id'),
+                    'name':      old_player.get('name'),
+                    'level':     old_player.get('level'),
+                    'hp_max':    old_player.get('hp_max'),
+                    'hp_current':old_hp,
+                    'image_url': old_player.get('image_url', ''),
+                    'species':   old_player.get('species', ''),
+                    'nature':    old_player.get('nature'),
+                    'gender':    old_player.get('gender', 'male'),
+                })
+        bench = new_bench
 
     # Scoate din bench
-    session['battle_bench']  = [p for p in bench if str(p['id']) != str(pet_id)]
+    session['battle_bench']  = bench
     session['battle_player'] = new_player
 
     return jsonify({
