@@ -18,10 +18,7 @@ from moves_config import get_moveset, get_move
 SPECIES_LIST   = ['dog', 'cat', 'blackcat', 'duck']
 NATURES_LIST   = ['fire', 'water', 'nature', 'earth', 'storm', 'ice', 'shadow', 'crystal', 'steel', 'light']
 SPECIES_NAMES  = {'dog': 'Câine', 'cat': 'Pisică', 'blackcat': 'Pisică Neagră', 'duck': 'Rață'}
-NPC_NAMES      = [
-    'Brutus', 'Fang', 'Claw', 'Shadow', 'Blaze', 'Storm', 'Rex',
-    'Nova', 'Zephyr', 'Ember', 'Frost', 'Titan', 'Viper', 'Ace'
-]
+from npc_names_config import get_npc_name
 
 
 def generate_npc(player_level: int) -> dict:
@@ -34,7 +31,7 @@ def generate_npc(player_level: int) -> dict:
     form      = get_form(level)
     stats     = get_stats_at_level(species, nature, level, form)
     moveset   = get_moveset(species, nature, level)
-    name      = random.choice(NPC_NAMES)
+    name      = get_npc_name(nature)
     gender    = random.choice(['male', 'female'])
 
     return {
