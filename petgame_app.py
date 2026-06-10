@@ -728,14 +728,15 @@ def api_rucsac_data():
 @app.route('/joc/petomania/api/rucsac/use', methods=['POST'])
 @login_required
 def api_rucsac_use():
-    user     = get_current_user()
-    uid      = int(user['id'])
-    data     = request.json or {}
-    category = data.get('category', '')
-    item_key = data.get('item_key', '')
+    user        = get_current_user()
+    uid         = int(user['id'])
+    data        = request.json or {}
+    category    = data.get('category', '')
+    item_key    = data.get('item_key', '')
+    target_slot = int(data.get('target_slot', 0))
     if not category or not item_key:
         return jsonify({'ok': False, 'msg': 'Date lipsă.'})
-    return jsonify(use_item(uid, category, item_key))
+    return jsonify(use_item(uid, category, item_key, target_slot=target_slot))
 
 
 @app.route('/joc/petomania/api/rucsac/drop', methods=['POST'])
@@ -1051,12 +1052,11 @@ def api_battle_start():
         if m:
             moveset_data.append({'key': m['key'], 'name': m['name'], 'icon': m['icon'], 'type': m['type'], 'power': m['power']})
 
-    session['battle_player']           = player
-    session['battle_npc']              = npc
-    session['battle_bench']            = bench
-    session['battle_size']             = battle_size
-    session['battle_npc_index']        = 1
-    session['battle_accumulated_reward'] = 0
+    session['battle_player']    = player
+    session['battle_npc']       = npc
+    session['battle_bench']     = bench
+    session['battle_size']      = battle_size
+    session['battle_npc_index'] = 1
 
     return jsonify({
         'ok': True,
@@ -1117,9 +1117,6 @@ def api_battle_turn():
             # Mai sunt NPC-uri — genereaza urmatorul
             from modules.battle import generate_npc as _gen_npc
             new_npc = _gen_npc(player['level'])
-            # Acumuleaza reward pentru NPC-ul doborat
-            partial_reward = calculate_reward(player['level'], npc['level'], True)
-            session['battle_accumulated_reward'] = session.get('battle_accumulated_reward', 0) + partial_reward
             session['battle_npc']       = new_npc
             session['battle_npc_index'] = npc_index + 1
             session['battle_player']    = player
@@ -1140,7 +1137,6 @@ def api_battle_turn():
 
         # Ultimul NPC doborat — victorie finala
         reward = calculate_reward(player['level'], npc['level'], True)
-        reward += session.get('battle_accumulated_reward', 0)
         if reward > 0:
             conn = get_db()
             conn.execute('UPDATE dacoins SET balance = balance + ? WHERE user_id = ?', (reward, uid))
@@ -1151,7 +1147,6 @@ def api_battle_turn():
         session.pop('battle_npc', None)
         session.pop('battle_size', None)
         session.pop('battle_npc_index', None)
-        session.pop('battle_accumulated_reward', None)
     elif result['winner'] == 'npc':
         _save_player_hp(player, uid, hp_override=0)
         bench = session.get('battle_bench', [])
@@ -1166,7 +1161,6 @@ def api_battle_turn():
             session.pop('battle_npc', None)
             session.pop('battle_size', None)
             session.pop('battle_npc_index', None)
-            session.pop('battle_accumulated_reward', None)
 
     return jsonify({
         'ok': True, 'log': result['log'],
