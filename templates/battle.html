@@ -17,6 +17,7 @@
                     <div class="bc-name-row">
                         <span class="bc-name" id="npc-name">—</span>
                         <span class="bc-level" id="npc-level">Nv.—</span>
+                        <span class="bc-nature-badge" id="npc-nature"></span>
                     </div>
                     <div class="bc-status" id="npc-status"></div>
                     <div class="bc-hp-bg"><div class="bc-hp-fill" id="npc-hp-bar" style="width:100%"></div></div>
@@ -35,11 +36,11 @@
                     <div class="bc-name-row">
                         <span class="bc-name" id="player-name">—</span>
                         <span class="bc-level" id="player-level">Nv.—</span>
-                        <span class="bc-nature-badge" id="player-nature"></span>
                     </div>
                     <div class="bc-status" id="player-status"></div>
                     <div class="bc-hp-bg"><div class="bc-hp-fill" id="player-hp-bar" style="width:100%"></div></div>
                     <div class="bc-hp-txt" id="player-hp-txt">—/—</div>
+                    <div style="text-align:right"><span class="bc-nature-badge" id="player-nature"></span></div>
                 </div>
                 <div class="bc-ground-wrap">
                     <img src="/static/arena/groundpatch.png" class="bc-ground-patch" alt="">
@@ -153,6 +154,7 @@
     padding: 1px 4px;
     margin-left: 4px;
 }
+
 
 #battle-canvas {
     position: absolute;
