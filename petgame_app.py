@@ -1008,12 +1008,14 @@ def api_battle_turn():
     if not player or not npc:
         return jsonify({'ok': False, 'error': 'Nicio bătălie activă.'})
 
-    # Re-citeste HP din DB inainte de tur (potiunile pot fi folosite intre tururi)
-    conn = get_db()
-    fresh = conn.execute('SELECT hp_current FROM pets WHERE user_id = ?', (uid,)).fetchone()
-    conn.close()
-    if fresh:
-        player['hp_current'] = fresh['hp_current']
+    # Re-citeste HP din DB inainte de tur doar daca playerul e petul activ (id=None = din pets)
+    # Daca e din menagerie (id != None), HP-ul lui e in sesiune, nu in tabela pets
+    if player.get('id') is None or player.get('id') == 0:
+        conn = get_db()
+        fresh = conn.execute('SELECT hp_current FROM pets WHERE user_id = ?', (uid,)).fetchone()
+        conn.close()
+        if fresh:
+            player['hp_current'] = fresh['hp_current']
 
     move_key = (request.json or {}).get('move_key', 'scratch')
     result   = execute_turn(player, npc, move_key)
