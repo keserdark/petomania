@@ -88,8 +88,8 @@ NATURES = {
         'color': '#dc2626',
         'flavor': 'Primordial, devastator, descendent din cei mai vechi stăpâni ai lumii.',
         'bonus_stat': 'attack',
-    ,
-}}
+    },
+}
 
 
 # ─────────────────────────────────────────────
