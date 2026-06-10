@@ -182,8 +182,8 @@ def sync_pet_hp(user_id: int):
     form   = get_form(p['level'])
     stats  = get_stats_at_level(p['species'], p.get('nature'), p['level'], form)
     hp_max = stats['hp']
-    hp_cur = p['hp_current'] if p['hp_current'] > 0 else hp_max
-    hp_cur = min(hp_cur, hp_max)
+    # Nu resetam hp_current daca e 0 (pet mort) — pastram cum e in DB
+    hp_cur = min(p['hp_current'], hp_max)
     conn = get_db()
     conn.execute('UPDATE pets SET hp = ?, hp_current = ? WHERE user_id = ?', (hp_max, hp_cur, user_id))
     conn.commit()
