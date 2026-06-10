@@ -1106,6 +1106,45 @@ def api_battle_switch():
     })
 
 
+
+# ── BATTLE STATE ─────────────────────────────────────────────────────
+
+@app.route('/joc/petomania/api/battle/state')
+@login_required
+def api_battle_state():
+    from moves_config import get_move
+    player = session.get('battle_player')
+    npc    = session.get('battle_npc')
+    bench  = session.get('battle_bench', [])
+    if not player or not npc:
+        return jsonify({'ok': False, 'active': False})
+
+    moveset_data = []
+    for mk in player.get('moveset', []):
+        m = get_move(mk)
+        if m:
+            moveset_data.append({'key': m['key'], 'name': m['name'], 'icon': m['icon'], 'type': m['type'], 'power': m['power']})
+
+    return jsonify({
+        'ok': True, 'active': True,
+        'player': {
+            'id': player['id'], 'name': player['name'],
+            'level': player.get('level', 1),
+            'hp_max': player['hp_max'], 'hp_current': player['hp_current'],
+            'image_url': player.get('image_url', ''),
+            'moveset': moveset_data, 'status': player.get('status'), 'shield': player.get('shield', 0),
+        },
+        'npc': {
+            'id': npc['id'], 'name': npc['name'],
+            'level': npc.get('level', 1),
+            'hp_max': npc['hp_max'], 'hp_current': npc['hp_current'],
+            'image_url': npc.get('image_url', ''),
+            'status': npc.get('status'), 'shield': npc.get('shield', 0),
+        },
+        'bench': bench,
+    })
+
+
 # ── RUN ───────────────────────────────────────────────────────────────
 
 if __name__ == '__main__':

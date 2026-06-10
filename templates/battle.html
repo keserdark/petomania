@@ -141,6 +141,23 @@ bgImg.onload = () => ctx.drawImage(bgImg, 0, 0, W, H);
 let battleData = { player: null, npc: null, bench: [], busy: false };
 
 async function initBattle() {
+    // Verifica daca exista o lupta activa in sesiune
+    const stateResp = await fetch('/joc/petomania/api/battle/state');
+    const stateData = await stateResp.json();
+
+    if (stateData.ok && stateData.active) {
+        battleData.player = stateData.player;
+        battleData.npc    = stateData.npc;
+        battleData.bench  = stateData.bench || [];
+        updateUI('player', stateData.player);
+        updateUI('npc', stateData.npc);
+        renderMoves(stateData.player.moveset);
+        clearLog();
+        addLog('⚔️ Lupta continuă...');
+        return;
+    }
+
+    // Porneste lupta noua
     const resp = await fetch('/joc/petomania/api/battle/start', {
         method: 'POST', headers: {'Content-Type':'application/json'}, body: '{}'
     });
