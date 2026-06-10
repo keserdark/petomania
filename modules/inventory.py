@@ -113,6 +113,7 @@ def inv_build_context(user_id: int) -> list:
                     'quest_item':            item_cfg.get('quest_item', False),
                     'usable_outside_battle': item_cfg.get('usable_outside_battle', True),
                     'usable_in_zone':        item_cfg.get('usable_in_zone', False),
+                    'capture_item':          item_cfg.get('capture_item', False),
                 })
         while len(slots) < CATEGORY_SLOTS:
             slots.append(None)

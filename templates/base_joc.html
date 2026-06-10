@@ -591,9 +591,28 @@ document.getElementById('rb-item-overlay').onclick = (e) => {
     if (e.target === document.getElementById('rb-item-overlay')) rbCloseItemPopup();
 };
 
-document.getElementById('pi-use').onclick = () => {
+document.getElementById('pi-use').onclick = async () => {
     if (!rbActiveItem) return;
-    // Arata target selector
+
+    // Capture items (nexus) — folosire directa fara target selector
+    if (rbActiveItem.capture_item) {
+        const res = await rbPost(RB_API.use, {
+            category: rbActiveItem.category,
+            item_key: rbActiveItem.item_key,
+            target_slot: 0,
+        });
+        rbShowMsg('pi-msg', res.msg, res.ok);
+        if (res.ok && res.quantity !== undefined) {
+            rbActiveItem.quantity = res.quantity;
+            document.getElementById('pi-qty').textContent = rbActiveItem.quantity;
+        } else if (res.ok) {
+            rbActiveItem.quantity--;
+            document.getElementById('pi-qty').textContent = rbActiveItem.quantity;
+        }
+        return;
+    }
+
+    // Arata target selector pentru alte iteme
     document.getElementById('pi-use').style.display    = 'none';
     document.getElementById('pi-offer').style.display  = 'none';
     document.getElementById('pi-drop').style.display   = 'none';

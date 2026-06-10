@@ -44,6 +44,7 @@ INVENTORY_ITEMS = {
         'price': 50,
         'effects': {},
         'usable_outside_battle': False,
+        'capture_item': True,
         'quest_item': False,
     },
 ],
