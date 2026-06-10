@@ -1211,7 +1211,7 @@ def battle():
 @app.route('/joc/petomania/api/battle/switch', methods=['POST'])
 @login_required
 def api_battle_switch():
-    from modules.battle import build_combatant
+    from modules.battle import build_combatant, save_combatant_mp
     from moves_config import get_move
     user   = get_current_user()
     uid    = int(user['id'])
