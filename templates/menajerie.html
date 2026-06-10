@@ -262,8 +262,10 @@ async function addToSlot(menId, slot) {
     }
 }
 
-document.getElementById('slot-picker-overlay').addEventListener('click', e => {
-    if (e.target === document.getElementById('slot-picker-overlay')) closeSlotPicker();
+document.addEventListener('DOMContentLoaded', () => {
+    document.getElementById('slot-picker-overlay').addEventListener('click', e => {
+        if (e.target === document.getElementById('slot-picker-overlay')) closeSlotPicker();
+    });
 });
 
 async function removeFromLoadout(slot, event) {
