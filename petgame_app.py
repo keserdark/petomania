@@ -979,20 +979,44 @@ def api_battle_start():
             'gender':    slot.get('gender', 'male'),
         })
 
-    # Daca petul activ e mort, inlocuieste-l cu primul din bench
+    # Daca petul activ e mort, inlocuieste-l cu primul din loadout cu HP > 0
     if player['hp_current'] <= 0:
-        alive_bench = [p for p in bench if p['hp_current'] > 0]
-        if not alive_bench:
+        # Cauta in tot loadout-ul (nu doar in bench limitat)
+        all_bench = []
+        for slot in loadout_raw:
+            if slot.get('empty') or slot.get('slot') == 1:
+                continue
+            all_bench.append(slot)
+        alive_slots = [s for s in all_bench if s.get('hp_current', 0) > 0]
+        if not alive_slots:
             return jsonify({'ok': False, 'error': 'Toți companionii tăi sunt KO. Vindecă-i înainte de luptă.'})
-        first = alive_bench[0]
-        # Construieste combatant din menagerie
+        first = alive_slots[0]
         conn_b = get_db()
         row_b  = conn_b.execute('SELECT * FROM menagerie WHERE id = ? AND user_id = ?', (first['id'], uid)).fetchone()
         conn_b.close()
         if not row_b:
             return jsonify({'ok': False, 'error': 'Companion negăsit.'})
         player = build_combatant(dict(row_b))
-        bench  = [p for p in bench if str(p['id']) != str(first['id'])]
+        # Reconstruieste bench fara noul player
+        bench = []
+        for slot in loadout_raw:
+            if slot.get('empty') or slot.get('slot') == 1:
+                continue
+            if str(slot['id']) == str(first['id']):
+                continue
+            if len(bench) >= battle_size - 1:
+                break
+            bench.append({
+                'id':        slot['id'],
+                'name':      slot['name'],
+                'level':     slot['level'],
+                'hp_max':    slot['hp_max'],
+                'hp_current':slot['hp_current'],
+                'image_url': slot['image_url'],
+                'species':   slot['species_key'],
+                'nature':    slot['nature_key'],
+                'gender':    slot.get('gender', 'male'),
+            })
 
     npc = generate_npc(player['level'])
 
