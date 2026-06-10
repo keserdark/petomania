@@ -291,8 +291,25 @@ function openSwitchMenu() {
 }
 
 function openBag() {
-    // Foloseste rucsacul din base_joc.html — deja disponibil
-    if (typeof rucsacToggle === 'function') rucsacToggle();
+    if (typeof rucsacToggle === 'function') {
+        rucsacToggle();
+        // Dupa inchiderea rucsacului, re-sync HP din battle state
+        const checkClose = setInterval(async () => {
+            if (typeof rbOpen !== 'undefined' && !rbOpen) {
+                clearInterval(checkClose);
+                // Re-fetch HP din sesiune (care e syncronizat cu DB)
+                try {
+                    const resp = await fetch('/joc/petomania/api/battle/state');
+                    const data = await resp.json();
+                    if (data.ok && data.active && battleData.player) {
+                        battleData.player.hp_current = data.player.hp_current;
+                        updateUI('player', data.player);
+                        addLog('💊 HP actualizat.');
+                    }
+                } catch(e) {}
+            }
+        }, 300);
+    }
 }
 
 async function tryFlee() {
