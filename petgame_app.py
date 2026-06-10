@@ -1050,7 +1050,7 @@ def api_battle_start():
     for mk in player['moveset']:
         m = get_move(mk)
         if m:
-            moveset_data.append({'key': m['key'], 'name': m['name'], 'icon': m['icon'], 'type': m['type'], 'power': m['power']})
+            moveset_data.append({'key': m['key'], 'name': m['name'], 'icon': m['icon'], 'type': m['type'], 'power': m['power'], 'mp': player['mp'].get(m['key'], 15), 'max_mp': m.get('max_mp', 15)})
 
     session['battle_player']             = player
     session['battle_npc']                = npc
@@ -1239,7 +1239,7 @@ def api_battle_switch():
     for mk in new_player['moveset']:
         m = get_move(mk)
         if m:
-            moveset_data.append({'key': m['key'], 'name': m['name'], 'icon': m['icon'], 'type': m['type'], 'power': m['power']})
+            moveset_data.append({'key': m['key'], 'name': m['name'], 'icon': m['icon'], 'type': m['type'], 'power': m['power'], 'mp': new_player['mp'].get(m['key'], 15), 'max_mp': m.get('max_mp', 15)})
 
     # Salveaza HP-ul petului care iese din arena
     old_player = session.get('battle_player')
@@ -1311,7 +1311,7 @@ def api_battle_state():
     for mk in player.get('moveset', []):
         m = get_move(mk)
         if m:
-            moveset_data.append({'key': m['key'], 'name': m['name'], 'icon': m['icon'], 'type': m['type'], 'power': m['power']})
+            moveset_data.append({'key': m['key'], 'name': m['name'], 'icon': m['icon'], 'type': m['type'], 'power': m['power'], 'mp': player.get('mp', {}).get(m['key'], 15), 'max_mp': m.get('max_mp', 15)})
 
     # Re-citeste HP din DB — poate fi modificat de potiuni intre tururi
     conn = get_db()

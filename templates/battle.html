@@ -119,6 +119,17 @@
     z-index: 1;
     order: -1;
 }
+.bmove-mp {
+    font-size: 10px;
+    opacity: 0.6;
+    margin-left: auto;
+    padding-left: 6px;
+}
+.bmove-empty {
+    opacity: 0.4;
+    cursor: not-allowed;
+    filter: grayscale(1);
+}
 
 #battle-canvas {
     position: absolute;
@@ -192,12 +203,16 @@ function updateUI(side, c) {
 }
 
 function renderMoves(moveset) {
-    document.getElementById('battle-moves').innerHTML = moveset.map(m => `
-        <button class="bmove" onclick="doTurn('${m.key}')">
+    document.getElementById('battle-moves').innerHTML = moveset.map(m => {
+        const mp = m.mp !== undefined ? m.mp : (m.max_mp || 15);
+        const maxMp = m.max_mp || 15;
+        const disabled = mp <= 0;
+        return `<button class="bmove${disabled ? ' bmove-empty' : ''}" onclick="doTurn('${m.key}')" ${disabled ? 'disabled' : ''}>
             <span class="bmove-icon">${m.icon}</span>
             <span class="bmove-name">${m.name}</span>
-        </button>
-    `).join('');
+            <span class="bmove-mp">${mp}/${maxMp}</span>
+        </button>`;
+    }).join('');
 }
 
 function addLog(msg) {
@@ -225,6 +240,22 @@ async function doTurn(moveKey) {
     updateUI('player', data.player);
     updateUI('npc', data.npc);
     if (data.bench !== undefined) { battleData.bench = data.bench; updatePetBtn(); }
+    // Actualizeaza MP pe butoane
+    if (data.player && data.player.mp && battleData.player) {
+        battleData.player.mp = data.player.mp;
+        // Update mp pe fiecare buton fara re-render complet
+        document.querySelectorAll('.bmove').forEach(btn => {
+            const key = btn.getAttribute('onclick').match(/'([^']+)'/)?.[1];
+            if (key && data.player.mp[key] !== undefined) {
+                const mp = data.player.mp[key];
+                const mpEl = btn.querySelector('.bmove-mp');
+                const moveData = battleData.player && battleData.player.moveset ? battleData.player.moveset.find(m => m.key === key) : null;
+                const maxMp = moveData ? (moveData.max_mp || 15) : 15;
+                if (mpEl) mpEl.textContent = mp + '/' + maxMp;
+                if (mp <= 0) { btn.disabled = true; btn.classList.add('bmove-empty'); }
+            }
+        });
+    }
     if (data.next_npc) {
         battleData.npc = data.npc;
         addLog('⚔️ Urmează următorul adversar!');

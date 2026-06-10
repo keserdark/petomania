@@ -38,6 +38,7 @@ MOVES = {
         'accuracy': 1.0,
         'unlock_level': 1,
         'species': None,
+        'max_mp':  15,
         'natures': None,
         'effect': None,
     },
@@ -51,6 +52,7 @@ MOVES = {
         'accuracy': 0.9,
         'unlock_level': 1,
         'species': None,
+        'max_mp':  15,
         'natures': None,
         'effect': {
             'type': 'stun',
@@ -73,6 +75,7 @@ MOVES = {
         'accuracy': 1.0,
         'unlock_level': 1,
         'species': None,
+        'max_mp':  15,
         'natures': ['fire'],
         'effect': {
             'type': 'burn',
@@ -91,6 +94,7 @@ MOVES = {
         'accuracy': 0.85,
         'unlock_level': 5,
         'species': None,
+        'max_mp':  15,
         'natures': ['fire'],
         'effect': {
             'type': 'burn',
@@ -109,6 +113,7 @@ MOVES = {
         'accuracy': 0.9,
         'unlock_level': 10,
         'species': None,
+        'max_mp':  15,
         'natures': ['fire'],
         'effect': {
             'type': 'attack_down',
@@ -127,6 +132,7 @@ MOVES = {
         'accuracy': 0.75,
         'unlock_level': 20,
         'species': None,
+        'max_mp':  15,
         'natures': ['fire'],
         'effect': {
             'type': 'burn',
@@ -149,6 +155,7 @@ MOVES = {
         'accuracy': 1.0,
         'unlock_level': 1,
         'species': None,
+        'max_mp':  15,
         'natures': ['water'],
         'effect': None,
     },
@@ -162,6 +169,7 @@ MOVES = {
         'accuracy': 0.9,
         'unlock_level': 5,
         'species': None,
+        'max_mp':  15,
         'natures': ['water'],
         'effect': {
             'type': 'speed_down',
@@ -180,6 +188,7 @@ MOVES = {
         'accuracy': 1.0,
         'unlock_level': 10,
         'species': None,
+        'max_mp':  15,
         'natures': ['water'],
         'effect': {
             'type': 'shield',
@@ -198,6 +207,7 @@ MOVES = {
         'accuracy': 0.8,
         'unlock_level': 20,
         'species': None,
+        'max_mp':  15,
         'natures': ['water'],
         'effect': {
             'type': 'speed_down',
@@ -220,6 +230,7 @@ MOVES = {
         'accuracy': 1.0,
         'unlock_level': 1,
         'species': None,
+        'max_mp':  15,
         'natures': ['nature'],
         'effect': None,
     },
@@ -233,6 +244,7 @@ MOVES = {
         'accuracy': 0.9,
         'unlock_level': 5,
         'species': None,
+        'max_mp':  15,
         'natures': ['nature'],
         'effect': {
             'type': 'poison',
@@ -251,6 +263,7 @@ MOVES = {
         'accuracy': 1.0,
         'unlock_level': 10,
         'species': None,
+        'max_mp':  15,
         'natures': ['nature'],
         'effect': {
             'type': 'heal',
@@ -269,6 +282,7 @@ MOVES = {
         'accuracy': 0.85,
         'unlock_level': 20,
         'species': None,
+        'max_mp':  15,
         'natures': ['nature'],
         'effect': {
             'type': 'poison',
@@ -291,6 +305,7 @@ MOVES = {
         'accuracy': 0.95,
         'unlock_level': 1,
         'species': None,
+        'max_mp':  15,
         'natures': ['earth'],
         'effect': None,
     },
@@ -304,6 +319,7 @@ MOVES = {
         'accuracy': 0.85,
         'unlock_level': 5,
         'species': None,
+        'max_mp':  15,
         'natures': ['earth'],
         'effect': {
             'type': 'stun',
@@ -322,6 +338,7 @@ MOVES = {
         'accuracy': 1.0,
         'unlock_level': 10,
         'species': None,
+        'max_mp':  15,
         'natures': ['earth'],
         'effect': {
             'type': 'shield',
@@ -340,6 +357,7 @@ MOVES = {
         'accuracy': 0.8,
         'unlock_level': 20,
         'species': None,
+        'max_mp':  15,
         'natures': ['earth'],
         'effect': {
             'type': 'stun',
@@ -362,6 +380,7 @@ MOVES = {
         'accuracy': 1.0,
         'unlock_level': 1,
         'species': None,
+        'max_mp':  15,
         'natures': ['storm'],
         'effect': {
             'type': 'stun',
@@ -380,6 +399,7 @@ MOVES = {
         'accuracy': 0.85,
         'unlock_level': 5,
         'species': None,
+        'max_mp':  15,
         'natures': ['storm'],
         'effect': {
             'type': 'stun',
@@ -398,6 +418,7 @@ MOVES = {
         'accuracy': 1.0,
         'unlock_level': 10,
         'species': None,
+        'max_mp':  15,
         'natures': ['storm'],
         'effect': {
             'type': 'speed_up',
@@ -416,6 +437,7 @@ MOVES = {
         'accuracy': 0.75,
         'unlock_level': 20,
         'species': None,
+        'max_mp':  15,
         'natures': ['storm'],
         'effect': {
             'type': 'stun',
@@ -438,6 +460,7 @@ MOVES = {
         'accuracy': 1.0,
         'unlock_level': 1,
         'species': None,
+        'max_mp':  15,
         'natures': ['ice'],
         'effect': {
             'type': 'speed_down',
@@ -456,6 +479,7 @@ MOVES = {
         'accuracy': 0.9,
         'unlock_level': 5,
         'species': None,
+        'max_mp':  15,
         'natures': ['ice'],
         'effect': {
             'type': 'freeze',
@@ -474,6 +498,7 @@ MOVES = {
         'accuracy': 0.8,
         'unlock_level': 10,
         'species': None,
+        'max_mp':  15,
         'natures': ['ice'],
         'effect': {
             'type': 'freeze',
@@ -492,6 +517,7 @@ MOVES = {
         'accuracy': 0.65,
         'unlock_level': 20,
         'species': None,
+        'max_mp':  15,
         'natures': ['ice'],
         'effect': {
             'type': 'freeze',
@@ -514,6 +540,7 @@ MOVES = {
         'accuracy': 0.95,
         'unlock_level': 1,
         'species': None,
+        'max_mp':  15,
         'natures': ['shadow'],
         'effect': None,
     },
@@ -527,6 +554,7 @@ MOVES = {
         'accuracy': 1.0,
         'unlock_level': 5,
         'species': None,
+        'max_mp':  15,
         'natures': ['shadow'],
         'effect': {
             'type': 'evasion_up',
@@ -545,6 +573,7 @@ MOVES = {
         'accuracy': 0.9,
         'unlock_level': 10,
         'species': None,
+        'max_mp':  15,
         'natures': ['shadow'],
         'effect': {
             'type': 'lifesteal',
@@ -563,6 +592,7 @@ MOVES = {
         'accuracy': 0.8,
         'unlock_level': 20,
         'species': None,
+        'max_mp':  15,
         'natures': ['shadow'],
         'effect': {
             'type': 'attack_down',
@@ -585,6 +615,7 @@ MOVES = {
         'accuracy': 0.95,
         'unlock_level': 1,
         'species': None,
+        'max_mp':  15,
         'natures': ['crystal'],
         'effect': None,
     },
@@ -598,6 +629,7 @@ MOVES = {
         'accuracy': 1.0,
         'unlock_level': 5,
         'species': None,
+        'max_mp':  15,
         'natures': ['crystal'],
         'effect': {
             'type': 'reflect',
@@ -616,6 +648,7 @@ MOVES = {
         'accuracy': 0.85,
         'unlock_level': 10,
         'species': None,
+        'max_mp':  15,
         'natures': ['crystal'],
         'effect': None,
     },
@@ -629,6 +662,7 @@ MOVES = {
         'accuracy': 0.78,
         'unlock_level': 20,
         'species': None,
+        'max_mp':  15,
         'natures': ['crystal'],
         'effect': {
             'type': 'reflect',
@@ -651,6 +685,7 @@ MOVES = {
         'accuracy': 1.0,
         'unlock_level': 1,
         'species': None,
+        'max_mp':  15,
         'natures': ['steel'],
         'effect': None,
     },
@@ -664,6 +699,7 @@ MOVES = {
         'accuracy': 1.0,
         'unlock_level': 5,
         'species': None,
+        'max_mp':  15,
         'natures': ['steel'],
         'effect': {
             'type': 'shield',
@@ -682,6 +718,7 @@ MOVES = {
         'accuracy': 0.9,
         'unlock_level': 10,
         'species': None,
+        'max_mp':  15,
         'natures': ['steel'],
         'effect': {
             'type': 'attack_down',
@@ -700,6 +737,7 @@ MOVES = {
         'accuracy': 0.85,
         'unlock_level': 20,
         'species': None,
+        'max_mp':  15,
         'natures': ['steel'],
         'effect': {
             'type': 'shield',
@@ -722,6 +760,7 @@ MOVES = {
         'accuracy': 1.0,
         'unlock_level': 1,
         'species': None,
+        'max_mp':  15,
         'natures': ['light'],
         'effect': None,
     },
@@ -735,6 +774,7 @@ MOVES = {
         'accuracy': 1.0,
         'unlock_level': 5,
         'species': None,
+        'max_mp':  15,
         'natures': ['light'],
         'effect': {
             'type': 'heal',
@@ -753,6 +793,7 @@ MOVES = {
         'accuracy': 0.9,
         'unlock_level': 10,
         'species': None,
+        'max_mp':  15,
         'natures': ['light'],
         'effect': {
             'type': 'attack_down',
@@ -771,6 +812,7 @@ MOVES = {
         'accuracy': 0.8,
         'unlock_level': 20,
         'species': None,
+        'max_mp':  15,
         'natures': ['light'],
         'effect': {
             'type': 'heal',

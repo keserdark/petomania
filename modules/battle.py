@@ -47,6 +47,7 @@ def generate_npc(player_level: int) -> dict:
         'hp_current':   stats['hp'],
         'stats':        stats,
         'moveset':      [m['key'] for m in moveset],
+        'mp':           {m['key']: m.get('max_mp', 15) for m in moveset},
         'image_url':    get_image_url(species, form, 'Basic', gender),
         'is_npc':       True,
         'status':       None,  # stun, burn, poison, freeze
@@ -87,6 +88,7 @@ def build_combatant(pet: dict) -> dict:
         'hp_current':   min(pet.get('hp_current', stats['hp']), stats['hp']),
         'stats':        stats,
         'moveset':      [m['key'] for m in moveset],
+        'mp':           {m['key']: m.get('max_mp', 15) for m in moveset},
         'image_url':    image_url,
         'is_npc':       False,
         'status':       None,
@@ -252,6 +254,13 @@ def execute_move(attacker: dict, defender: dict, move_key: str) -> dict:
     log    = []
     result = {'log': log, 'hit': False, 'damage': 0, 'effectiveness': '', 'effect_msg': None}
 
+    # Verifica MP
+    mp = attacker.get('mp', {})
+    if mp.get(move_key, 0) <= 0:
+        log.append(f'{attacker["name"]} nu mai are MP pentru {move["name"]}!')
+        return result
+    attacker['mp'][move_key] = mp.get(move_key, move.get('max_mp', 15)) - 1
+
     # Stun/freeze blocheaza atacul si consuma un tur
     if attacker.get('status') in ('stun', 'freeze'):
         log.append(f'{attacker["name"]} nu poate acționa! ({attacker["status"]})')
@@ -319,7 +328,10 @@ def get_speed(combatant: dict) -> int:
 
 def npc_choose_move(npc: dict, player: dict) -> str:
     """AI simplu — alege random din moveset, cu preferinta pentru attack."""
-    moveset = npc['moveset']
+    mp = npc.get('mp', {})
+    moveset = [m for m in npc['moveset'] if mp.get(m, 15) > 0]
+    if not moveset:
+        moveset = npc['moveset']  # fallback daca toate sunt epuizate
     attacks = [m for m in moveset if get_move(m) and get_move(m)['type'] == 'attack']
     if attacks and random.random() < 0.7:
         return random.choice(attacks)
@@ -399,6 +411,7 @@ def _combatant_snapshot(c: dict) -> dict:
         'speed_mod':    c.get('speed_mod', 0),
         'attack_mod':   c.get('attack_mod', 0),
         'evasion_mod':  c.get('evasion_mod', 0),
+        'mp':           c.get('mp', {}),
     }
 
 
