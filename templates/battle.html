@@ -100,25 +100,24 @@
     flex-direction: column;
 }
 .bc-ground-wrap {
-    position: relative;
-    display: inline-block;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 .bc-ground-patch {
-    position: absolute;
-    bottom: -5%;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 120%;
+    width: clamp(120px, 18vw, 280px);
+    margin-top: -20%;
     opacity: 0.9;
     pointer-events: none;
     z-index: 0;
+    flex-shrink: 0;
 }
 .bc-ground-patch-enemy {
-    transform: translateX(-50%) scaleX(-1);
+    transform: scaleX(-1);
 }
 .bc-img {
-    position: relative;
     z-index: 1;
+    order: -1;
 }
 
 #battle-canvas {
