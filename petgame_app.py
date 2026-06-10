@@ -1145,6 +1145,19 @@ def api_battle_state():
     })
 
 
+
+# ── BATTLE ABANDON ────────────────────────────────────────────────────
+
+@app.route('/joc/petomania/api/battle/abandon', methods=['POST'])
+@login_required
+def api_battle_abandon():
+    """Curata sesiunea de lupta fara a salva HP."""
+    session.pop('battle_player', None)
+    session.pop('battle_npc', None)
+    session.pop('battle_bench', None)
+    return jsonify({'ok': True})
+
+
 # ── RUN ───────────────────────────────────────────────────────────────
 
 if __name__ == '__main__':

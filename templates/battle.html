@@ -323,12 +323,11 @@ async function tryFlee() {
 
 initBattle();
 
-// Avertizeaza la orice iesire din pagina (back, close, refresh)
+// La parasirea paginii, abandoneaza lupta din sesiune
 let battleFinished = false;
-window.addEventListener('beforeunload', (e) => {
+window.addEventListener('pagehide', () => {
     if (!battleFinished && battleData.player) {
-        e.preventDefault();
-        e.returnValue = '';
+        navigator.sendBeacon('/joc/petomania/api/battle/abandon');
     }
 });
 
