@@ -175,6 +175,7 @@ async function initBattle() {
     renderMoves(data.player.moveset);
     clearLog();
     addLog('⚔️ Lupta începe!');
+    updatePetBtn();
 }
 
 function updateUI(side, c) {
@@ -222,7 +223,7 @@ async function doTurn(moveKey) {
     data.log.forEach(l => addLog(l));
     updateUI('player', data.player);
     updateUI('npc', data.npc);
-    if (data.bench !== undefined) battleData.bench = data.bench;
+    if (data.bench !== undefined) { battleData.bench = data.bench; updatePetBtn(); }
     if (data.next_npc) {
         battleData.npc = data.npc;
         addLog('⚔️ Urmează următorul adversar!');
@@ -268,6 +269,7 @@ async function doSwitch(petId) {
     updateUI('player', data.player);
     renderMoves(data.player.moveset);
     addLog(`🔄 ${data.player.name} intră în luptă!`);
+    updatePetBtn();
     setBusy(false);
 }
 
@@ -295,8 +297,14 @@ function showMoves() {
     document.getElementById('battle-moves-panel').classList.add('open');
 }
 
+function updatePetBtn() {
+    const alive = battleData.bench ? battleData.bench.filter(p => p.hp_current > 0) : [];
+    document.getElementById('btn-pet').style.display = alive.length > 0 ? '' : 'none';
+}
+
 function openSwitchMenu() {
     const bench = battleData.bench ? battleData.bench.filter(p => p.hp_current > 0) : [];
+    if (bench.length === 0) return;
     openSwitch(bench, true);
 }
 
