@@ -15,7 +15,7 @@ from moves_config import get_moveset, get_move
 # GENERARE NPC INAMIC
 # ─────────────────────────────────────────────
 
-SPECIES_LIST   = ['dog', 'cat', 'blackcat', 'duck']
+SPECIES_LIST   = ['dog', 'cat', 'blackcat', 'duck', 'fox']
 NATURES_LIST   = ['fire', 'water', 'nature', 'earth', 'storm', 'ice', 'shadow', 'crystal', 'steel', 'light']
 SPECIES_NAMES  = {'dog': 'Câine', 'cat': 'Pisică', 'blackcat': 'Pisică Neagră', 'duck': 'Rață'}
 from npc_names_config import get_npc_name
