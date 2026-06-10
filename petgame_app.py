@@ -974,6 +974,16 @@ def api_battle_start():
 
     # Loadout complet pentru switch
     loadout_raw = build_loadout_context(uid)
+
+    # Numara pets vii din loadout (inclusiv petul activ)
+    alive_count = (1 if player['hp_current'] > 0 else 0)
+    for slot in loadout_raw:
+        if not slot.get('empty') and slot.get('slot') != 1 and slot.get('hp_current', 0) > 0:
+            alive_count += 1
+    if alive_count == 0:
+        return jsonify({'ok': False, 'error': 'Toți companionii tăi sunt KO. Vindecă-i înainte de luptă.'})
+    if alive_count < battle_size:
+        return jsonify({'ok': False, 'error': f'Ai nevoie de {battle_size} companioi cu HP pentru acest mod. Ai doar {alive_count}.'})
     bench = []  # petii de pe bancă — max battle_size-1 pets, doar cu HP > 0
     for slot in loadout_raw:
         if slot.get('empty') or slot.get('slot') == 1:
