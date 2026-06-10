@@ -1374,6 +1374,230 @@ def api_loadout_count():
 
 # ── RUN ───────────────────────────────────────────────────────────────
 
+
+# ── TRAINING SYSTEM ──────────────────────────────────────────────────────
+
+@app.route('/joc/petomania/api/training/loadout')
+@login_required
+def api_training_loadout():
+    from modules.loadout import get_loadout, build_loadout_slot
+    from modules.pets import get_pet
+    user = get_current_user()
+    uid  = int(user['id'])
+
+    pets = []
+    # Pet activ (id=0)
+    active = get_pet(uid)
+    if active:
+        p = dict(active)
+        pets.append({'id': 0, 'name': p['name'], 'level': p['level'], 'nature': p.get('nature'), 'species': p.get('species')})
+
+    # Menajerie din loadout
+    loadout = get_loadout(uid)
+    conn = get_db()
+    for slot_key in ['slot_2','slot_3','slot_4','slot_5']:
+        men_id = loadout.get(slot_key)
+        if not men_id: continue
+        row = conn.execute('SELECT * FROM menagerie WHERE id = ? AND user_id = ?', (men_id, uid)).fetchone()
+        if row:
+            pets.append({'id': men_id, 'name': row['name'], 'level': row['level'], 'nature': row.get('nature'), 'species': row.get('species')})
+    conn.close()
+    return jsonify({'ok': True, 'pets': pets})
+
+
+@app.route('/joc/petomania/api/training/moves')
+@login_required
+def api_training_moves():
+    from moves_config import MOVES
+    user = get_current_user()
+    uid  = int(user['id'])
+    pet_id = request.args.get('pet_id', 0, type=int)
+    zone   = request.args.get('zone', 'incepator')
+
+    ZONE_RANGES = {
+        'incepator': (0,  20),
+        'ucenic':    (20, 40),
+        'adept':     (40, 60),
+        'expert':    (60, 80),
+        'maestru':   (80, 100),
+    }
+    if zone not in ZONE_RANGES:
+        return jsonify({'ok': False, 'error': 'Zonă invalidă.'})
+
+    zmin, zmax = ZONE_RANGES[zone]
+
+    # Obtine natura petului
+    if pet_id == 0:
+        from modules.pets import get_pet
+        pet = get_pet(uid)
+        nature = pet['nature'] if pet else None
+        level  = pet['level'] if pet else 1
+    else:
+        conn = get_db()
+        row = conn.execute('SELECT * FROM menagerie WHERE id = ? AND user_id = ?', (pet_id, uid)).fetchone()
+        conn.close()
+        if not row:
+            return jsonify({'ok': False, 'error': 'Pet negăsit.'})
+        nature = row['nature']
+        level  = row['level']
+
+    if level < zmin:
+        return jsonify({'ok': True, 'moves': [], 'locked': True, 'level': level, 'zone_min': zmin})
+
+    # Known moves pentru acest pet
+    conn = get_db()
+    known_rows = conn.execute('SELECT move_key FROM known_moves WHERE user_id = ? AND pet_id = ?', (uid, pet_id)).fetchall()
+    conn.close()
+    known_keys = {r['move_key'] for r in known_rows}
+
+    # Filtreaza moves: natura potrivita, trainable, in zona de nivel
+    moves_out = []
+    for key, m in MOVES.items():
+        if not m.get('trainable'): continue
+        if m.get('nature') != nature: continue
+        lvl = m.get('unlock_level', 0)
+        if lvl <= zmin or lvl > zmax: continue
+        if lvl > level: continue  # petul nu are inca nivelul necesar
+        moves_out.append({
+            'key':            key,
+            'name':           m['name'],
+            'icon':           m.get('icon', '⚡'),
+            'power':          m['power'],
+            'unlock_level':   lvl,
+            'trainable_cost': m.get('trainable_cost', 0),
+            'known':          key in known_keys,
+        })
+
+    moves_out.sort(key=lambda x: x['unlock_level'])
+    return jsonify({'ok': True, 'moves': moves_out, 'locked': False})
+
+
+@app.route('/joc/petomania/api/training/buy', methods=['POST'])
+@login_required
+def api_training_buy():
+    from moves_config import MOVES
+    user     = get_current_user()
+    uid      = int(user['id'])
+    data     = request.json
+    pet_id   = data.get('pet_id', 0)
+    move_key = data.get('move_key')
+
+    if not move_key or move_key not in MOVES:
+        return jsonify({'ok': False, 'error': 'Move invalid.'})
+
+    move = MOVES[move_key]
+    cost = move.get('trainable_cost', 0)
+
+    # Verifica daca stie deja
+    conn = get_db()
+    already = conn.execute('SELECT 1 FROM known_moves WHERE user_id = ? AND pet_id = ? AND move_key = ?',
+                           (uid, pet_id, move_key)).fetchone()
+    if already:
+        conn.close()
+        return jsonify({'ok': False, 'error': 'Abilitatea este deja cunoscută.'})
+
+    # Scade dacoins
+    if not spend_dacoins(uid, cost):
+        conn.close()
+        return jsonify({'ok': False, 'error': 'Dacoins insuficienți.'})
+
+    # Adauga in known_moves
+    conn.execute('INSERT OR IGNORE INTO known_moves (user_id, pet_id, move_key) VALUES (?, ?, ?)',
+                 (uid, pet_id, move_key))
+    conn.commit()
+
+    # Returneaza active moves curente (cele 4 slots)
+    active_rows = conn.execute('SELECT slot, move_key FROM active_moves WHERE user_id = ? AND pet_id = ? ORDER BY slot',
+                               (uid, pet_id)).fetchall()
+    conn.close()
+
+    # Daca nu are inca active_moves in DB, luam din get_moveset (self-taught)
+    if not active_rows:
+        from moves_config import get_moveset
+        if pet_id == 0:
+            from modules.pets import get_pet
+            pet = get_pet(uid)
+            nature = pet['nature'] if pet else None
+            level  = pet['level'] if pet else 1
+            species = pet['species'] if pet else None
+        else:
+            conn2 = get_db()
+            row = conn2.execute('SELECT * FROM menagerie WHERE id = ? AND user_id = ?', (pet_id, uid)).fetchone()
+            conn2.close()
+            nature  = row['nature']
+            level   = row['level']
+            species = row['species']
+        moveset = get_moveset(species, nature, level)
+        active_moves = [{'key': m['key'], 'name': m['name'], 'icon': m.get('icon','⚡'), 'slot': i+1}
+                        for i, m in enumerate(moveset)]
+    else:
+        from moves_config import MOVES as MV
+        active_moves = []
+        for r in active_rows:
+            m = MV.get(r['move_key'], {})
+            active_moves.append({'key': r['move_key'], 'name': m.get('name','?'), 'icon': m.get('icon','⚡'), 'slot': r['slot']})
+
+    return jsonify({'ok': True, 'active_moves': active_moves})
+
+
+@app.route('/joc/petomania/api/training/swap', methods=['POST'])
+@login_required
+def api_training_swap():
+    from moves_config import MOVES, get_moveset
+    user         = get_current_user()
+    uid          = int(user['id'])
+    data         = request.json
+    pet_id       = data.get('pet_id', 0)
+    old_move_key = data.get('old_move_key')
+    new_move_key = data.get('new_move_key')
+
+    if not old_move_key or not new_move_key:
+        return jsonify({'ok': False, 'error': 'Date incomplete.'})
+
+    # Obtine active moves curente
+    conn = get_db()
+    active_rows = conn.execute('SELECT slot, move_key FROM active_moves WHERE user_id = ? AND pet_id = ? ORDER BY slot',
+                               (uid, pet_id)).fetchall()
+
+    if not active_rows:
+        # Initializeaza din get_moveset
+        if pet_id == 0:
+            from modules.pets import get_pet
+            pet = get_pet(uid)
+            nature = pet['nature'] if pet else None
+            level  = pet['level'] if pet else 1
+            species = pet['species'] if pet else None
+        else:
+            row = conn.execute('SELECT * FROM menagerie WHERE id = ? AND user_id = ?', (pet_id, uid)).fetchone()
+            nature  = row['nature']
+            level   = row['level']
+            species = row['species']
+        moveset = get_moveset(species, nature, level)
+        for i, m in enumerate(moveset):
+            conn.execute('INSERT OR REPLACE INTO active_moves (user_id, pet_id, slot, move_key) VALUES (?, ?, ?, ?)',
+                         (uid, pet_id, i+1, m['key']))
+        conn.commit()
+        active_rows = conn.execute('SELECT slot, move_key FROM active_moves WHERE user_id = ? AND pet_id = ? ORDER BY slot',
+                                   (uid, pet_id)).fetchall()
+
+    # Gaseste slot-ul cu old_move
+    slot_to_replace = None
+    for r in active_rows:
+        if r['move_key'] == old_move_key:
+            slot_to_replace = r['slot']
+            break
+
+    if slot_to_replace is None:
+        conn.close()
+        return jsonify({'ok': False, 'error': 'Abilitatea veche nu a fost găsită în slot-urile active.'})
+
+    conn.execute('UPDATE active_moves SET move_key = ? WHERE user_id = ? AND pet_id = ? AND slot = ?',
+                 (new_move_key, uid, pet_id, slot_to_replace))
+    conn.commit()
+    conn.close()
+    return jsonify({'ok': True})
+
+
 if __name__ == '__main__':
     init_db()
     app.run(host='0.0.0.0', port=5002, debug=False)

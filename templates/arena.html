@@ -21,6 +21,10 @@
                 <span class="assets-popup-btn-icon">⚔️</span>
                 <span>Luptă în Arenă</span>
             </button>
+            <button class="assets-popup-btn" onclick="closeCorvinPopup(); openTraining()">
+                <span class="assets-popup-btn-icon">📚</span>
+                <span>Antrenează</span>
+            </button>
             <button class="assets-popup-btn" onclick="closeCorvinPopup()">
                 <span class="assets-popup-btn-icon">🏹</span>
                 <span>Provoacă un alt cetățean</span>
@@ -130,6 +134,131 @@
         ← Oraș
     </a>
 </div>
+    <!-- Popup Antrenament — Step 1: Alege Pet -->
+    <div class="assets-popup-overlay" id="training-overlay">
+        <div class="assets-popup" style="max-width:480px;width:95vw">
+            <button class="assets-popup-close" onclick="closeTraining()">✕</button>
+            <div class="assets-popup-deco">📚</div>
+            <div class="assets-popup-title">Antrenament — Alege Companion</div>
+            <div id="training-pets-list"></div>
+        </div>
+    </div>
+
+    <!-- Popup Antrenament — Step 2: Zone -->
+    <div class="assets-popup-overlay" id="training-zones-overlay">
+        <div class="assets-popup" style="max-width:600px;width:95vw">
+            <button class="assets-popup-close" onclick="closeZones()">✕</button>
+            <div class="assets-popup-deco">📚</div>
+            <div class="assets-popup-title" id="training-zones-title">Antrenament</div>
+            <div class="training-zones" id="training-zones"></div>
+        </div>
+    </div>
+
+    <!-- Popup Antrenament — Step 3: Moves per zona -->
+    <div class="assets-popup-overlay" id="training-moves-overlay">
+        <div class="assets-popup" style="max-width:560px;width:95vw;max-height:80vh;overflow-y:auto">
+            <button class="assets-popup-close" onclick="closeMoves()">✕</button>
+            <div class="assets-popup-title" id="training-moves-title">Abilități</div>
+            <div id="training-moves-list"></div>
+        </div>
+    </div>
+
+    <!-- Popup Confirmare Cumpărare -->
+    <div class="assets-popup-overlay" id="training-confirm-overlay">
+        <div class="assets-popup" style="max-width:420px;width:95vw">
+            <button class="assets-popup-close" onclick="closeConfirm()">✕</button>
+            <div class="assets-popup-title">Confirmare</div>
+            <div id="training-confirm-text" style="text-align:center;margin:12px 0;font-size:14px;color:var(--text-muted)"></div>
+            <button class="assets-popup-btn" id="training-confirm-btn" onclick="confirmBuy()">
+                <span class="assets-popup-btn-icon">✅</span>
+                <span>Confirmă Cumpărarea</span>
+            </button>
+            <button class="assets-popup-btn" onclick="closeConfirm()">
+                <span class="assets-popup-btn-icon">❌</span>
+                <span>Anulează</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Popup Uită Abilitate -->
+    <div class="assets-popup-overlay" id="training-forget-overlay">
+        <div class="assets-popup" style="max-width:420px;width:95vw">
+            <button class="assets-popup-close" onclick="closeForget()">✕</button>
+            <div class="assets-popup-title">Care abilitate trebuie uitată?</div>
+            <div style="font-size:13px;color:var(--text-muted);text-align:center;margin-bottom:8px">
+                Abilitatea uitată rămâne în lista de Cunoscute și poate fi re-activată oricând.
+            </div>
+            <div id="training-forget-list"></div>
+        </div>
+    </div>
+
+
+{% endblock %}
+
+{% block extra_style %}
+<style>
+.training-zones {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+.zone-btn {
+    flex: 1;
+    min-width: 80px;
+    max-width: 110px;
+    padding: 12px 8px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 8px;
+    color: var(--text-primary, #fff);
+    cursor: pointer;
+    text-align: center;
+    font-size: 12px;
+    transition: background 0.15s;
+}
+.zone-btn:hover { background: rgba(255,255,255,0.12); }
+.zone-btn .zone-name { font-weight: 600; font-size: 13px; display: block; margin-bottom: 4px; }
+.zone-btn .zone-range { opacity: 0.6; font-size: 11px; }
+.zone-btn.locked { opacity: 0.4; cursor: not-allowed; }
+.move-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border-bottom: 1px solid rgba(255,255,255,0.07);
+    cursor: pointer;
+    transition: background 0.1s;
+}
+.move-item:hover { background: rgba(255,255,255,0.06); }
+.move-item.known { opacity: 0.5; cursor: default; pointer-events: none; }
+.move-icon { font-size: 20px; width: 28px; text-align: center; }
+.move-info { flex: 1; }
+.move-name { font-size: 13px; font-weight: 500; }
+.move-meta { font-size: 11px; opacity: 0.6; margin-top: 2px; }
+.move-cost { font-size: 12px; color: #f0c060; white-space: nowrap; }
+.move-known-badge { font-size: 11px; color: #4caf7d; white-space: nowrap; }
+.training-pet-btn {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 8px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    width: 100%;
+    color: var(--text-primary, #fff);
+    transition: background 0.15s;
+}
+.training-pet-btn:hover { background: rgba(255,255,255,0.1); }
+.training-pet-nature { font-size: 18px; }
+.training-pet-info { flex: 1; text-align: left; }
+.training-pet-name { font-size: 14px; font-weight: 600; }
+.training-pet-sub { font-size: 11px; opacity: 0.6; }
+</style>
 {% endblock %}
 
 {% block scripts %}
@@ -570,5 +699,222 @@ function closeBattle() {
     ctx.drawImage(corvinImg, 0, 0, W, H);
     battleData = { player: null, npc: null, moveset: [], busy: false };
 }
+
+// ── TRAINING SYSTEM ──────────────────────────────────────
+
+const NATURE_ICONS = {
+    fire:'🔥',water:'💧',nature:'🌿',earth:'⛰️',storm:'⚡',
+    ice:'❄️',shadow:'🌑',crystal:'💎',steel:'⚙️',light:'✨',dragon:'🐉'
+};
+
+const ZONES = [
+    {key:'incepator', name:'Începător', min:0,  max:20,  color:'#4caf7d'},
+    {key:'ucenic',    name:'Ucenic',    min:20, max:40,  color:'#378ADD'},
+    {key:'adept',     name:'Adept',     min:40, max:60,  color:'#eab308'},
+    {key:'expert',    name:'Expert',    min:60, max:80,  color:'#f97316'},
+    {key:'maestru',   name:'Maestru',   min:80, max:100, color:'#dc2626'},
+];
+
+let trainingState = {
+    pet: null,
+    zone: null,
+    selectedMove: null,
+};
+
+async function openTraining() {
+    const resp = await fetch('/joc/petomania/api/training/loadout');
+    const data = await resp.json();
+    if (!data.ok) { alert(data.error); return; }
+
+    const list = document.getElementById('training-pets-list');
+    list.innerHTML = '';
+    if (!data.pets || data.pets.length === 0) {
+        list.innerHTML = '<div style="text-align:center;opacity:0.6;padding:20px">Nu ai companions în loadout.</div>';
+    } else {
+        data.pets.forEach(pet => {
+            const icon = NATURE_ICONS[pet.nature] || '🐾';
+            const btn = document.createElement('button');
+            btn.className = 'training-pet-btn';
+            btn.innerHTML = `
+                <span class="training-pet-nature">${icon}</span>
+                <div class="training-pet-info">
+                    <div class="training-pet-name">${pet.name}</div>
+                    <div class="training-pet-sub">Nv.${pet.level} · ${pet.nature || 'Fără natură'}</div>
+                </div>
+                <span style="opacity:0.5;font-size:12px">→</span>
+            `;
+            btn.onclick = () => selectTrainingPet(pet);
+            list.appendChild(btn);
+        });
+    }
+    document.getElementById('training-overlay').classList.add('open');
+}
+
+function closeTraining() {
+    document.getElementById('training-overlay').classList.remove('open');
+}
+
+function selectTrainingPet(pet) {
+    trainingState.pet = pet;
+    closeTraining();
+    openZones(pet);
+}
+
+function openZones(pet) {
+    document.getElementById('training-zones-title').textContent = `${pet.name} — Alege Zona`;
+    const zonesEl = document.getElementById('training-zones');
+    zonesEl.innerHTML = '';
+
+    ZONES.forEach(zone => {
+        const locked = pet.level < zone.min;
+        const btn = document.createElement('button');
+        btn.className = 'zone-btn' + (locked ? ' locked' : '');
+        btn.innerHTML = `
+            <span class="zone-name" style="color:${zone.color}">${zone.name}</span>
+            <span class="zone-range">Nv.${zone.min}–${zone.max}</span>
+        `;
+        if (!locked) {
+            btn.onclick = () => selectZone(zone);
+        } else {
+            btn.title = 'Nivel insuficient';
+        }
+        zonesEl.appendChild(btn);
+    });
+
+    document.getElementById('training-zones-overlay').classList.add('open');
+}
+
+function closeZones() {
+    document.getElementById('training-zones-overlay').classList.remove('open');
+}
+
+async function selectZone(zone) {
+    trainingState.zone = zone;
+    closeZones();
+
+    const pet = trainingState.pet;
+    const resp = await fetch(`/joc/petomania/api/training/moves?pet_id=${pet.id}&zone=${zone.key}`);
+    const data = await resp.json();
+    if (!data.ok) { alert(data.error); return; }
+
+    // Verifica daca petul are nivel minim pentru zona
+    if (pet.level < zone.min) {
+        document.getElementById('training-moves-title').textContent = zone.name;
+        document.getElementById('training-moves-list').innerHTML = `
+            <div style="text-align:center;padding:30px 20px;font-size:14px;opacity:0.7;line-height:1.6">
+                Trebuie să îți antrenezi mai mult petul până când macar merita să discutam despre asemenea miscări!
+            </div>`;
+        document.getElementById('training-moves-overlay').classList.add('open');
+        return;
+    }
+
+    document.getElementById('training-moves-title').textContent = `${pet.name} — ${zone.name}`;
+    const list = document.getElementById('training-moves-list');
+    list.innerHTML = '';
+
+    if (!data.moves || data.moves.length === 0) {
+        list.innerHTML = '<div style="text-align:center;opacity:0.6;padding:20px">Nu există abilități disponibile.</div>';
+    } else {
+        data.moves.forEach(m => {
+            const isKnown = m.known;
+            const div = document.createElement('div');
+            div.className = 'move-item' + (isKnown ? ' known' : '');
+            div.innerHTML = `
+                <span class="move-icon">${m.icon}</span>
+                <div class="move-info">
+                    <div class="move-name">${m.name}</div>
+                    <div class="move-meta">Putere: ${m.power} · Nv.${m.unlock_level}</div>
+                </div>
+                ${isKnown
+                    ? '<span class="move-known-badge">✓ Cunoscut</span>'
+                    : '<span class="move-cost">🪙 ' + m.trainable_cost.toLocaleString() + '</span>'
+                }
+            `;
+            if (!isKnown) {
+                div.onclick = () => selectMove(m);
+            }
+            list.appendChild(div);
+        });
+    }
+
+    document.getElementById('training-moves-overlay').classList.add('open');
+}
+
+function closeMoves() {
+    document.getElementById('training-moves-overlay').classList.remove('open');
+}
+
+function selectMove(move) {
+    trainingState.selectedMove = move;
+    document.getElementById('training-confirm-text').innerHTML = `
+        Vrei să înveți <strong>${move.name}</strong>?<br>
+        <span style="color:#f0c060">Cost: 🪙 ${move.trainable_cost.toLocaleString()} Dacoins</span>
+    `;
+    document.getElementById('training-moves-overlay').classList.remove('open');
+    document.getElementById('training-confirm-overlay').classList.add('open');
+}
+
+function closeConfirm() {
+    document.getElementById('training-confirm-overlay').classList.remove('open');
+    document.getElementById('training-moves-overlay').classList.add('open');
+}
+
+async function confirmBuy() {
+    const pet = trainingState.pet;
+    const move = trainingState.selectedMove;
+
+    const resp = await fetch('/joc/petomania/api/training/buy', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({pet_id: pet.id, move_key: move.key})
+    });
+    const data = await resp.json();
+    if (!data.ok) {
+        alert(data.error);
+        return;
+    }
+
+    closeConfirm();
+
+    // Arata popup-ul de uitare abilitate
+    const forgetList = document.getElementById('training-forget-list');
+    forgetList.innerHTML = '';
+    data.active_moves.forEach(m => {
+        const btn = document.createElement('button');
+        btn.className = 'assets-popup-btn';
+        btn.innerHTML = `<span class="assets-popup-btn-icon">${m.icon}</span><span>${m.name}</span>`;
+        btn.onclick = () => forgetMove(m.key);
+        forgetList.appendChild(btn);
+    });
+    document.getElementById('training-forget-overlay').classList.add('open');
+}
+
+function closeForget() {
+    document.getElementById('training-forget-overlay').classList.remove('open');
+}
+
+async function forgetMove(oldMoveKey) {
+    const pet = trainingState.pet;
+    const newMove = trainingState.selectedMove;
+
+    const resp = await fetch('/joc/petomania/api/training/swap', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({pet_id: pet.id, old_move_key: oldMoveKey, new_move_key: newMove.key})
+    });
+    const data = await resp.json();
+    closeForget();
+    if (!data.ok) { alert(data.error); return; }
+    alert('✅ ' + newMove.name + ' a înlocuit abilitatea selectată!');
+}
+
+// Close overlays on backdrop click
+['training-overlay','training-zones-overlay','training-moves-overlay',
+ 'training-confirm-overlay','training-forget-overlay'].forEach(id => {
+    document.getElementById(id).addEventListener('click', e => {
+        if (e.target.id === id) document.getElementById(id).classList.remove('open');
+    });
+});
+
 </script>
 {% endblock %}

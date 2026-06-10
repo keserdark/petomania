@@ -100,6 +100,25 @@ def init_db():
             slot_5     INTEGER
         )
     ''')
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS known_moves (
+            id         INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id    INTEGER NOT NULL,
+            pet_id     INTEGER NOT NULL,
+            move_key   TEXT NOT NULL,
+            learned_at INTEGER NOT NULL DEFAULT (strftime('%s','now')),
+            UNIQUE(user_id, pet_id, move_key)
+        )
+    ''')
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS active_moves (
+            user_id    INTEGER NOT NULL,
+            pet_id     INTEGER NOT NULL,
+            slot       INTEGER NOT NULL,
+            move_key   TEXT NOT NULL,
+            PRIMARY KEY (user_id, pet_id, slot)
+        )
+    ''')
 
     conn.commit()
     conn.close()
