@@ -974,12 +974,14 @@ def api_battle_start():
 
     # Loadout complet pentru switch
     loadout_raw = build_loadout_context(uid)
-    bench = []  # petii de pe bancă — max battle_size-1 pets
+    bench = []  # petii de pe bancă — max battle_size-1 pets, doar cu HP > 0
     for slot in loadout_raw:
         if slot.get('empty') or slot.get('slot') == 1:
             continue
         if len(bench) >= battle_size - 1:
             break
+        if slot['hp_current'] <= 0:
+            continue
         bench.append({
             'id':        slot['id'],
             'name':      slot['name'],
