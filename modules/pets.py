@@ -50,9 +50,9 @@ def get_state(hunger, happiness, cleanliness, energy, sleeping) -> str:
 
 def get_image_url(species: str, form: int, state: str, gender: str = 'male') -> str:
     base = f"{STATIC_BASE}/00transparent/{species}"
-    if (species == 'duck' or species == 'fox') and form == 1:
+    if species in ('duck', 'fox', 'rhino') and form == 1:
         return f"{base}/Stage{form}-{state}-Form.png"
-    if species in ('blackcat', 'dog', 'duck', 'fox'):
+    if species in ('blackcat', 'dog', 'duck', 'fox', 'rhino'):
         gender_suffix = 'Male' if gender == 'male' else 'Female'
         return f"{base}/Stage{form}-{state}-Form-{gender_suffix}.png"
     return f"{base}/Stage{form}-{state}-Form.png"

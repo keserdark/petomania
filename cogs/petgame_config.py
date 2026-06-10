@@ -412,4 +412,58 @@ SPECIES = {
             },
         }
     },
+
+    'rhino': {
+        'starter': False,
+        'name': 'Rinocer', 'emoji': '🦏', 'button_label': '🦏 Rinocer',
+        'codes': {1: 'RHINO-001', 2: 'RHINO-002', 3: 'RHINO-003'},
+        'available_natures': ['steel'],
+        'entries': {
+            1: {
+                'code': 'RHINO-001',
+                'name': 'Ferrok',
+                'description': 'Un pui de rinocer cu pielea deja acoperită de plăci metalice rudimentare. Lent, dar de neclintit.',
+                'lore': 'Ferrok este prima formă a rinocerului de Metal — o creatură care pare fragilă la prima vedere, dar ale cărei plăci metalice cresc odată cu ea.\n\nSe spune că rinocerii de Metal s-au format în adâncurile minelor părăsite ale Regnum Dacorum, acolo unde fierul și viața s-au contopit în secole de întuneric.\n\nFerrok nu fuge niciodată. Nu pentru că nu poate — ci pentru că nu vede niciun motiv să o facă.',
+            },
+            2: {
+                'code': 'RHINO-002',
+                'name': 'Titanok',
+                'description': 'Plăcile metalice s-au extins și întărit. Titanok este o forță a naturii — lent, dar aproape imposibil de doborât.',
+                'lore': 'Titanok marchează transformarea din pui în luptător. Coarnele sale au acum un miez de oțel pur, iar pașii săi lasă urme adânci în piatră.\n\nÎn tradiția dacică, un Titanok care te urmează înseamnă că ai câștigat respectul munților înșiși.\n\nDiferențele dintre mascul și femelă devin clare — masculul are plăci mai groase și colțuri ascuțite, femela are o armură mai suplă, dar la fel de rezistentă.',
+            },
+            3: {
+                'code': 'RHINO-003',
+                'name': 'Golemrhon',
+                'description': 'Forma finală. Un colos de metal viu care poate rezista la orice atac și zdrobi orice obstacol din calea sa.',
+                'lore': 'Golemrhon este legendă în Regnum Dacorum. Se spune că doar trei au existat vreodată, și că fiecare a schimbat cursul unei bătălii majore.\n\nArmura sa completă nu mai e simplă piele — e un aliaj viu care se repară singur, absorb loviturile și le transformă în putere.\n\nZamolxe ar fi spus că Golemrhon nu este un animal, ci un principiu — ideea că rezistența absolută este ea însăși o formă de înțelepciune.',
+            },
+        },
+    },
+
+    'fox': {
+        'starter': False,
+        'name': 'Vulpe', 'emoji': '🦊', 'button_label': '🦊 Vulpe',
+        'codes': {1: 'FOX-001', 2: 'FOX-002', 3: 'FOX-003'},
+        'available_natures': ['fire'],
+        'entries': {
+            1: {
+                'code': 'FOX-001',
+                'name': 'Vixar',
+                'description': 'O vulpiță tânără cu blana roșie ca flacăra. Natura sa de Foc o face imprevizibilă și iute.',
+                'lore': 'Vixar este prima formă a vulpii de Foc — o creatură mică, dar cu o energie arzătoare în privire.\n\nSe spune că vulpile de Foc s-au născut din scânteile unui incendiu de pădure care a durat trei zile și trei nopți. Supraviețuitorii acelui foc au ieșit schimbați, cu blana de culoarea jarului și ochii strălucind ca tăciunele.\n\nVixar este jucăuș și curios, dar temperamentul său se aprinde rapid. Un companion loial pentru cei care îi câștigă încrederea.',
+            },
+            2: {
+                'code': 'FOX-002',
+                'name': 'Foxar',
+                'description': 'Vulpea a crescut și stăpânește acum flăcările cu pricepere. Blana sa arde cu nuanțe de portocaliu și roșu.',
+                'lore': 'În forma a doua, Foxar devine un hunter redutabil. Cozile sale emit căldură perceptibilă, iar urmele sale lasă pâraie de scântei pe pământ.\n\nVulpile Foxar sunt respectate în regat ca mesageri ai Soarelui. Unii spun că pot vedea destinul în flăcările pe care le invocă.\n\nDiferențele dintre mascul și femelă devin vizibile — masculul are blana mai închisă, femela strălucește cu flăcări alb-aurii.',
+            },
+            3: {
+                'code': 'FOX-003',
+                'name': 'Emberfox',
+                'description': 'Forma finală a vulpii de Foc. O creatură legendară cu cozi de flăcări, temută și respectată în egală măsură.',
+                'lore': 'Emberfox este o legendă vie în regat. Forma sa finală se atinge doar după ani de luptă și devotament față de stăpân.\n\nSe spune că apariția unui Emberfox anunță schimbări mari — fie victoria absolută, fie o catastrofă de proporții. Flăcările pure care o înconjoară reprezintă fiecare luptă câștigată.\n\nZamolxe însuși ar fi binecuvântat prima vulpe de Foc, dăruindu-i nemurirea prin flacără. Emberfox nu moare — se transformă în scântei și renaște din propria cenușă.',
+            },
+        },
+    },
 }

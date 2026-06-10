@@ -57,6 +57,16 @@ BASE_STATS: dict[str, dict[str, int]] = {
         'control':  40,
         'reflection': 50,
     },
+    'rhino': {
+        'hp':       85,
+        'attack':   55,
+        'defense':  80,
+        'speed':    20,
+        'evasion':  15,
+        'healing':  30,
+        'control':  20,
+        'reflection': 35,
+    },
     'fox': {
         'hp':       45,
         'attack':   70,
@@ -115,6 +125,16 @@ STAT_GROWTH: dict[str, dict[str, float]] = {
         'healing':    1.8,
         'control':    1.0,
         'reflection': 1.2,
+    },
+    'rhino': {
+        'hp':         2.8,
+        'attack':     1.3,
+        'defense':    2.5,
+        'speed':      0.4,
+        'evasion':    0.3,
+        'healing':    0.7,
+        'control':    0.4,
+        'reflection': 0.8,
     },
     'fox': {
         'hp':         1.2,
