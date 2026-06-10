@@ -1212,7 +1212,10 @@ def api_battle_switch():
     # Construieste noul combatant
     from modules.db import get_db
     conn = get_db()
-    row  = conn.execute('SELECT * FROM menagerie WHERE id = ? AND user_id = ?', (pet_data['id'], uid)).fetchone()
+    if pet_data.get('from_pets') or str(pet_data['id']) == '0':
+        row = conn.execute('SELECT * FROM pets WHERE user_id = ?', (uid,)).fetchone()
+    else:
+        row = conn.execute('SELECT * FROM menagerie WHERE id = ? AND user_id = ?', (pet_data['id'], uid)).fetchone()
     conn.close()
     if not row:
         return jsonify({'ok': False, 'error': 'Pet negasit în DB.'})
@@ -1243,7 +1246,7 @@ def api_battle_switch():
             already_in_bench = any(str(p.get('id')) == str(old_id) for p in new_bench)
             if not already_in_bench:
                 new_bench.append({
-                    'id':        old_player.get('id'),
+                    'id':        old_id,
                     'name':      old_player.get('name'),
                     'level':     old_player.get('level'),
                     'hp_max':    old_player.get('hp_max'),
@@ -1252,6 +1255,7 @@ def api_battle_switch():
                     'species':   old_player.get('species', ''),
                     'nature':    old_player.get('nature'),
                     'gender':    old_player.get('gender', 'male'),
+                    'from_pets': (old_id == 0),
                 })
         bench = new_bench
 
