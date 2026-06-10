@@ -230,6 +230,36 @@
         }
         .bag-close-btn:hover { color: #e05252; border-color: #e05252; }
 
+        /* Iframe rucsac overlay */
+        #rucsac-overlay {
+            position: absolute; inset: 0;
+            background: rgba(0,0,0,0.92);
+            display: none; flex-direction: column;
+            z-index: 60;
+        }
+        #rucsac-overlay.open { display: flex; }
+        #rucsac-iframe-header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 8px 16px; background: #0a0a0a;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            flex-shrink: 0;
+        }
+        #rucsac-iframe-title {
+            font-family: 'Cinzel', serif; font-size: 13px;
+            font-weight: 700; color: #c9a84c;
+        }
+        #rucsac-iframe-close {
+            background: #1a1a1a; border: 1px solid #2a2a2a;
+            color: #888; padding: 6px 14px; border-radius: 6px;
+            cursor: pointer; font-family: 'Cinzel', serif;
+            font-size: 12px; font-weight: 600;
+            transition: color .15s, border-color .15s;
+        }
+        #rucsac-iframe-close:hover { color: #c9a84c; border-color: #c9a84c; }
+        #rucsac-iframe {
+            flex: 1; border: none; background: #0a0a0a;
+        }
+
         /* Switch overlay */
         #switch-overlay {
             position: absolute; inset: 0;
@@ -350,6 +380,15 @@
             <div class="switch-title">⚔️ Trimite un companion</div>
             <div class="switch-list" id="switch-list"></div>
         </div>
+    </div>
+
+    <!-- Rucsac iframe overlay -->
+    <div id="rucsac-overlay">
+        <div id="rucsac-iframe-header">
+            <span id="rucsac-iframe-title">🎒 Rucsac</span>
+            <button id="rucsac-iframe-close" onclick="closeRucsac()">✕ Înapoi la Luptă</button>
+        </div>
+        <iframe id="rucsac-iframe" src="" allow="same-origin"></iframe>
     </div>
 
     <!-- Bag overlay -->
@@ -535,7 +574,19 @@ function openSwitchMenu() {
     openSwitch(bench, true);  // true = switch voluntar, nu fortat
 }
 
-async function openBag() {
+function openBag() {
+    const iframe = document.getElementById('rucsac-iframe');
+    iframe.src = '/joc/petomania';
+    document.getElementById('rucsac-overlay').classList.add('open');
+}
+
+function closeRucsac() {
+    document.getElementById('rucsac-overlay').classList.remove('open');
+    document.getElementById('rucsac-iframe').src = '';
+    showMenu();
+}
+
+async function openBagMini() {
     const resp = await fetch('/joc/petomania/api/rucsac/data');
     const data = await resp.json();
     const list = document.getElementById('bag-list');
