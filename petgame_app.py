@@ -1520,13 +1520,28 @@ def api_training_moves():
     if level < zmin:
         return jsonify({'ok': True, 'moves': [], 'locked': True, 'level': level, 'zone_min': zmin})
 
-    # Known moves pentru acest pet
+    # Known moves pentru acest pet (cumparate + self-taught deblocate)
+    from moves_config import get_moveset
     conn = get_db()
     known_rows = conn.execute('SELECT move_key FROM known_moves WHERE user_id = ? AND pet_id = ?', (uid, pet_id)).fetchall()
     conn.close()
     known_keys = {r['move_key'] for r in known_rows}
 
-    # Filtreaza moves: natura potrivita, trainable, in zona de nivel
+    # Adauga si self-taught deblocate la known
+    if pet_id == 0:
+        from modules.pets import get_pet as _gp
+        _pet = _gp(uid)
+        _species = _pet['species'] if _pet else None
+    else:
+        _conn = get_db()
+        _row = _conn.execute('SELECT species FROM menagerie WHERE id = ? AND user_id = ?', (pet_id, uid)).fetchone()
+        _conn.close()
+        _species = _row['species'] if _row else None
+    self_taught_moves = get_moveset(_species, nature, level)
+    for _m in self_taught_moves:
+        known_keys.add(_m['key'])
+
+    # Filtreaza moves: natura potrivita, trainable, in zona de nivel, necunoscute
     moves_out = []
     for key, m in MOVES.items():
         if not m.get('trainable'): continue
@@ -1534,6 +1549,7 @@ def api_training_moves():
         lvl = m.get('unlock_level', 0)
         if lvl <= zmin or lvl > zmax: continue
         if lvl > level: continue  # petul nu are inca nivelul necesar
+        if key in known_keys: continue  # deja cunoscut
         moves_out.append({
             'key':            key,
             'name':           m['name'],
