@@ -257,7 +257,7 @@ def execute_move(attacker: dict, defender: dict, move_key: str) -> dict:
     # Verifica MP
     mp = attacker.get('mp', {})
     if mp.get(move_key, 0) <= 0:
-        log.append(f'{attacker["name"]} nu mai are MP pentru {move["name"]}!')
+        result['no_mp'] = True
         return result
     attacker['mp'][move_key] = mp.get(move_key, move.get('max_mp', 15)) - 1
 

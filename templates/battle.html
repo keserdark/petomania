@@ -229,6 +229,8 @@ function setBusy(v) {
 
 async function doTurn(moveKey) {
     if (battleData.busy) return;
+    // Verifica MP inainte de a trimite
+    if (battleData.player && battleData.player.mp && battleData.player.mp[moveKey] <= 0) return;
     setBusy(true);
     const resp = await fetch('/joc/petomania/api/battle/turn', {
         method: 'POST', headers: {'Content-Type':'application/json'},
