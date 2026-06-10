@@ -410,7 +410,7 @@ def api_activa():
               active['nature'], active['level'], active['xp'], active['hunger'],
               active['happiness'], active['cleanliness'], active['energy'],
               active['sleeping'], active['sleep_started'], active['last_decay'],
-              active['last_xp_tick'], active['born_at'], now, active.get('hp_current', 0)))
+              active['last_xp_tick'], active['born_at'], now, active['hp_current'] if 'hp_current' in active.keys() else 0))
         conn.execute('DELETE FROM pets WHERE user_id = ?', (uid,))
     conn.execute('''
         INSERT OR REPLACE INTO pets
