@@ -789,6 +789,26 @@ function rbShowMsg(elId, msg, ok) {
 // Escape închide panelul
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && rbOpen) rucsacClose(); });
 
+// ── Blocheaza navigarea daca exista o lupta activa ──
+document.querySelectorAll('.pet-nav-item').forEach(link => {
+    link.addEventListener('click', async (e) => {
+        const href = link.getAttribute('href');
+        if (!href || href.includes('/battle')) return; // lasa battle sa treaca
+        try {
+            const resp = await fetch('/joc/petomania/api/battle/state');
+            const data = await resp.json();
+            if (data.ok && data.active) {
+                e.preventDefault();
+                const confirmed = confirm('Ai o luptă în desfășurare! Dacă pleci, lupta va fi abandonată. Continui?');
+                if (confirmed) {
+                    await fetch('/joc/petomania/api/battle/flee', {method: 'POST'});
+                    window.location.href = href;
+                }
+            }
+        } catch(err) {}
+    });
+});
+
 // Daca ?rucsac=1, butonul close duce inapoi la battle
 if (new URLSearchParams(window.location.search).get('rucsac') === '1') {
     document.addEventListener('DOMContentLoaded', () => {
