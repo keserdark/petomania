@@ -923,6 +923,19 @@ def api_corvin_talked():
 
 # ── BATTLE ARENA ─────────────────────────────────────────────────────
 
+
+def _save_bench_hp(bench: list):
+    """Salveaza HP-ul curent al pets din bench in menagerie."""
+    if not bench:
+        return
+    conn = get_db()
+    for p in bench:
+        if p.get('id'):
+            conn.execute('UPDATE menagerie SET hp_current = ? WHERE id = ?',
+                         (max(0, p.get('hp_current', 0)), p['id']))
+    conn.commit()
+    conn.close()
+
 @app.route('/joc/petomania/api/battle/start', methods=['POST'])
 @login_required
 def api_battle_start():
@@ -1065,6 +1078,7 @@ def api_battle_turn():
             conn.execute('UPDATE dacoins SET balance = balance + ? WHERE user_id = ?', (reward, uid))
             conn.commit()
             conn.close()
+        _save_bench_hp(session.get('battle_bench', []))
         session.pop('battle_player', None)
         session.pop('battle_npc', None)
         session.pop('battle_size', None)
@@ -1081,6 +1095,7 @@ def api_battle_turn():
             session['battle_player'] = player
         else:
             # Niciun pet disponibil — lupta pierduta
+            _save_bench_hp(bench)
             session.pop('battle_player', None)
             session.pop('battle_npc', None)
             session.pop('battle_size', None)
@@ -1149,6 +1164,30 @@ def api_battle_switch():
         m = get_move(mk)
         if m:
             moveset_data.append({'key': m['key'], 'name': m['name'], 'icon': m['icon'], 'type': m['type'], 'power': m['power']})
+
+    # Salveaza HP-ul petului care iese din arena
+    old_player = session.get('battle_player')
+    if old_player:
+        old_id = old_player.get('id', 0)
+        old_hp = max(0, old_player.get('hp_current', 0))
+        conn2 = get_db()
+        if old_id and old_id != 0:
+            # Pet din menagerie
+            conn2.execute('UPDATE menagerie SET hp_current = ? WHERE id = ?', (old_hp, old_id))
+        else:
+            # Pet activ din pets
+            conn2.execute('UPDATE pets SET hp_current = ? WHERE user_id = ?', (old_hp, uid))
+        conn2.commit()
+        conn2.close()
+        # Actualizeaza HP si in bench daca e acolo
+        updated_bench = []
+        for p in bench:
+            if str(p['id']) != str(pet_id):
+                if str(p.get('id')) == str(old_id):
+                    p = dict(p)
+                    p['hp_current'] = old_hp
+                updated_bench.append(p)
+        bench = updated_bench
 
     # Scoate din bench
     session['battle_bench']  = [p for p in bench if str(p['id']) != str(pet_id)]
