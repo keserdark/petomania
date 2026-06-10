@@ -201,63 +201,74 @@
     display: flex;
     gap: 8px;
     margin-top: 8px;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     justify-content: center;
 }
 .zone-btn {
     flex: 1;
-    min-width: 80px;
-    max-width: 110px;
-    padding: 12px 8px;
-    background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(255,255,255,0.15);
-    border-radius: 8px;
-    color: var(--text-primary, #fff);
+    padding: clamp(10px,1vh,16px) clamp(8px,0.8vw,14px);
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--border);
+    border-radius: 10px;
+    color: var(--text-primary);
     cursor: pointer;
     text-align: center;
-    font-size: 12px;
-    transition: background 0.15s;
+    font-family: 'Cinzel', serif;
+    font-size: clamp(10px,0.9vw,13px);
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
 }
-.zone-btn:hover { background: rgba(255,255,255,0.12); }
-.zone-btn .zone-name { font-weight: 600; font-size: 13px; display: block; margin-bottom: 4px; }
-.zone-btn .zone-range { opacity: 0.6; font-size: 11px; }
-.zone-btn.locked { opacity: 0.4; cursor: not-allowed; }
+.zone-btn:hover {
+    background: var(--gold-soft);
+    border-color: var(--gold-dim);
+    color: var(--gold);
+}
+.zone-btn .zone-name { font-weight: 700; font-size: clamp(11px,1vw,14px); display: block; margin-bottom: 4px; }
+.zone-btn .zone-range { opacity: 0.6; font-size: clamp(9px,0.8vw,11px); }
+.zone-btn.locked { opacity: 0.35; cursor: not-allowed; }
+.zone-btn.locked:hover { background: var(--bg-elev); border-color: var(--border); color: var(--text-primary); }
 .move-item {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 10px 12px;
-    border-bottom: 1px solid rgba(255,255,255,0.07);
+    gap: 12px;
+    padding: clamp(10px,1vh,14px) clamp(12px,1.2vw,18px);
+    border-bottom: 1px solid var(--border);
     cursor: pointer;
-    transition: background 0.1s;
+    transition: background 0.1s, border-color 0.1s;
+    border-left: 3px solid transparent;
 }
-.move-item:hover { background: rgba(255,255,255,0.06); }
-.move-item.known { opacity: 0.5; cursor: default; pointer-events: none; }
-.move-icon { font-size: 20px; width: 28px; text-align: center; }
+.move-item:hover { background: var(--gold-soft); border-left-color: var(--gold-dim); }
+.move-item.known { opacity: 0.45; cursor: default; pointer-events: none; }
+.move-icon { font-size: clamp(18px,1.8vw,26px); width: 32px; text-align: center; }
 .move-info { flex: 1; }
-.move-name { font-size: 13px; font-weight: 500; }
-.move-meta { font-size: 11px; opacity: 0.6; margin-top: 2px; }
-.move-cost { font-size: 12px; color: #f0c060; white-space: nowrap; }
-.move-known-badge { font-size: 11px; color: #4caf7d; white-space: nowrap; }
+.move-name { font-size: clamp(12px,1.1vw,15px); font-weight: 600; font-family: 'Cinzel', serif; color: var(--text-primary); }
+.move-meta { font-size: clamp(10px,0.9vw,12px); color: var(--text-muted); margin-top: 3px; }
+.move-cost { font-size: clamp(11px,1vw,13px); color: var(--gold); white-space: nowrap; font-family: 'Cinzel', serif; }
+.move-known-badge { font-size: clamp(10px,0.9vw,12px); color: #4caf7d; white-space: nowrap; }
 .training-pet-btn {
     display: flex;
     align-items: center;
-    gap: 12px;
-    padding: 10px 14px;
-    background: rgba(255,255,255,0.05);
-    border: 1px solid rgba(255,255,255,0.1);
-    border-radius: 8px;
+    gap: clamp(10px,1vw,16px);
+    padding: clamp(10px,1vh,16px) clamp(14px,1.4vw,22px);
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--border);
+    border-radius: 10px;
     margin-bottom: 8px;
     cursor: pointer;
     width: 100%;
-    color: var(--text-primary, #fff);
-    transition: background 0.15s;
+    color: var(--text-primary);
+    font-family: 'Cinzel', serif;
+    font-size: clamp(11px,1.1vw,15px);
+    font-weight: 600;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+    text-align: left;
 }
-.training-pet-btn:hover { background: rgba(255,255,255,0.1); }
-.training-pet-nature { font-size: 18px; }
-.training-pet-info { flex: 1; text-align: left; }
-.training-pet-name { font-size: 14px; font-weight: 600; }
-.training-pet-sub { font-size: 11px; opacity: 0.6; }
+.training-pet-btn:hover { background: var(--gold-soft); border-color: var(--gold-dim); color: var(--gold); }
+.training-pet-nature { font-size: clamp(20px,2vw,28px); flex-shrink: 0; }
+.training-pet-info { flex: 1; }
+.training-pet-name { font-size: clamp(12px,1.1vw,16px); font-weight: 700; }
+.training-pet-sub { font-size: clamp(10px,0.9vw,12px); color: var(--text-muted); margin-top: 3px; font-family: 'Inter', sans-serif; font-weight: 400; }
 </style>
 {% endblock %}
 
@@ -801,8 +812,11 @@ async function selectZone(zone) {
     if (pet.level < zone.min) {
         document.getElementById('training-moves-title').textContent = zone.name;
         document.getElementById('training-moves-list').innerHTML = `
-            <div style="text-align:center;padding:30px 20px;font-size:14px;opacity:0.7;line-height:1.6">
-                Trebuie să îți antrenezi mai mult petul până când macar merita să discutam despre asemenea miscări!
+            <div style="text-align:center;padding:40px 20px;line-height:1.8">
+                <div style="font-size:32px;margin-bottom:12px">⚔️</div>
+                <div style="font-family:'Cinzel',serif;font-size:14px;color:var(--text-muted);font-style:italic">
+                    Trebuie să îți antrenezi mai mult petul până când măcar merită să discutăm despre asemenea mișcări!
+                </div>
             </div>`;
         document.getElementById('training-moves-overlay').classList.add('open');
         return;
@@ -832,6 +846,8 @@ async function selectZone(zone) {
             `;
             if (!isKnown) {
                 div.onclick = () => selectMove(m);
+            } else {
+                div.style.cursor = 'default';
             }
             list.appendChild(div);
         });
@@ -847,8 +863,15 @@ function closeMoves() {
 function selectMove(move) {
     trainingState.selectedMove = move;
     document.getElementById('training-confirm-text').innerHTML = `
-        Vrei să înveți <strong>${move.name}</strong>?<br>
-        <span style="color:#f0c060">Cost: 🪙 ${move.trainable_cost.toLocaleString()} Dacoins</span>
+        <div style="font-family:'Cinzel',serif;font-size:15px;font-weight:700;color:var(--text-primary);margin-bottom:10px">
+            ${move.icon} ${move.name}
+        </div>
+        <div style="color:var(--text-muted);font-size:13px;margin-bottom:8px">
+            Putere: ${move.power} · Nivel ${move.unlock_level}
+        </div>
+        <div style="color:var(--gold);font-family:'Cinzel',serif;font-size:14px;font-weight:600">
+            🪙 ${move.trainable_cost.toLocaleString()} Dacoins
+        </div>
     `;
     document.getElementById('training-moves-overlay').classList.remove('open');
     document.getElementById('training-confirm-overlay').classList.add('open');
