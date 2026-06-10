@@ -61,6 +61,34 @@ def generate_npc(player_level: int) -> dict:
 
 
 # ─────────────────────────────────────────────
+# MP HELPERS
+# ─────────────────────────────────────────────
+
+def _load_mp(mp_json: str, moveset: list) -> dict:
+    """Incarca MP din DB, completand cu max_mp pentru moves noi."""
+    import json
+    try:
+        saved = json.loads(mp_json or '{}')
+    except Exception:
+        saved = {}
+    return {m['key']: saved.get(m['key'], m.get('max_mp', 15)) for m in moveset}
+
+
+def save_combatant_mp(combatant: dict, user_id: int):
+    """Salveaza MP-ul combatantului in DB."""
+    import json
+    mp_json = json.dumps(combatant.get('mp', {}))
+    pid = combatant.get('id', 0)
+    conn = get_db()
+    if pid and pid != 0:
+        conn.execute('UPDATE menagerie SET mp_json = ? WHERE id = ?', (mp_json, pid))
+    else:
+        conn.execute('UPDATE pets SET mp_json = ? WHERE user_id = ?', (mp_json, user_id))
+    conn.commit()
+    conn.close()
+
+
+# ─────────────────────────────────────────────
 # BUILD COMBATANT din pet DB
 # ─────────────────────────────────────────────
 
@@ -88,7 +116,7 @@ def build_combatant(pet: dict) -> dict:
         'hp_current':   min(pet.get('hp_current', stats['hp']), stats['hp']),
         'stats':        stats,
         'moveset':      [m['key'] for m in moveset],
-        'mp':           {m['key']: m.get('max_mp', 15) for m in moveset},
+        'mp':           _load_mp(pet.get('mp_json', '{}'), moveset),
         'image_url':    image_url,
         'is_npc':       False,
         'status':       None,

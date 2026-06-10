@@ -953,7 +953,7 @@ def _save_player_hp(player: dict, uid: int, hp_override: int = None):
 @app.route('/joc/petomania/api/battle/start', methods=['POST'])
 @login_required
 def api_battle_start():
-    from modules.battle import build_combatant, generate_npc
+    from modules.battle import build_combatant, generate_npc, save_combatant_mp
     from moves_config import get_move
     from modules.pets import sync_pet, get_form, get_state
     user = get_current_user()
@@ -1104,8 +1104,9 @@ def api_battle_turn():
     move_key = (request.json or {}).get('move_key', 'scratch')
     result   = execute_turn(player, npc, move_key)
 
-    # Salveaza HP dupa fiecare tur in DB
+    # Salveaza HP si MP dupa fiecare tur in DB
     _save_player_hp(player, uid)
+    save_combatant_mp(player, uid)
 
     session['battle_player'] = player
     session['battle_npc']    = npc
@@ -1253,6 +1254,9 @@ def api_battle_switch():
             conn2.execute('UPDATE pets SET hp_current = ? WHERE user_id = ?', (old_hp, uid))
         conn2.commit()
         conn2.close()
+        # Salveaza MP petului care iese
+        if old_player:
+            save_combatant_mp(old_player, uid)
 
         # Daca petul care iese e viu (switch voluntar), il adaugam inapoi in bench
         new_bench = [p for p in bench if str(p['id']) != str(pet_id)]

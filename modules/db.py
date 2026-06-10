@@ -83,6 +83,14 @@ def init_db():
             c.execute(f'ALTER TABLE menagerie ADD COLUMN {col} INTEGER NOT NULL DEFAULT 0')
         except Exception:
             pass
+    try:
+        c.execute("ALTER TABLE pets ADD COLUMN mp_json TEXT NOT NULL DEFAULT '{}'")
+    except Exception:
+        pass
+    try:
+        c.execute("ALTER TABLE menagerie ADD COLUMN mp_json TEXT NOT NULL DEFAULT '{}'")
+    except Exception:
+        pass
     c.execute('''
         CREATE TABLE IF NOT EXISTS loadout (
             user_id    INTEGER PRIMARY KEY,
