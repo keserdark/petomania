@@ -1084,7 +1084,7 @@ def api_battle_start():
 @app.route('/joc/petomania/api/battle/turn', methods=['POST'])
 @login_required
 def api_battle_turn():
-    from modules.battle import execute_turn, calculate_reward
+    from modules.battle import execute_turn, calculate_reward, save_combatant_mp
     user   = get_current_user()
     uid    = int(user['id'])
     player = session.get('battle_player')
