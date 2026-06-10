@@ -231,7 +231,7 @@ async function doTurn(moveKey) {
         showMenu();
         setBusy(false);
     } else if (data.winner === 'player') {
-        showResult('player', data.reward);
+        showResult('player', data.reward, data.xp_results || []);
     } else if (data.winner === 'npc') {
         const bench = battleData.bench.filter(p => p.hp_current > 0);
         if (bench.length > 0) openSwitch(bench);
@@ -274,13 +274,19 @@ async function doSwitch(petId) {
     setBusy(false);
 }
 
-function showResult(winner, reward) {
+function showResult(winner, reward, xpResults) {
     const el = document.getElementById('result-overlay');
     el.classList.add('open');
     if (winner === 'player') {
         document.getElementById('result-icon').textContent  = '🏆';
         document.getElementById('result-title').textContent = 'Victorie!';
-        document.getElementById('result-reward').textContent = reward > 0 ? `+${reward} ✦ Dacoins` : '';
+        let rewardText = reward > 0 ? `+${reward} ✦ Dacoins` : '';
+        if (xpResults && xpResults.length > 0) {
+            rewardText += '<br>' + xpResults.map(r =>
+                `⭐ ${r.name} +${r.xp} XP${r.leveled_up ? ' 🎉 Level Up!' : ''}`
+            ).join('<br>');
+        }
+        document.getElementById('result-reward').innerHTML = rewardText;
     } else {
         document.getElementById('result-icon').textContent  = '💀';
         document.getElementById('result-title').textContent = 'Înfrângere...';

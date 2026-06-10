@@ -244,19 +244,22 @@ def build_pet_context(p, get_signed_url_fn) -> dict:
 
 # ── BATTLE XP ────────────────────────────────────────────
 
-def add_battle_xp(user_id: int, xp_amount: int, participant_ids: list):
+def add_battle_xp(user_id: int, xp_amount: int, participant_ids: list) -> list:
     """Adauga XP dupa lupta, impartit egal intre participanti.
     participant_ids: 0 = pet activ (pets table), >0 = menagerie id
+    Returneaza lista de dicts {name, xp, leveled_up}
     """
     if not participant_ids or xp_amount <= 0:
-        return
+        return []
     xp_each = max(1, xp_amount // len(participant_ids))
     conn = get_db()
+    results = []
     for pid in participant_ids:
         if pid == 0:
-            row = conn.execute('SELECT level, xp FROM pets WHERE user_id = ?', (user_id,)).fetchone()
+            row = conn.execute('SELECT name, level, xp FROM pets WHERE user_id = ?', (user_id,)).fetchone()
             if not row:
                 continue
+            old_level = row['level']
             level, xp = row['level'], row['xp'] + xp_each
             while True:
                 needed = xp_for_level(level)
@@ -266,10 +269,12 @@ def add_battle_xp(user_id: int, xp_amount: int, participant_ids: list):
                 else:
                     break
             conn.execute('UPDATE pets SET xp = ?, level = ? WHERE user_id = ?', (xp, level, user_id))
+            results.append({'name': row['name'], 'xp': xp_each, 'leveled_up': level > old_level})
         else:
-            row = conn.execute('SELECT level, xp FROM menagerie WHERE id = ? AND user_id = ?', (pid, user_id)).fetchone()
+            row = conn.execute('SELECT name, level, xp FROM menagerie WHERE id = ? AND user_id = ?', (pid, user_id)).fetchone()
             if not row:
                 continue
+            old_level = row['level']
             level, xp = row['level'], row['xp'] + xp_each
             while True:
                 needed = xp_for_level(level)
@@ -279,5 +284,7 @@ def add_battle_xp(user_id: int, xp_amount: int, participant_ids: list):
                 else:
                     break
             conn.execute('UPDATE menagerie SET xp = ?, level = ? WHERE id = ?', (xp, level, pid))
+            results.append({'name': row['name'], 'xp': xp_each, 'leveled_up': level > old_level})
     conn.commit()
     conn.close()
+    return results

@@ -1151,7 +1151,7 @@ def api_battle_turn():
         # Acorda XP participantilor
         xp_total = max(1, reward // 3)
         participants = session.get('battle_participants', [player['id']])
-        add_battle_xp(uid, xp_total, participants)
+        xp_results = add_battle_xp(uid, xp_total, participants)
         session.pop('battle_player', None)
         session.pop('battle_npc', None)
         session.pop('battle_size', None)
@@ -1180,6 +1180,7 @@ def api_battle_turn():
         'player': result['player'], 'npc': result['npc'],
         'winner': result['winner'], 'reward': reward,
         'bench': session.get('battle_bench', []),
+        'xp_results': locals().get('xp_results', []),
     })
 
 
