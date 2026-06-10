@@ -298,13 +298,17 @@ async function openArenaMenu() {
     const data = await resp.json();
     const alive = data.alive !== undefined ? data.alive : (data.count || 1);
     const msg   = document.getElementById('arena-format-msg');
+    const btn1  = document.getElementById('btn-arena-1v1');
     const btn2  = document.getElementById('btn-arena-2v2');
     const btn3  = document.getElementById('btn-arena-3v3');
+
+    // Reset toate butoanele
+    [btn1, btn2, btn3].forEach(b => { b.disabled = false; b.style.opacity = '1'; b.style.cursor = 'pointer'; });
+    msg.textContent = '';
 
     if (alive === 0) {
         btn2.disabled = true; btn2.style.opacity = '0.4'; btn2.style.cursor = 'not-allowed';
         btn3.disabled = true; btn3.style.opacity = '0.4'; btn3.style.cursor = 'not-allowed';
-        const btn1 = document.getElementById('btn-arena-1v1');
         btn1.disabled = true; btn1.style.opacity = '0.4'; btn1.style.cursor = 'not-allowed';
         msg.textContent = 'Toți companionii tăi sunt KO. Vindecă-i înainte de luptă.';
     } else if (alive < 2) {
