@@ -936,6 +936,19 @@ def _save_bench_hp(bench: list):
     conn.commit()
     conn.close()
 
+
+def _save_player_hp(player: dict, uid: int, hp_override: int = None):
+    """Salveaza HP playerului in DB — pets daca e petul activ, menagerie daca e din bench."""
+    hp = hp_override if hp_override is not None else max(0, player.get('hp_current', 0))
+    player_id = player.get('id', 0)
+    conn = get_db()
+    if player_id and player_id != 0:
+        conn.execute('UPDATE menagerie SET hp_current = ? WHERE id = ?', (hp, player_id))
+    else:
+        conn.execute('UPDATE pets SET hp_current = ? WHERE user_id = ?', (hp, uid))
+    conn.commit()
+    conn.close()
+
 @app.route('/joc/petomania/api/battle/start', methods=['POST'])
 @login_required
 def api_battle_start():
@@ -1075,10 +1088,7 @@ def api_battle_turn():
     result   = execute_turn(player, npc, move_key)
 
     # Salveaza HP dupa fiecare tur in DB
-    conn = get_db()
-    conn.execute('UPDATE pets SET hp_current = ? WHERE user_id = ?', (max(0, player['hp_current']), uid))
-    conn.commit()
-    conn.close()
+    _save_player_hp(player, uid)
 
     session['battle_player'] = player
     session['battle_npc']    = npc
@@ -1123,10 +1133,7 @@ def api_battle_turn():
         session.pop('battle_size', None)
         session.pop('battle_npc_index', None)
     elif result['winner'] == 'npc':
-        conn = get_db()
-        conn.execute('UPDATE pets SET hp_current = 0 WHERE user_id = ?', (uid,))
-        conn.commit()
-        conn.close()
+        _save_player_hp(player, uid, hp_override=0)
         bench = session.get('battle_bench', [])
         alive = [p for p in bench if p.get('hp_current', 0) > 0]
         if alive:
@@ -1155,10 +1162,8 @@ def api_battle_flee():
     uid    = int(user['id'])
     player = session.get('battle_player')
     if player:
-        conn = get_db()
-        conn.execute('UPDATE pets SET hp_current = ? WHERE user_id = ?', (max(1, player['hp_current']), uid))
-        conn.commit()
-        conn.close()
+        hp_flee = max(1, player.get('hp_current', 1))
+        _save_player_hp(player, uid, hp_override=hp_flee)
     session.pop('battle_player', None)
     session.pop('battle_npc', None)
     return jsonify({'ok': True})
