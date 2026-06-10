@@ -957,8 +957,8 @@ def api_battle_start():
             'hp_max':    slot['hp_max'],
             'hp_current':slot['hp_current'],
             'image_url': slot['image_url'],
-            'species':   slot['species'],
-            'nature':    slot.get('nature'),
+            'species':   slot['species_key'],
+            'nature':    slot['nature_key'],
             'gender':    slot.get('gender', 'male'),
         })
 

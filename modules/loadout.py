@@ -38,7 +38,8 @@ def build_loadout_slot(pet_row, slot_num: int) -> dict:
     p        = dict(pet_row)
     form     = get_form(p['level'])
     state    = get_state(p['hunger'], p['happiness'], p['cleanliness'], p['energy'], bool(p['sleeping']))
-    nat_data = NATURES.get(p.get('nature')) if p.get('nature') else None
+    nat_key  = p.get('nature')
+    nat_data = NATURES.get(nat_key) if nat_key else None
     return {
         'empty':       False,
         'slot':        slot_num,
@@ -46,6 +47,7 @@ def build_loadout_slot(pet_row, slot_num: int) -> dict:
         'name':        p['name'],
         'species':     SPECIES.get(p['species'], {}).get('name', p['species']),
         'species_key': p['species'],
+        'nature_key':  nat_key,
         'level':       p['level'],
         'form':        form,
         'gender':      p['gender'],
@@ -53,7 +55,7 @@ def build_loadout_slot(pet_row, slot_num: int) -> dict:
         'image_url':   get_image_url(p['species'], form, state, p['gender']),
         'nat_data':    nat_data,
         'hp_current':  p.get('hp_current', 0),
-        'hp_max':      get_stats_at_level(p['species'], p.get('nature'), p['level'], form)['hp'],
+        'hp_max':      get_stats_at_level(p['species'], nat_key, p['level'], form)['hp'],
     }
 
 
