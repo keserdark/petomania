@@ -375,9 +375,9 @@ window.addEventListener('pagehide', () => {
 
 // Marcheaza ca terminata cand result e afisat
 const _origShowResult = showResult;
-showResult = function(winner, reward) {
+showResult = function(winner, reward, xpResults) {
     battleFinished = true;
-    _origShowResult(winner, reward);
+    _origShowResult(winner, reward, xpResults);
 };
 </script>
 {% endblock %}
