@@ -11,7 +11,7 @@
     <div class="assets-popup-overlay" id="arhonte-overlay">
         <div class="assets-popup">
             <button class="assets-popup-close" onclick="closeArhonte()">✕</button>
-            <div class="assets-popup-deco">✨</div>
+            <div class="assets-popup-deco"></div>
             <div class="assets-popup-title">Arhontele Sanctuarului</div>
             <div style="font-size:clamp(11px,1vw,14px);color:var(--text-secondary);line-height:1.7;font-style:italic;text-align:center;padding:4px 0 8px">
                 Pace ție, călătorule.<br>
@@ -19,15 +19,12 @@
                 Mulți vin aici căutând putere. Puțini înțeleg că adevărata putere vine din echilibrul dintre om și companion.
             </div>
             <button class="assets-popup-btn" onclick="openAjutor()">
-                <span class="assets-popup-btn-icon">🙏</span>
                 <span>Am nevoie de ajutor.</span>
             </button>
             <button class="assets-popup-btn" onclick="openPoveste()">
-                <span class="assets-popup-btn-icon">📜</span>
                 <span>Spune-mi despre acest loc.</span>
             </button>
             <button class="assets-popup-btn" onclick="closeArhonte()">
-                <span class="assets-popup-btn-icon">🚶</span>
                 <span>La revedere.</span>
             </button>
         </div>
@@ -37,7 +34,7 @@
     <div class="assets-popup-overlay" id="ajutor-overlay">
         <div class="assets-popup assets-dialog">
             <button class="assets-popup-close" onclick="closeAjutor()">✕</button>
-            <div class="assets-popup-deco">✨</div>
+            <div class="assets-popup-deco"></div>
             <div class="assets-popup-title">Arhontele Sanctuarului</div>
             <div class="assets-dialog-text">
                 Prin ritualurile acestui sanctuar pot vindeca rănile companionilor tăi și le pot reface energia spirituală.<br><br>
@@ -46,15 +43,12 @@
             </div>
             <div>
                 <button class="assets-popup-btn assets-name-btn" onclick="donaVindeca()">
-                    <span class="assets-popup-btn-icon">🪙</span>
                     <span>Donez 500 Dacoins.</span>
                 </button>
                 <button class="assets-popup-btn" onclick="openPreaMult()">
-                    <span class="assets-popup-btn-icon">😔</span>
                     <span>Este prea mult.</span>
                 </button>
                 <button class="assets-popup-btn" onclick="closeAjutor(); openArhonte()">
-                    <span class="assets-popup-btn-icon">↩️</span>
                     <span>M-am răzgândit.</span>
                 </button>
             </div>
@@ -64,7 +58,7 @@
     <!-- Popup Ritual -->
     <div class="assets-popup-overlay" id="ritual-overlay">
         <div class="assets-popup assets-dialog">
-            <div class="assets-popup-deco">✨</div>
+            <div class="assets-popup-deco"></div>
             <div class="assets-popup-title">Arhontele Sanctuarului</div>
             <div class="assets-dialog-text" id="ritual-text">
                 Generozitatea ta nu va fi uitată.<br><br>
@@ -78,7 +72,7 @@
     <div class="assets-popup-overlay" id="preamult-overlay">
         <div class="assets-popup assets-dialog">
             <button class="assets-popup-close" onclick="closePreaMult()">✕</button>
-            <div class="assets-popup-deco">✨</div>
+            <div class="assets-popup-deco"></div>
             <div class="assets-popup-title">Arhontele Sanctuarului</div>
             <div class="assets-dialog-text">
                 Poate că așa pare.<br><br>
@@ -88,11 +82,9 @@
             </div>
             <div>
                 <button class="assets-popup-btn assets-name-btn" onclick="closePreaMult(); donaVindeca()">
-                    <span class="assets-popup-btn-icon">🪙</span>
                     <span>Donez 500 Dacoins.</span>
                 </button>
                 <button class="assets-popup-btn" onclick="closePreaMult(); closeAjutor()">
-                    <span class="assets-popup-btn-icon">🚶</span>
                     <span>La revedere.</span>
                 </button>
             </div>
@@ -103,7 +95,7 @@
     <div class="assets-popup-overlay" id="poveste-overlay">
         <div class="assets-popup assets-dialog">
             <button class="assets-popup-close" onclick="closePoveste()">✕</button>
-            <div class="assets-popup-deco">✨</div>
+            <div class="assets-popup-deco"></div>
             <div class="assets-popup-title">Arhontele Sanctuarului</div>
             <div class="assets-dialog-text">
                 Acest sanctuar există de generații.<br><br>
@@ -113,11 +105,9 @@
             </div>
             <div>
                 <button class="assets-popup-btn" onclick="closePoveste(); openAjutor()">
-                    <span class="assets-popup-btn-icon">🙏</span>
                     <span>Am nevoie de ajutor.</span>
                 </button>
                 <button class="assets-popup-btn" onclick="closePoveste()">
-                    <span class="assets-popup-btn-icon">🚶</span>
                     <span>La revedere.</span>
                 </button>
             </div>
@@ -227,7 +217,7 @@ canvas.addEventListener('mousemove', (e) => {
         currentHover = hit;
         canvas.style.cursor   = hit ? 'pointer' : 'default';
         tooltip.style.opacity = hit ? '1' : '0';
-        if (hit) tooltip.textContent = '✨ Arhontele Sanctuarului';
+        if (hit) tooltip.textContent = ' Arhontele Sanctuarului';
         redraw(hit);
     }
 });
@@ -320,7 +310,6 @@ async function donaVindeca() {
         `;
         document.getElementById('ritual-actions').innerHTML = `
             <button class="assets-popup-btn" onclick="allClosed()">
-                <span class="assets-popup-btn-icon">🚶</span>
                 <span>Înțeleg.</span>
             </button>`;
         return;
@@ -330,14 +319,13 @@ async function donaVindeca() {
         <em class="assets-dialog-action">*Fie ca spiritele strămoșilor să le aline suferința.*</em><br>
         <em class="assets-dialog-action">*Fie ca inimile lor să rămână neclintite în fața întunericului.*</em><br>
         <em class="assets-dialog-action">*Fie ca legătura dintre voi să devină mai puternică decât înainte.*</em><br><br>
-        <span style="color:#4caf7d">✅ Toți companionii au fost vindecați.</span><br>
-        <span style="color:#378ADD">✅ MP-ul tuturor companionilor a fost restaurat.</span><br><br>
+        <span style="color:#4caf7d"> Toți companionii au fost vindecați.</span><br>
+        <span style="color:#378ADD"> MP-ul tuturor companionilor a fost restaurat.</span><br><br>
         Gata. Trupurile lor sunt întregite, iar sufletele lor odihnite.<br><br>
         <em class="assets-dialog-action">Mergi înainte cu încredere, călătorule.</em>
     `;
     document.getElementById('ritual-actions').innerHTML = `
         <button class="assets-popup-btn assets-name-btn" onclick="allClosed()">
-            <span class="assets-popup-btn-icon">🙏</span>
             <span>Mulțumesc.</span>
         </button>`;
 }
