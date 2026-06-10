@@ -444,33 +444,6 @@ function openBag() {
 
 // Interceptor pentru captură — rucsac_widget.js apeleaza /api/rucsac/use
 // Suprascriem fetch global ca sa detectam raspunsuri de captura
-const _origFetch = window.fetch;
-window.fetch = async function(...args) {
-    const resp = await _origFetch(...args);
-    const url  = typeof args[0] === 'string' ? args[0] : '';
-    if (url.includes('/api/rucsac/use')) {
-        const clone = resp.clone();
-        try {
-            const data = await clone.json();
-            if (data.caught !== undefined) {
-                window._lastCaptureResult = data;
-                if (data.caught) {
-                    // Inchide rucsacul automat
-                    if (typeof rucsacToggle === 'function' && typeof rbOpen !== 'undefined' && rbOpen) {
-                        rucsacToggle();
-                    }
-                } else if (!data.caught) {
-                    // Esec — NPC continua lupta, doar log
-                    addLog(`🔮 ${data.msg}`);
-                    window._lastCaptureResult = null;
-                }
-            }
-        } catch(e) {}
-        return resp;
-    }
-    return resp;
-};
-
 // Interceptor fetch pentru captură
 const _origFetch = window.fetch;
 window.fetch = async function(...args) {
