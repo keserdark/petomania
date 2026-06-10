@@ -2,6 +2,8 @@
 {% block content_class %}pet-content-city{% endblock %}
 {% block title %}Arenă — Luptă{% endblock %}
 
+
+
 {% block content %}
 <div id="battle-wrap">
     <canvas id="battle-canvas"></canvas>
@@ -80,6 +82,11 @@
 {% block scripts %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/battle.css') }}">
 <style>
+
+.pet-footbar { display: none !important; }
+
+
+
 #battle-wrap {
     position: absolute;
     inset: 0;
