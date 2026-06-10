@@ -136,6 +136,12 @@
 
 {% block scripts %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/assets.css') }}">
+<style>
+#biserica-wrap {
+    aspect-ratio: 1287 / 816;
+    max-height: calc((100vw - var(--sidebar-w)) * 816 / 1287);
+}
+</style>
 <script>
 const W = 1287;
 const H = 816;
