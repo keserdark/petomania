@@ -195,7 +195,7 @@
 
 {% endblock %}
 
-{% block extra_style %}
+{% block scripts %}
 <style>
 .training-zones {
     display: flex;
@@ -270,9 +270,6 @@
 .training-pet-name { font-size: clamp(12px,1.1vw,16px); font-weight: 700; }
 .training-pet-sub { font-size: clamp(10px,0.9vw,12px); color: var(--text-muted); margin-top: 3px; font-family: 'Inter', sans-serif; font-weight: 400; }
 </style>
-{% endblock %}
-
-{% block scripts %}
 <link rel="stylesheet" href="{{ url_for('static', filename='css/assets.css') }}">
 <style>
 .arena-wrap {
