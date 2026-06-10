@@ -310,8 +310,10 @@ def menajerie():
     active     = sync_pet(uid)
     active_ctx = _build_pet_context(active) if active else None
     rows          = get_menagerie(uid)
-    men_pets      = [_build_pet_context(dict(r)) for r in rows]
     loadout_slots = build_loadout_context(uid)
+    # Exclude pets care sunt in loadout
+    loadout_ids = {s['id'] for s in loadout_slots if not s.get('empty') and s.get('id')}
+    men_pets    = [_build_pet_context(dict(r)) for r in rows if r['id'] not in loadout_ids]
     return render_template('menajerie.html', active=active_ctx, men_pets=men_pets, loadout_slots=loadout_slots)
 
 
