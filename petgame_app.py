@@ -1052,11 +1052,12 @@ def api_battle_start():
         if m:
             moveset_data.append({'key': m['key'], 'name': m['name'], 'icon': m['icon'], 'type': m['type'], 'power': m['power']})
 
-    session['battle_player']    = player
-    session['battle_npc']       = npc
-    session['battle_bench']     = bench
-    session['battle_size']      = battle_size
-    session['battle_npc_index'] = 1
+    session['battle_player']             = player
+    session['battle_npc']                = npc
+    session['battle_bench']              = bench
+    session['battle_size']               = battle_size
+    session['battle_npc_index']          = 1
+    session['battle_accumulated_reward'] = 0
 
     return jsonify({
         'ok': True,
@@ -1117,6 +1118,8 @@ def api_battle_turn():
             # Mai sunt NPC-uri — genereaza urmatorul
             from modules.battle import generate_npc as _gen_npc
             new_npc = _gen_npc(player['level'])
+            partial_reward = calculate_reward(player['level'], npc['level'], True)
+            session['battle_accumulated_reward'] = session.get('battle_accumulated_reward', 0) + partial_reward
             session['battle_npc']       = new_npc
             session['battle_npc_index'] = npc_index + 1
             session['battle_player']    = player
@@ -1137,6 +1140,7 @@ def api_battle_turn():
 
         # Ultimul NPC doborat — victorie finala
         reward = calculate_reward(player['level'], npc['level'], True)
+        reward += session.get('battle_accumulated_reward', 0)
         if reward > 0:
             conn = get_db()
             conn.execute('UPDATE dacoins SET balance = balance + ? WHERE user_id = ?', (reward, uid))
@@ -1147,6 +1151,7 @@ def api_battle_turn():
         session.pop('battle_npc', None)
         session.pop('battle_size', None)
         session.pop('battle_npc_index', None)
+        session.pop('battle_accumulated_reward', None)
     elif result['winner'] == 'npc':
         _save_player_hp(player, uid, hp_override=0)
         bench = session.get('battle_bench', [])
@@ -1161,6 +1166,7 @@ def api_battle_turn():
             session.pop('battle_npc', None)
             session.pop('battle_size', None)
             session.pop('battle_npc_index', None)
+            session.pop('battle_accumulated_reward', None)
 
     return jsonify({
         'ok': True, 'log': result['log'],
