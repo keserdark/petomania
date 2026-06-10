@@ -35,6 +35,7 @@
                     <div class="bc-name-row">
                         <span class="bc-name" id="player-name">—</span>
                         <span class="bc-level" id="player-level">Nv.—</span>
+                        <span class="bc-nature-badge" id="player-nature"></span>
                     </div>
                     <div class="bc-status" id="player-status"></div>
                     <div class="bc-hp-bg"><div class="bc-hp-fill" id="player-hp-bar" style="width:100%"></div></div>
@@ -144,6 +145,14 @@
 .bmove {
     position: relative;
 }
+.bc-nature-badge {
+    font-size: 12px;
+    background: rgba(0,0,0,0.4);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 4px;
+    padding: 1px 4px;
+    margin-left: 4px;
+}
 
 #battle-canvas {
     position: absolute;
@@ -220,6 +229,12 @@ function updateUI(side, c) {
     document.getElementById(`${side}-hp-txt`).textContent = `${c.hp_current} / ${c.hp_max}`;
     document.getElementById(`${side}-status`).textContent = c.status ? `[${c.status.toUpperCase()}]` : '';
     if (c.image_url) document.getElementById(`${side}-img`).src = c.image_url;
+    const natureBadge = document.getElementById(`${side}-nature`);
+    if (natureBadge) {
+        const icon = c.nature && NATURE_ICONS[c.nature] ? NATURE_ICONS[c.nature] : '';
+        natureBadge.textContent = icon;
+        natureBadge.style.display = icon ? '' : 'none';
+    }
 }
 
 function renderMoves(moveset) {

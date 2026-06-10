@@ -443,6 +443,7 @@ def _combatant_snapshot(c: dict) -> dict:
         'attack_mod':   c.get('attack_mod', 0),
         'evasion_mod':  c.get('evasion_mod', 0),
         'mp':           c.get('mp', {}),
+        'nature':       c.get('nature'),
     }
 
 
