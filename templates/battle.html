@@ -242,7 +242,10 @@ async function doTurn(moveKey) {
     updateUI('player', data.player);
     updateUI('npc', data.npc);
     if (data.bench !== undefined) { battleData.bench = data.bench; updatePetBtn(); }
-    // Actualizeaza MP pe butoane
+    // Actualizeaza MP
+    if (data.player) {
+        battleData.player = Object.assign(battleData.player || {}, data.player);
+    }
     if (data.player && data.player.mp && battleData.player) {
         battleData.player.mp = data.player.mp;
         // Update mp pe fiecare buton fara re-render complet

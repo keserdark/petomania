@@ -373,9 +373,12 @@ def execute_turn(player: dict, npc: dict, player_move_key: str) -> dict:
     r1 = execute_move(first, second, first_move)
     log.extend(r1['log'])
 
-    # Al doilea atac (daca al doilea e in viata)
+    # Daca primul atac a fost blocat de MP 0 si e playerul, NPC nu ataca
+    player_had_no_mp = r1.get('no_mp') and first is player
+
+    # Al doilea atac (daca al doilea e in viata si primul nu a fost blocat de MP)
     r2 = {'log': [], 'damage': 0}
-    if second['hp_current'] > 0:
+    if second['hp_current'] > 0 and not player_had_no_mp:
         r2 = execute_move(second, first, sec_move)
         log.extend(r2['log'])
 
