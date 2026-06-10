@@ -322,5 +322,21 @@ async function tryFlee() {
 }
 
 initBattle();
+
+// Avertizeaza la orice iesire din pagina (back, close, refresh)
+let battleFinished = false;
+window.addEventListener('beforeunload', (e) => {
+    if (!battleFinished && battleData.player) {
+        e.preventDefault();
+        e.returnValue = '';
+    }
+});
+
+// Marcheaza ca terminata cand result e afisat
+const _origShowResult = showResult;
+showResult = function(winner, reward) {
+    battleFinished = true;
+    _origShowResult(winner, reward);
+};
 </script>
 {% endblock %}
