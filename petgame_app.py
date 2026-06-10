@@ -1134,6 +1134,14 @@ def api_battle_state():
         if m:
             moveset_data.append({'key': m['key'], 'name': m['name'], 'icon': m['icon'], 'type': m['type'], 'power': m['power']})
 
+    # Re-citeste HP din DB — poate fi modificat de potiuni intre tururi
+    conn = get_db()
+    fresh = conn.execute('SELECT hp_current FROM pets WHERE user_id = ?', (int(get_current_user()['id']),)).fetchone()
+    conn.close()
+    if fresh:
+        player['hp_current'] = fresh['hp_current']
+        session['battle_player'] = player
+
     return jsonify({
         'ok': True, 'active': True,
         'player': {
