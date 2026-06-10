@@ -240,3 +240,44 @@ def build_pet_context(p, get_signed_url_fn) -> dict:
         'gender_icon':  '♂️' if p['gender'] == 'male' else '♀️',
         'species_name': SPECIES.get(p['species'], {}).get('name', p['species']),
     }
+
+
+# ── BATTLE XP ────────────────────────────────────────────
+
+def add_battle_xp(user_id: int, xp_amount: int, participant_ids: list):
+    """Adauga XP dupa lupta, impartit egal intre participanti.
+    participant_ids: 0 = pet activ (pets table), >0 = menagerie id
+    """
+    if not participant_ids or xp_amount <= 0:
+        return
+    xp_each = max(1, xp_amount // len(participant_ids))
+    conn = get_db()
+    for pid in participant_ids:
+        if pid == 0:
+            row = conn.execute('SELECT level, xp FROM pets WHERE user_id = ?', (user_id,)).fetchone()
+            if not row:
+                continue
+            level, xp = row['level'], row['xp'] + xp_each
+            while True:
+                needed = xp_for_level(level)
+                if xp >= needed and level < 100:
+                    xp -= needed
+                    level += 1
+                else:
+                    break
+            conn.execute('UPDATE pets SET xp = ?, level = ? WHERE user_id = ?', (xp, level, user_id))
+        else:
+            row = conn.execute('SELECT level, xp FROM menagerie WHERE id = ? AND user_id = ?', (pid, user_id)).fetchone()
+            if not row:
+                continue
+            level, xp = row['level'], row['xp'] + xp_each
+            while True:
+                needed = xp_for_level(level)
+                if xp >= needed and level < 100:
+                    xp -= needed
+                    level += 1
+                else:
+                    break
+            conn.execute('UPDATE menagerie SET xp = ?, level = ? WHERE id = ?', (xp, level, pid))
+    conn.commit()
+    conn.close()

@@ -35,7 +35,7 @@ load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), '.env'))
 # ── MODULES ──────────────────────────────────────────────────────────
 from modules.db       import get_db, init_db, get_dacoins, spend_dacoins, get_room_config, save_room_config, bump_room_version
 from modules.pets     import (get_pet, get_menagerie, get_form, get_state, get_image_url,
-                               get_room_url, sync_pet, sync_pet_hp, sync_menagerie_hp, update_pet, build_pet_context,
+                               get_room_url, sync_pet, sync_pet_hp, sync_menagerie_hp, update_pet, build_pet_context, add_battle_xp,
                                format_age, xp_for_level,
                                DECAY_INTERVAL, FEED_AMOUNT, WASH_AMOUNT,
                                PLAY_HAPPINESS, PLAY_ENERGY_COST, PLAY_HUNGER_COST)
@@ -1058,6 +1058,7 @@ def api_battle_start():
     session['battle_size']               = battle_size
     session['battle_npc_index']          = 1
     session['battle_accumulated_reward'] = 0
+    session['battle_participants']          = [player['id']]
 
     return jsonify({
         'ok': True,
@@ -1147,11 +1148,16 @@ def api_battle_turn():
             conn.commit()
             conn.close()
         _save_bench_hp(session.get('battle_bench', []))
+        # Acorda XP participantilor
+        xp_total = max(1, reward // 3)
+        participants = session.get('battle_participants', [player['id']])
+        add_battle_xp(uid, xp_total, participants)
         session.pop('battle_player', None)
         session.pop('battle_npc', None)
         session.pop('battle_size', None)
         session.pop('battle_npc_index', None)
         session.pop('battle_accumulated_reward', None)
+        session.pop('battle_participants', None)
     elif result['winner'] == 'npc':
         _save_player_hp(player, uid, hp_override=0)
         bench = session.get('battle_bench', [])
@@ -1167,6 +1173,7 @@ def api_battle_turn():
             session.pop('battle_size', None)
             session.pop('battle_npc_index', None)
             session.pop('battle_accumulated_reward', None)
+            session.pop('battle_participants', None)
 
     return jsonify({
         'ok': True, 'log': result['log'],
@@ -1268,6 +1275,11 @@ def api_battle_switch():
     # Scoate din bench
     session['battle_bench']  = bench
     session['battle_player'] = new_player
+    # Adauga noul player in lista de participanti daca nu e deja
+    participants = session.get('battle_participants', [])
+    if new_player['id'] not in participants:
+        participants.append(new_player['id'])
+    session['battle_participants'] = participants
 
     return jsonify({
         'ok': True,
