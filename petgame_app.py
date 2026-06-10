@@ -1400,7 +1400,7 @@ def api_training_loadout():
         if not men_id: continue
         row = conn.execute('SELECT * FROM menagerie WHERE id = ? AND user_id = ?', (men_id, uid)).fetchone()
         if row:
-            pets.append({'id': men_id, 'name': row['name'], 'level': row['level'], 'nature': row.get('nature'), 'species': row.get('species')})
+            pets.append({'id': men_id, 'name': row['name'], 'level': row['level'], 'nature': row['nature'] if 'nature' in row.keys() else None, 'species': row['species'] if 'species' in row.keys() else None})
     conn.close()
     return jsonify({'ok': True, 'pets': pets})
 
