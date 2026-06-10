@@ -224,7 +224,16 @@ function clearLog() { document.getElementById('battle-log').innerHTML = ''; }
 
 function setBusy(v) {
     battleData.busy = v;
-    document.querySelectorAll('.bmove').forEach(b => b.disabled = v);
+    document.querySelectorAll('.bmove').forEach(b => {
+        if (v) {
+            b.disabled = true;
+        } else {
+            // Reactivam doar daca are MP
+            const key = b.getAttribute('onclick').match(/'([^']+)'/)?.[1];
+            const mp = key && battleData.player && battleData.player.mp ? battleData.player.mp[key] : 1;
+            b.disabled = (mp !== undefined && mp <= 0);
+        }
+    });
 }
 
 async function doTurn(moveKey) {
