@@ -2,6 +2,7 @@
 modules/inventory.py
 Rucsac: inv_add, inv_remove, inv_build_context, use_item, rename_pet.
 """
+import json
 from inventory_config import (
     CATEGORY_SLOTS, STACK_MAX,
     CATEGORY_NAMES, CATEGORY_ORDER, USE_STUB_MESSAGES,
@@ -153,6 +154,29 @@ def _apply_effects(p: dict, effects: dict, category: str) -> list:
         p['energy'] = min(100, p.get('energy', 0) + effects['energy'])
         changed.append(f"Energie +{effects['energy']}")
 
+    if 'mp' in effects:
+        mp_restore = effects['mp']
+        try:
+            mp_dict = json.loads(p.get('mp_json') or '{}')
+        except Exception:
+            mp_dict = {}
+        # Restaureaza mp_restore pe fiecare abilitate, pana la max_mp
+        from moves_config import get_moveset, get_move
+        moveset = get_moveset(p['species'], p.get('nature'), p['level'])
+        restored = 0
+        for m in moveset:
+            max_mp = m.get('max_mp', 15)
+            current = mp_dict.get(m['key'], max_mp)
+            new_val = min(max_mp, current + mp_restore)
+            if new_val > current:
+                restored += new_val - current
+            mp_dict[m['key']] = new_val
+        p['mp_json'] = json.dumps(mp_dict)
+        if restored > 0:
+            changed.append(f"MP +{mp_restore} per abilitate")
+        else:
+            return []  # toate la max
+
     return changed
 
 
@@ -184,8 +208,8 @@ def use_item(user_id: int, category: str, item_key: str, target_slot: int = 0) -
             return {'ok': False, 'msg': 'HP-ul companionului este deja plin.' if 'hp' in effects else 'Acest item nu are efect momentan.'}
         conn = get_db()
         conn.execute(
-            'UPDATE pets SET hunger = ?, energy = ?, hp_current = ? WHERE user_id = ?',
-            (p['hunger'], p['energy'], p['hp_current'], user_id)
+            'UPDATE pets SET hunger = ?, energy = ?, hp_current = ?, mp_json = ? WHERE user_id = ?',
+            (p['hunger'], p['energy'], p['hp_current'], p.get('mp_json', '{}'), user_id)
         )
         conn.commit()
         conn.close()
@@ -219,8 +243,8 @@ def use_item(user_id: int, category: str, item_key: str, target_slot: int = 0) -
         conn.close()
         return {'ok': False, 'msg': 'HP-ul companionului este deja plin.' if 'hp' in effects else 'Acest item nu are efect momentan.'}
     conn.execute(
-        'UPDATE menagerie SET hunger = ?, energy = ?, hp_current = ? WHERE id = ?',
-        (p['hunger'], p['energy'], p['hp_current'], men_id)
+        'UPDATE menagerie SET hunger = ?, energy = ?, hp_current = ?, mp_json = ? WHERE id = ?',
+        (p['hunger'], p['energy'], p['hp_current'], p.get('mp_json', '{}'), men_id)
     )
     conn.commit()
     conn.close()

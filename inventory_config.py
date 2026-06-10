@@ -87,6 +87,17 @@ INVENTORY_ITEMS = {
     'usable_outside_battle': True,
     'quest_item': False,
 },
+    {
+    'key':   'mp_potion_small',
+    'name':  'Poțiune de Move Power',
+    'desc':  'Restaurează 5 MP la toate abilitățile unui companion.',
+    'icon':  '🔵',
+    'img':   '/static/items/inventory_items/MovePowerPotion_Small.png',
+    'price': 40,
+    'effects': { 'mp': 5 },
+    'usable_outside_battle': True,
+    'quest_item': False,
+},
     ],
 
     # ── OFRANDE ──────────────────────────────────
