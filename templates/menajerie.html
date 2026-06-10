@@ -20,7 +20,7 @@
             <div class="men-slot-name">{{ slot.name }}</div>
             <div class="men-slot-sub">Nv.{{ slot.level }}</div>
             {% else %}
-            <div class="men-slot-plus">+</div>
+            <div class="men-slot-plus" onclick="openSlotPicker({{ slot.slot }})" style="cursor:pointer">+</div>
             <div class="men-slot-name men-slot-empty-label">Gol</div>
             {% endif %}
         </div>
@@ -64,12 +64,6 @@
                         data-name="{{ p.name }}">
                     ⚡ Activează
                 </button>
-                <button class="pet-btn pet-btn-abilitati"
-                        data-id="{{ p.id }}"
-                        data-name="{{ p.name }}"
-                        data-nature="{{ p.nat_data.icon if p.nat_data else '' }}">
-                    📚 Abilități
-                </button>
             </div>
         </div>
         {% endfor %}
@@ -84,21 +78,14 @@
 <!-- Toast notificare -->
 <div class="pet-toast" id="pet-toast"></div>
 
-<!-- Overlay Abilități -->
-<div class="assets-popup-overlay" id="abilitati-overlay" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.6);z-index:200;align-items:center;justify-content:center">
-    <div class="assets-popup" style="max-width:520px;width:95vw;max-height:85vh;overflow-y:auto;background:var(--bg-elev);border:1px solid var(--border);border-radius:14px;padding:20px;position:relative">
-        <button onclick="closeAbilitati()" style="position:absolute;top:12px;right:14px;background:none;border:none;color:var(--text-muted);font-size:20px;cursor:pointer">✕</button>
-        <div class="assets-popup-title" id="abilitati-title" style="margin-bottom:16px">Abilități</div>
-
-        <div style="margin-bottom:14px">
-            <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.05em">Active (4 sloturi)</div>
-            <div id="abilitati-active" style="display:grid;grid-template-columns:1fr 1fr;gap:8px"></div>
+<!-- Overlay Slot Picker -->
+<div id="slot-picker-overlay" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.65);z-index:200;align-items:center;justify-content:center">
+    <div style="background:var(--bg-elev);border:1px solid var(--border-strong);border-radius:16px;padding:24px;width:90vw;max-width:440px;max-height:80vh;overflow-y:auto;position:relative;box-shadow:0 8px 40px rgba(0,0,0,0.6)">
+        <button onclick="closeSlotPicker()" style="position:absolute;top:12px;right:14px;background:none;border:none;color:var(--text-muted);font-size:20px;cursor:pointer">✕</button>
+        <div style="font-family:'Cinzel',serif;font-size:16px;font-weight:700;color:var(--gold);text-align:center;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border)">
+            Adaugă în Echipă
         </div>
-
-        <div>
-            <div style="font-size:12px;color:var(--text-muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.05em">Cunoscute</div>
-            <div id="abilitati-cunoscute"></div>
-        </div>
+        <div id="slot-picker-list"></div>
     </div>
 </div>
 
@@ -186,41 +173,12 @@
     color: var(--text-muted);
     font-weight: 400;
 }
-.pet-btn-abilitati {
-    background: rgba(99, 153, 34, 0.15);
-    border: 1px solid rgba(99, 153, 34, 0.35);
-    color: #4caf7d;
-    border-radius: 8px;
-    padding: 6px 12px;
-    font-size: 12px;
+.men-loadout-slot.men-slot-empty:hover {
+    border-color: var(--gold-dim);
+    background: var(--gold-soft);
+    opacity: 0.8;
     cursor: pointer;
-    margin-top: 6px;
-    width: 100%;
-    transition: background 0.15s;
 }
-.pet-btn-abilitati:hover { background: rgba(99,153,34,0.25); }
-.move-slot-card {
-    background: var(--bg-elev);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 10px;
-    cursor: pointer;
-    transition: border-color 0.15s;
-}
-.move-slot-card:hover { border-color: var(--gold-dim); }
-.move-slot-card.active-slot { border-color: #4caf7d55; background: rgba(76,175,125,0.08); }
-.known-move-row {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    padding: 8px 10px;
-    border-bottom: 1px solid var(--border);
-    cursor: pointer;
-    transition: background 0.1s;
-    border-radius: 6px;
-}
-.known-move-row:hover { background: rgba(255,255,255,0.05); }
-.known-move-row.is-active { opacity: 0.45; cursor: default; }
 </style>
 
 <script>
@@ -259,117 +217,74 @@ document.querySelectorAll('.pet-btn-activa').forEach(btn => {
 });
 
 
-// ── ABILITĂȚI SWAP ────────────────────────────────────────
+// ── SLOT PICKER ────────────────────────────────────────────
 
-let currentPetId = null;
-let currentActiveMoves = [];
+let targetSlot = null;
 
-document.querySelectorAll('.pet-btn-abilitati').forEach(btn => {
-    btn.addEventListener('click', async () => {
-        const petId = parseInt(btn.dataset.id);
-        const name  = btn.dataset.name;
-        currentPetId = petId;
-        await openAbilitati(petId, name);
+function openSlotPicker(slot) {
+    targetSlot = slot;
+    const list = document.getElementById('slot-picker-list');
+    list.innerHTML = '';
+
+    // Colecteaza pets din menajerie care nu sunt deja in loadout
+    const inLoadout = new Set();
+    document.querySelectorAll('.men-loadout-slot:not(.men-slot-empty)').forEach(s => {
+        const name = s.querySelector('.men-slot-name')?.textContent?.trim();
+        if (name) inLoadout.add(name);
     });
-});
 
-async function openAbilitati(petId, name) {
-    document.getElementById('abilitati-title').textContent = name + ' — Abilități';
-    document.getElementById('abilitati-active').innerHTML = '<div style="opacity:0.5;font-size:12px">Se încarcă...</div>';
-    document.getElementById('abilitati-cunoscute').innerHTML = '';
-    document.getElementById('abilitati-overlay').style.display = 'flex';
+    const cards = document.querySelectorAll('.pet-men-card');
+    if (cards.length === 0) {
+        list.innerHTML = '<div style="text-align:center;opacity:0.5;padding:20px;font-size:13px">Menajeria e goală.</div>';
+    } else {
+        cards.forEach(card => {
+            const id   = card.id.replace('men-card-', '');
+            const name = card.querySelector('.pet-men-name')?.textContent?.trim() || '?';
+            const img  = card.querySelector('.pet-men-image')?.src || '';
+            const sub  = card.querySelector('.pet-men-meta span')?.textContent?.trim() || '';
 
-    const resp = await fetch('/joc/petomania/api/training/pet_moves?pet_id=' + petId);
-    const data = await resp.json();
-    if (!data.ok) { showToast('❌ ' + data.error, 'err'); closeAbilitati(); return; }
-
-    currentActiveMoves = data.active_moves.map(m => m.key);
-    renderActiveMoves(data.active_moves);
-    renderKnownMoves(data.known_moves, data.active_moves);
-}
-
-function renderActiveMoves(activeMoves) {
-    const el = document.getElementById('abilitati-active');
-    el.innerHTML = '';
-    activeMoves.forEach((m, idx) => {
-        const div = document.createElement('div');
-        div.className = 'move-slot-card active-slot';
-        div.id = 'active-slot-' + idx;
-        div.innerHTML = `
-            <div style="font-size:18px;margin-bottom:4px">${m.icon}</div>
-            <div style="font-size:12px;font-weight:600">${m.name}</div>
-            <div style="font-size:10px;opacity:0.5;margin-top:2px">Putere: ${m.power}</div>
-        `;
-        el.appendChild(div);
-    });
-}
-
-function renderKnownMoves(knownMoves, activeMoves) {
-    const el = document.getElementById('abilitati-cunoscute');
-    el.innerHTML = '';
-    const activeKeys = new Set(activeMoves.map(m => m.key));
-
-    if (!knownMoves || knownMoves.length === 0) {
-        el.innerHTML = '<div style="opacity:0.5;font-size:12px;padding:8px">Nicio abilitate cunoscută încă.</div>';
-        return;
+            const btn = document.createElement('button');
+            btn.style.cssText = 'display:flex;align-items:center;gap:14px;padding:10px 14px;background:var(--bg-elev);border:1px solid var(--border);border-left:3px solid var(--border);border-radius:10px;margin-bottom:8px;cursor:pointer;width:100%;color:var(--text-primary);font-family:Cinzel,serif;font-size:13px;font-weight:600;transition:background 0.15s,border-color 0.15s,color 0.15s;text-align:left';
+            btn.innerHTML = `
+                <img src="${img}" style="width:44px;height:44px;object-fit:contain;border-radius:6px;background:var(--bg-card)">
+                <div style="flex:1">
+                    <div style="font-size:13px;font-weight:700">${name}</div>
+                    <div style="font-size:11px;color:var(--text-muted);font-family:Inter,sans-serif;font-weight:400;margin-top:2px">${sub}</div>
+                </div>
+                <span style="font-size:12px;opacity:0.5">→</span>
+            `;
+            btn.onmouseenter = () => { btn.style.background = 'var(--gold-soft)'; btn.style.borderColor = 'var(--gold-dim)'; btn.style.color = 'var(--gold)'; };
+            btn.onmouseleave = () => { btn.style.background = 'var(--bg-elev)'; btn.style.borderColor = 'var(--border)'; btn.style.color = 'var(--text-primary)'; };
+            btn.onclick = () => addToSlot(parseInt(id), slot);
+            list.appendChild(btn);
+        });
     }
 
-    knownMoves.forEach(m => {
-        const isActive = activeKeys.has(m.key);
-        const div = document.createElement('div');
-        div.className = 'known-move-row' + (isActive ? ' is-active' : '');
-        div.innerHTML = `
-            <span style="font-size:18px">${m.icon}</span>
-            <div style="flex:1">
-                <div style="font-size:13px;font-weight:500">${m.name}</div>
-                <div style="font-size:11px;opacity:0.5">Putere: ${m.power} · Nv.${m.unlock_level}</div>
-            </div>
-            ${isActive
-                ? '<span style="font-size:11px;color:#4caf7d">✓ Activ</span>'
-                : '<span style="font-size:11px;color:var(--text-muted)">Echipează →</span>'
-            }
-        `;
-        if (!isActive) {
-            div.onclick = () => promptSwap(m);
-        }
-        el.appendChild(div);
-    });
+    document.getElementById('slot-picker-overlay').style.display = 'flex';
 }
 
-function promptSwap(newMove) {
-    const activeEl = document.getElementById('abilitati-active');
-    const slots = activeEl.querySelectorAll('.move-slot-card');
-
-    // Highlight slots pentru selectie
-    slots.forEach((slot, idx) => {
-        slot.style.borderColor = '#f0c060';
-        slot.style.cursor = 'pointer';
-        slot.title = 'Click pentru a înlocui cu ' + newMove.name;
-        slot.onclick = () => doSwap(newMove, currentActiveMoves[idx], idx);
-    });
-
-    showToast('Alege abilitatea de înlocuit (click pe slot)', 'ok');
+function closeSlotPicker() {
+    document.getElementById('slot-picker-overlay').style.display = 'none';
 }
 
-async function doSwap(newMove, oldMoveKey, slotIdx) {
-    const resp = await fetch('/joc/petomania/api/training/swap', {
+async function addToSlot(menId, slot) {
+    closeSlotPicker();
+    const resp = await fetch('/joc/petomania/api/loadout/set', {
         method: 'POST',
         headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({pet_id: currentPetId, old_move_key: oldMoveKey, new_move_key: newMove.key})
+        body: JSON.stringify({slot: slot, men_id: menId})
     });
     const data = await resp.json();
-    if (!data.ok) { showToast('❌ ' + data.error, 'err'); return; }
-
-    showToast('✅ ' + newMove.name + ' echipat!', 'ok');
-    await openAbilitati(currentPetId, document.getElementById('abilitati-title').textContent.replace(' — Abilități',''));
+    if (data.ok) {
+        showToast('✅ Companion adăugat în echipă!', 'ok');
+        setTimeout(() => location.reload(), 1000);
+    } else {
+        showToast('❌ ' + data.error, 'err');
+    }
 }
 
-function closeAbilitati() {
-    document.getElementById('abilitati-overlay').style.display = 'none';
-}
-
-document.getElementById('abilitati-overlay').addEventListener('click', e => {
-    if (e.target === document.getElementById('abilitati-overlay')) closeAbilitati();
+document.getElementById('slot-picker-overlay').addEventListener('click', e => {
+    if (e.target === document.getElementById('slot-picker-overlay')) closeSlotPicker();
 });
 
 function showToast(msg, type) {
