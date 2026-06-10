@@ -471,6 +471,61 @@ window.fetch = async function(...args) {
     return resp;
 };
 
+// Interceptor fetch pentru captură
+const _origFetch = window.fetch;
+window.fetch = async function(...args) {
+    const resp = await _origFetch(...args);
+    const url  = typeof args[0] === 'string' ? args[0] : '';
+    if (url.includes('/api/rucsac/use')) {
+        const clone = resp.clone();
+        try {
+            const data = await clone.json();
+            if (data.caught !== undefined) {
+                if (data.caught) {
+                    if (typeof rucsacToggle === 'function' && typeof rbOpen !== 'undefined' && rbOpen) {
+                        rucsacToggle();
+                    }
+                    setTimeout(() => showCaptureSuccess(data), 400);
+                } else {
+                    addLog(`🔮 ${data.msg}`);
+                }
+            }
+        } catch(e) {}
+        return resp;
+    }
+    return resp;
+};
+
+function showCaptureSuccess(data) {
+    battleData.npc  = null;
+    battleData.busy = false;
+    const NICONS = {fire:'🔥',water:'💧',nature:'🌿',earth:'⛰️',storm:'⚡',ice:'❄️',shadow:'🌑',crystal:'💎',steel:'⚙️',light:'✨',dragon:'🐉'};
+    const natIcon    = data.nature && NICONS[data.nature] ? NICONS[data.nature] : '';
+    const genderIcon = data.gender === 'male' ? '♂️' : '♀️';
+    let overlay = document.getElementById('capture-overlay');
+    if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'capture-overlay';
+        overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:500;display:flex;align-items:center;justify-content:center';
+        document.body.appendChild(overlay);
+    }
+    overlay.innerHTML = `
+        <div style="background:var(--bg-card,#1a1a2e);border:1px solid rgba(201,168,76,0.3);border-radius:16px;padding:36px 40px;text-align:center;max-width:380px;width:90vw;box-shadow:0 8px 40px rgba(0,0,0,0.6)">
+            <div style="font-size:48px;margin-bottom:12px">🔮</div>
+            <div style="font-family:'Cinzel',serif;font-size:22px;font-weight:700;color:var(--gold,#c9a84c);margin-bottom:8px">Capturat!</div>
+            <div style="font-size:16px;font-weight:600;margin-bottom:4px">${data.name}</div>
+            <div style="font-size:13px;opacity:0.6;margin-bottom:20px">${data.species} ${genderIcon} · Nv.${data.level} · ${natIcon} ${data.nature || ''}</div>
+            <button onclick="document.getElementById('capture-overlay').remove();window.location.href='/joc/petomania/menajerie';"
+                style="background:rgba(201,168,76,0.15);border:1px solid rgba(201,168,76,0.4);color:var(--gold,#c9a84c);font-family:'Cinzel',serif;font-size:14px;font-weight:600;padding:12px 28px;border-radius:10px;cursor:pointer;width:100%">
+                Mergi la Menajerie
+            </button>
+            <button onclick="document.getElementById('capture-overlay').remove();window.location.href='/joc/petomania/arena';"
+                style="background:transparent;border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.6);font-size:13px;padding:10px 28px;border-radius:10px;cursor:pointer;width:100%;margin-top:8px">
+                Înapoi la Arenă
+            </button>
+        </div>`;
+}
+
 async function tryFlee() {
     const playerLvl = battleData.player ? battleData.player.level : 1;
     const npcLvl    = battleData.npc    ? battleData.npc.level    : 1;
