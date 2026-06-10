@@ -163,6 +163,10 @@
 
         <div class="pet-action-msg" id="pet-action-msg"></div>
 
+        <button class="pet-btn-abilitati-home" onclick="openAbilitatiHome()">
+            📚 Abilități
+        </button>
+
     </div>
 </div>
 
@@ -176,6 +180,23 @@
 {% if pet %}
 <style>
 .room-object-clickable{ cursor:pointer; transition:filter 0.15s; }
+.pet-btn-abilitati-home {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    right: 20px;
+    padding: 12px;
+    background: rgba(99, 153, 34, 0.12);
+    border: 1px solid rgba(99, 153, 34, 0.35);
+    color: #4caf7d;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s;
+    width: calc(100% - 40px);
+}
+.pet-btn-abilitati-home:hover { background: rgba(99,153,34,0.22); }
 .room-object-clickable:hover{ filter:brightness(1.2) drop-shadow(0 0 8px rgba(201,168,76,0.5)); }
 .room-object {
     position: absolute;
@@ -233,6 +254,94 @@ if (sessionStorage.getItem('panelOpen') === '1') {
         document.getElementById('care-overlay').classList.add('care-overlay-show');
         document.getElementById('btn-ingrijeste').textContent = '✕ Închide';
     });
+}
+
+async function openAbilitatiHome() {
+    const resp = await fetch('/joc/petomania/api/training/pet_moves?pet_id=0');
+    const data = await resp.json();
+    if (!data.ok) { alert(data.error); return; }
+
+    // Build overlay dinamic
+    let overlay = document.getElementById('abilitati-home-overlay');
+    if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'abilitati-home-overlay';
+        overlay.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.65);z-index:300;display:flex;align-items:center;justify-content:center';
+        overlay.addEventListener('click', e => { if(e.target===overlay) overlay.remove(); });
+        document.body.appendChild(overlay);
+    }
+
+    const activeKeys = new Set(data.active_moves.map(m => m.key));
+
+    const activeSlotsHtml = data.active_moves.map(m => `
+        <div style="background:rgba(76,175,125,0.1);border:1px solid rgba(76,175,125,0.3);border-radius:8px;padding:10px;text-align:center">
+            <div style="font-size:20px">${m.icon}</div>
+            <div style="font-size:12px;font-weight:600;margin-top:4px">${m.name}</div>
+            <div style="font-size:10px;opacity:0.5">Putere: ${m.power}</div>
+        </div>`).join('');
+
+    const knownHtml = data.known_moves.map(m => {
+        const isActive = activeKeys.has(m.key);
+        return `<div onclick="${isActive ? '' : 'selectSwapHome(this)'}" data-key="${m.key}" data-name="${m.name}" data-icon="${m.icon}"
+            style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-bottom:1px solid rgba(255,255,255,0.07);border-radius:6px;cursor:${isActive?'default':'pointer'};opacity:${isActive?0.45:1}">
+            <span style="font-size:18px">${m.icon}</span>
+            <div style="flex:1">
+                <div style="font-size:13px;font-weight:500">${m.name}</div>
+                <div style="font-size:10px;opacity:0.5">Putere: ${m.power} · Nv.${m.unlock_level}</div>
+            </div>
+            ${isActive ? '<span style="font-size:11px;color:#4caf7d">✓ Activ</span>' : '<span style="font-size:11px;opacity:0.5">Echipează →</span>'}
+        </div>`;
+    }).join('');
+
+    overlay.innerHTML = `
+        <div style="background:var(--bg-elev,#1a1a2e);border:1px solid rgba(255,255,255,0.1);border-radius:14px;padding:20px;width:90vw;max-width:480px;max-height:80vh;overflow-y:auto;position:relative">
+            <button onclick="document.getElementById('abilitati-home-overlay').remove()" style="position:absolute;top:12px;right:14px;background:none;border:none;color:rgba(255,255,255,0.5);font-size:20px;cursor:pointer">✕</button>
+            <div style="font-size:16px;font-weight:700;margin-bottom:16px">📚 Abilități — {{ pet.name }}</div>
+            <div style="font-size:12px;opacity:0.5;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.05em">Active</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px" id="home-active-slots">${activeSlotsHtml}</div>
+            <div style="font-size:12px;opacity:0.5;margin-bottom:8px;text-transform:uppercase;letter-spacing:0.05em">Cunoscute</div>
+            <div id="home-known-list">${knownHtml}</div>
+        </div>`;
+    window._homeActiveMoves = data.active_moves;
+}
+
+function selectSwapHome(row) {
+    const newKey  = row.dataset.key;
+    const newName = row.dataset.name;
+    const newIcon = row.dataset.icon;
+
+    // Highlight active slots
+    const slots = document.querySelectorAll('#home-active-slots > div');
+    slots.forEach((slot, idx) => {
+        slot.style.borderColor = '#f0c060';
+        slot.style.cursor = 'pointer';
+        slot.onclick = () => doSwapHome(newKey, window._homeActiveMoves[idx].key, newName);
+    });
+    // Mesaj
+    const known = document.getElementById('home-known-list');
+    if (known) {
+        const msg = document.createElement('div');
+        msg.style.cssText = 'text-align:center;font-size:12px;color:#f0c060;padding:8px';
+        msg.textContent = 'Alege abilitatea de înlocuit';
+        known.prepend(msg);
+    }
+}
+
+async function doSwapHome(newMoveKey, oldMoveKey, newName) {
+    const resp = await fetch('/joc/petomania/api/training/swap', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({pet_id: 0, old_move_key: oldMoveKey, new_move_key: newMoveKey})
+    });
+    const data = await resp.json();
+    const overlay = document.getElementById('abilitati-home-overlay');
+    if (overlay) overlay.remove();
+    if (data.ok) {
+        const msg = document.getElementById('pet-action-msg');
+        if (msg) { msg.textContent = '✅ ' + newName + ' echipat!'; msg.className = 'pet-action-msg pet-action-ok'; setTimeout(()=>msg.textContent='',3000); }
+    } else {
+        alert('❌ ' + data.error);
+    }
 }
 
 function togglePanel() {
