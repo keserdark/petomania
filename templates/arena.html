@@ -296,16 +296,23 @@ async function openArenaMenu() {
     closeCorvinPopup();
     const resp = await fetch('/joc/petomania/api/loadout/count');
     const data = await resp.json();
-    const count = data.count || 1;
+    const alive = data.alive !== undefined ? data.alive : (data.count || 1);
     const msg   = document.getElementById('arena-format-msg');
     const btn2  = document.getElementById('btn-arena-2v2');
     const btn3  = document.getElementById('btn-arena-3v3');
 
-    if (count < 2) {
+    if (alive === 0) {
         btn2.disabled = true; btn2.style.opacity = '0.4'; btn2.style.cursor = 'not-allowed';
         btn3.disabled = true; btn3.style.opacity = '0.4'; btn3.style.cursor = 'not-allowed';
-        msg.textContent = 'Ai nevoie de mai mulți companioi în loadout.';
-    } else if (count < 3) {
+        document.getElementById('btn-arena-1v1') && (document.getElementById('btn-arena-1v1').disabled = true);
+        document.getElementById('btn-arena-1v1') && (document.getElementById('btn-arena-1v1').style.opacity = '0.4');
+        document.getElementById('btn-arena-1v1') && (document.getElementById('btn-arena-1v1').style.cursor = 'not-allowed');
+        msg.textContent = 'Toți companionii tăi sunt KO. Vindecă-i înainte de luptă.';
+    } else if (alive < 2) {
+        btn2.disabled = true; btn2.style.opacity = '0.4'; btn2.style.cursor = 'not-allowed';
+        btn3.disabled = true; btn3.style.opacity = '0.4'; btn3.style.cursor = 'not-allowed';
+        msg.textContent = '';
+    } else if (alive < 3) {
         btn2.disabled = false; btn2.style.opacity = '1'; btn2.style.cursor = 'pointer';
         btn3.disabled = true;  btn3.style.opacity = '0.4'; btn3.style.cursor = 'not-allowed';
         msg.textContent = '';
