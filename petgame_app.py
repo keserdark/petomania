@@ -1411,6 +1411,76 @@ def api_training_loadout():
     return jsonify({'ok': True, 'pets': pets})
 
 
+@app.route('/joc/petomania/api/training/pet_moves')
+@login_required
+def api_training_pet_moves():
+    from moves_config import MOVES, get_moveset
+    user   = get_current_user()
+    uid    = int(user['id'])
+    pet_id = request.args.get('pet_id', 0, type=int)
+
+    # Obtine pet info
+    if pet_id == 0:
+        from modules.pets import get_pet
+        pet = get_pet(uid)
+        if not pet:
+            return jsonify({'ok': False, 'error': 'Pet negăsit.'})
+        nature  = pet['nature']
+        level   = pet['level']
+        species = pet['species']
+    else:
+        conn = get_db()
+        row = conn.execute('SELECT * FROM menagerie WHERE id = ? AND user_id = ?', (pet_id, uid)).fetchone()
+        conn.close()
+        if not row:
+            return jsonify({'ok': False, 'error': 'Pet negăsit.'})
+        nature  = row['nature']
+        level   = row['level']
+        species = row['species']
+
+    def move_data(key):
+        m = MOVES.get(key, {})
+        return {
+            'key':          key,
+            'name':         m.get('name', key),
+            'icon':         m.get('icon', '⚡'),
+            'power':        m.get('power', 0),
+            'unlock_level': m.get('unlock_level', 1),
+            'type':         m.get('type', 'attack'),
+        }
+
+    # Active moves din DB sau fallback get_moveset
+    conn = get_db()
+    active_rows = conn.execute(
+        'SELECT slot, move_key FROM active_moves WHERE user_id = ? AND pet_id = ? ORDER BY slot',
+        (uid, pet_id)
+    ).fetchall()
+
+    if active_rows:
+        active_moves = [move_data(r['move_key']) for r in active_rows]
+    else:
+        moveset = get_moveset(species, nature, level)
+        active_moves = [move_data(m['key']) for m in moveset]
+
+    # Known moves din DB
+    known_rows = conn.execute(
+        'SELECT move_key FROM known_moves WHERE user_id = ? AND pet_id = ?',
+        (uid, pet_id)
+    ).fetchall()
+    conn.close()
+
+    known_keys = [r['move_key'] for r in known_rows]
+
+    # Adauga si self-taught deblocate (nu sunt in known_moves)
+    self_taught = get_moveset(species, nature, level)
+    self_taught_keys = [m['key'] for m in self_taught]
+    all_known_keys = list(dict.fromkeys(self_taught_keys + known_keys))
+
+    known_moves = [move_data(k) for k in all_known_keys if k in MOVES]
+
+    return jsonify({'ok': True, 'active_moves': active_moves, 'known_moves': known_moves})
+
+
 @app.route('/joc/petomania/api/training/moves')
 @login_required
 def api_training_moves():
