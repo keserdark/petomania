@@ -389,8 +389,10 @@ def _combatant_snapshot(c: dict) -> dict:
     return {
         'id':           c['id'],
         'name':         c['name'],
+        'level':        c.get('level', 1),
         'hp_current':   c['hp_current'],
         'hp_max':       c['hp_max'],
+        'image_url':    c.get('image_url', ''),
         'status':       c.get('status'),
         'shield':       c.get('shield', 0),
         'speed_mod':    c.get('speed_mod', 0),
