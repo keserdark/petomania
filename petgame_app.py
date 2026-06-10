@@ -685,7 +685,7 @@ def api_rucsac_data():
     if pet_ctx and pet:
         p      = dict(pet)
         hp_max = pet_ctx['stats']['hp']
-        hp_cur = p['hp_current'] if p['hp_current'] > 0 else hp_max
+        hp_cur = p['hp_current']
         companions[0] = {
             'name': pet_ctx['name'], 'species': pet_ctx['species_name'],
             'level': pet_ctx['level'], 'form': pet_ctx['form'],
@@ -709,7 +709,7 @@ def api_rucsac_data():
                                    mp['energy'], bool(mp['sleeping']))
                 mnat   = NATURES.get(mp.get('nature')) if mp.get('nature') else None
                 mhp_max = get_stats_at_level(mp['species'], mp.get('nature'), mp['level'], mform)['hp']
-                mhp_cur = mp['hp_current'] if mp['hp_current'] > 0 else mhp_max
+                mhp_cur = mp['hp_current']
                 companions[i] = {
                     'name': mp['name'],
                     'species': SPECIES.get(mp['species'], {}).get('name', mp['species']),
@@ -778,7 +778,7 @@ def api_rucsac_comp_stats():
     stats    = get_stats_at_level(p['species'], nature, p['level'], form)
     nat_data = NATURES.get(nature) if nature else None
     hp_max   = stats['hp']
-    hp_cur   = p['hp_current'] if p['hp_current'] > 0 else hp_max
+    hp_cur   = p['hp_current']
     return jsonify({
         'ok': True, 'name': p['name'],
         'species': SPECIES.get(p['species'], {}).get('name', p['species']),
