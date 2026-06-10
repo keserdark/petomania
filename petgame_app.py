@@ -35,7 +35,7 @@ load_dotenv(os.path.join(os.path.dirname(os.path.abspath(__file__)), '.env'))
 # ── MODULES ──────────────────────────────────────────────────────────
 from modules.db       import get_db, init_db, get_dacoins, spend_dacoins, get_room_config, save_room_config, bump_room_version
 from modules.pets     import (get_pet, get_menagerie, get_form, get_state, get_image_url,
-                               get_room_url, sync_pet, sync_pet_hp, update_pet, build_pet_context,
+                               get_room_url, sync_pet, sync_pet_hp, sync_menagerie_hp, update_pet, build_pet_context,
                                format_age, xp_for_level,
                                DECAY_INTERVAL, FEED_AMOUNT, WASH_AMOUNT,
                                PLAY_HAPPINESS, PLAY_ENERGY_COST, PLAY_HUNGER_COST)
@@ -944,18 +944,22 @@ def api_battle_start():
     player = build_combatant(pet)
     npc    = generate_npc(player['level'])
 
+    # Initializeaza HP in menagerie pentru pets care nu au luptat niciodata
+    sync_menagerie_hp(uid)
+
     # Loadout complet pentru switch
     loadout_raw = build_loadout_context(uid)
     bench = []  # petii de pe bancă (slot 2-5, cu HP > 0)
     for slot in loadout_raw:
         if slot.get('empty') or slot.get('slot') == 1:
             continue
+        hp_cur = slot['hp_current'] if slot['hp_current'] > 0 else slot['hp_max']
         bench.append({
             'id':        slot['id'],
             'name':      slot['name'],
             'level':     slot['level'],
             'hp_max':    slot['hp_max'],
-            'hp_current':slot['hp_current'],
+            'hp_current':hp_cur,
             'image_url': slot['image_url'],
             'species':   slot['species_key'],
             'nature':    slot['nature_key'],

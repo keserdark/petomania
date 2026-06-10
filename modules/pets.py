@@ -190,6 +190,21 @@ def sync_pet_hp(user_id: int):
     conn.close()
 
 
+def sync_menagerie_hp(user_id: int):
+    """Initializeaza hp_current in menagerie unde e 0 (pet nou, niciodata in lupta)."""
+    conn = get_db()
+    rows = conn.execute('SELECT * FROM menagerie WHERE user_id = ?', (user_id,)).fetchall()
+    for row in rows:
+        p      = dict(row)
+        form   = get_form(p['level'])
+        stats  = get_stats_at_level(p['species'], p.get('nature'), p['level'], form)
+        hp_max = stats['hp']
+        if p.get('hp_current', 0) == 0:
+            conn.execute('UPDATE menagerie SET hp_current = ? WHERE id = ?', (hp_max, p['id']))
+    conn.commit()
+    conn.close()
+
+
 # ── CONTEXT ───────────────────────────────────────────────
 
 def build_pet_context(p, get_signed_url_fn) -> dict:
