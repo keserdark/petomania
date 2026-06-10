@@ -999,8 +999,21 @@ def api_battle_turn():
     if not player or not npc:
         return jsonify({'ok': False, 'error': 'Nicio bătălie activă.'})
 
+    # Re-citeste HP din DB inainte de tur (potiunile pot fi folosite intre tururi)
+    conn = get_db()
+    fresh = conn.execute('SELECT hp_current FROM pets WHERE user_id = ?', (uid,)).fetchone()
+    conn.close()
+    if fresh:
+        player['hp_current'] = fresh['hp_current']
+
     move_key = (request.json or {}).get('move_key', 'scratch')
     result   = execute_turn(player, npc, move_key)
+
+    # Salveaza HP dupa fiecare tur in DB
+    conn = get_db()
+    conn.execute('UPDATE pets SET hp_current = ? WHERE user_id = ?', (max(0, player['hp_current']), uid))
+    conn.commit()
+    conn.close()
 
     session['battle_player'] = player
     session['battle_npc']    = npc
@@ -1013,10 +1026,6 @@ def api_battle_turn():
             conn.execute('UPDATE dacoins SET balance = balance + ? WHERE user_id = ?', (reward, uid))
             conn.commit()
             conn.close()
-        conn = get_db()
-        conn.execute('UPDATE pets SET hp_current = ? WHERE user_id = ?', (player['hp_current'], uid))
-        conn.commit()
-        conn.close()
         session.pop('battle_player', None)
         session.pop('battle_npc', None)
     elif result['winner'] == 'npc':
