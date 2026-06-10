@@ -955,7 +955,6 @@ def api_battle_start():
     pet = dict(pet)
 
     player = build_combatant(pet)
-    npc    = generate_npc(player['level'])
 
     # Initializeaza HP in menagerie pentru pets care nu au luptat niciodata
     sync_menagerie_hp(uid)
@@ -968,18 +967,34 @@ def api_battle_start():
             continue
         if len(bench) >= battle_size - 1:
             break
-        hp_cur = slot['hp_current'] if slot['hp_current'] > 0 else slot['hp_max']
         bench.append({
             'id':        slot['id'],
             'name':      slot['name'],
             'level':     slot['level'],
             'hp_max':    slot['hp_max'],
-            'hp_current':hp_cur,
+            'hp_current':slot['hp_current'],
             'image_url': slot['image_url'],
             'species':   slot['species_key'],
             'nature':    slot['nature_key'],
             'gender':    slot.get('gender', 'male'),
         })
+
+    # Daca petul activ e mort, inlocuieste-l cu primul din bench
+    if player['hp_current'] <= 0:
+        alive_bench = [p for p in bench if p['hp_current'] > 0]
+        if not alive_bench:
+            return jsonify({'ok': False, 'error': 'Toți companionii tăi sunt KO. Vindecă-i înainte de luptă.'})
+        first = alive_bench[0]
+        # Construieste combatant din menagerie
+        conn_b = get_db()
+        row_b  = conn_b.execute('SELECT * FROM menagerie WHERE id = ? AND user_id = ?', (first['id'], uid)).fetchone()
+        conn_b.close()
+        if not row_b:
+            return jsonify({'ok': False, 'error': 'Companion negăsit.'})
+        player = build_combatant(dict(row_b))
+        bench  = [p for p in bench if str(p['id']) != str(first['id'])]
+
+    npc = generate_npc(player['level'])
 
     moveset_data = []
     for mk in player['moveset']:
