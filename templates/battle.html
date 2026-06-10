@@ -536,7 +536,7 @@ function openSwitchMenu() {
 }
 
 async function openBag() {
-    const resp = await fetch('/joc/petomania/api/rucsac');
+    const resp = await fetch('/joc/petomania/api/rucsac/data');
     const data = await resp.json();
     const list = document.getElementById('bag-list');
 
