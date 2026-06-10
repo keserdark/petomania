@@ -21,6 +21,7 @@ PLAY_ENERGY_COST = 5
 PLAY_HUNGER_COST = 5
 XP_PER_MINUTE    = 1
 XP_TICK          = 60
+HP_REGEN_PER_MINUTE = 2
 
 STATIC_BASE = '/static'
 
@@ -154,6 +155,12 @@ def apply_xp_tick(p: dict) -> dict:
                 p['level'] += 1
             else:
                 break
+        # HP regen — doar daca petul e viu (hp > 0) si nu e la max
+        if p.get('hp_current', 0) > 0:
+            from cogs.petgame_stats import get_stats_at_level
+            hp_max = get_stats_at_level(p['species'], p.get('nature'), p['level'], get_form(p['level']))['hp']
+            if p['hp_current'] < hp_max:
+                p['hp_current'] = min(hp_max, p['hp_current'] + minutes * HP_REGEN_PER_MINUTE)
     p['last_xp_tick'] = now
     return p
 
@@ -164,13 +171,16 @@ def sync_pet(user_id: int):
         return None
     p = apply_decay(pet)
     p = apply_xp_tick(p)
-    update_pet(user_id,
+    update_kwargs = dict(
         hunger=p['hunger'], happiness=p['happiness'],
         cleanliness=p['cleanliness'], energy=p['energy'],
         sleeping=p['sleeping'], sleep_started=p['sleep_started'],
         level=p['level'], xp=p['xp'],
         last_decay=p['last_decay'], last_xp_tick=p['last_xp_tick']
     )
+    if 'hp_current' in p:
+        update_kwargs['hp_current'] = p['hp_current']
+    update_pet(user_id, **update_kwargs)
     return p
 
 
