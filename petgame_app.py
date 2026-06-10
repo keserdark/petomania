@@ -932,6 +932,9 @@ def api_battle_start():
     user = get_current_user()
     uid  = int(user['id'])
 
+    data_req     = request.json or {}
+    battle_size  = min(max(int(data_req.get('size', 1)), 1), 3)
+
     # Petul activ (slot 1)
     pet = sync_pet(uid)
     if not pet:
@@ -965,9 +968,11 @@ def api_battle_start():
         if m:
             moveset_data.append({'key': m['key'], 'name': m['name'], 'icon': m['icon'], 'type': m['type'], 'power': m['power']})
 
-    session['battle_player'] = player
-    session['battle_npc']    = npc
-    session['battle_bench']  = bench
+    session['battle_player']    = player
+    session['battle_npc']       = npc
+    session['battle_bench']     = bench
+    session['battle_size']      = battle_size
+    session['battle_npc_index'] = 1
 
     return jsonify({
         'ok': True,
@@ -1020,6 +1025,32 @@ def api_battle_turn():
 
     reward = 0
     if result['winner'] == 'player':
+        npc_index   = session.get('battle_npc_index', 1)
+        battle_size = session.get('battle_size', 1)
+
+        if npc_index < battle_size:
+            # Mai sunt NPC-uri — genereaza urmatorul
+            from modules.battle import generate_npc as _gen_npc
+            new_npc = _gen_npc(player['level'])
+            session['battle_npc']       = new_npc
+            session['battle_npc_index'] = npc_index + 1
+            session['battle_player']    = player
+            return jsonify({
+                'ok': True, 'log': result['log'],
+                'player': result['player'],
+                'npc': {
+                    'id': new_npc['id'], 'name': new_npc['name'],
+                    'species': new_npc['species'], 'nature': new_npc['nature'],
+                    'level': new_npc['level'], 'hp_max': new_npc['hp_max'],
+                    'hp_current': new_npc['hp_current'],
+                    'image_url': new_npc['image_url'], 'status': None, 'shield': 0,
+                },
+                'winner': None,
+                'next_npc': True,
+                'reward': 0,
+            })
+
+        # Ultimul NPC doborat — victorie finala
         reward = calculate_reward(player['level'], npc['level'], True)
         if reward > 0:
             conn = get_db()
@@ -1028,6 +1059,8 @@ def api_battle_turn():
             conn.close()
         session.pop('battle_player', None)
         session.pop('battle_npc', None)
+        session.pop('battle_size', None)
+        session.pop('battle_npc_index', None)
     elif result['winner'] == 'npc':
         conn = get_db()
         conn.execute('UPDATE pets SET hp_current = ? WHERE user_id = ?', (max(1, player['hp_current']), uid))
@@ -1035,6 +1068,8 @@ def api_battle_turn():
         conn.close()
         session.pop('battle_player', None)
         session.pop('battle_npc', None)
+        session.pop('battle_size', None)
+        session.pop('battle_npc_index', None)
 
     return jsonify({
         'ok': True, 'log': result['log'],

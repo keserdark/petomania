@@ -158,8 +158,12 @@ async function initBattle() {
     }
 
     // Porneste lupta noua
+    const urlParams  = new URLSearchParams(window.location.search);
+    const battleSize = parseInt(urlParams.get('size') || '1');
+
     const resp = await fetch('/joc/petomania/api/battle/start', {
-        method: 'POST', headers: {'Content-Type':'application/json'}, body: '{}'
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({size: battleSize})
     });
     const data = await resp.json();
     if (!data.ok) { addLog('❌ ' + data.error); return; }
@@ -218,7 +222,12 @@ async function doTurn(moveKey) {
     data.log.forEach(l => addLog(l));
     updateUI('player', data.player);
     updateUI('npc', data.npc);
-    if (data.winner === 'player') {
+    if (data.next_npc) {
+        battleData.npc = data.npc;
+        addLog('⚔️ Urmează următorul adversar!');
+        showMenu();
+        setBusy(false);
+    } else if (data.winner === 'player') {
         showResult('player', data.reward);
     } else if (data.winner === 'npc') {
         const bench = battleData.bench.filter(p => p.hp_current > 0);
