@@ -789,6 +789,17 @@ function rbShowMsg(elId, msg, ok) {
 // Escape închide panelul
 document.addEventListener('keydown', e => { if (e.key === 'Escape' && rbOpen) rucsacClose(); });
 
+// Daca ?rucsac=1, butonul close duce inapoi la battle
+if (new URLSearchParams(window.location.search).get('rucsac') === '1') {
+    document.addEventListener('DOMContentLoaded', () => {
+        const closeBtn = document.querySelector('.rucsac-panel-close');
+        if (closeBtn) {
+            closeBtn.textContent = '← Luptă';
+            closeBtn.onclick = () => { window.location.href = '/joc/petomania/battle'; };
+        }
+    });
+}
+
 // Daca ?rucsac=1 in URL, deschide rucsacul automat si suprascrie butonul close
 if (new URLSearchParams(window.location.search).get('rucsac') === '1') {
     window.addEventListener('load', () => {

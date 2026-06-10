@@ -214,6 +214,17 @@ document.querySelectorAll('.room-object-clickable').forEach(img => {
 });
 const API_URL = "{{ url_for('api_action') }}";
 
+// Mod rucsac din lupta (?rucsac=1)
+if (new URLSearchParams(window.location.search).get('rucsac') === '1') {
+    document.addEventListener('DOMContentLoaded', () => {
+        const room = document.querySelector('.pet-room-full');
+        if (room) room.style.display = 'none';
+        const careBtn = document.getElementById('btn-ingrijeste');
+        if (careBtn) careBtn.style.display = 'none';
+        if (typeof rucsacOpen === 'function') rucsacOpen();
+    });
+}
+
 // Redeschide panel daca era deschis inainte de reload
 if (sessionStorage.getItem('panelOpen') === '1') {
     sessionStorage.removeItem('panelOpen');
