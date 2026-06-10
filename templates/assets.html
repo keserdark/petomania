@@ -11,7 +11,7 @@
     <div class="assets-popup-overlay" id="lady-overlay">
         <div class="assets-popup">
             <button class="assets-popup-close" onclick="closePopup()">✕</button>
-         <div class="assets-popup-deco"></div>
+            <div class="assets-popup-deco">⚜️</div>
             <div class="assets-popup-title">👸 Lunara Silvermist</div>
             <button class="assets-popup-btn" onclick="openDialog()">
                 <span class="assets-popup-btn-icon">💬</span>
@@ -34,9 +34,9 @@
 
     <!-- Popup Dialog Lunara -->
     <div class="assets-popup-overlay" id="dialog-overlay">
-            <div class="assets-popup-deco"></div>
+        <div class="assets-popup assets-dialog">
             <button class="assets-popup-close" onclick="closeDialog()">✕</button>
-            <div class="assets-popup-deco"></div>
+            <div class="assets-popup-deco">⚜️</div>
             <div class="assets-popup-title">👸 Lunara Silvermist</div>
             <div class="assets-dialog-text" id="dialog-text">
                 <div class="assets-dialog-loading">Se încarcă...</div>
@@ -298,7 +298,7 @@ function stepPetReply() {
     appendText(formatText(compText));
     setActions(`
         <button class="assets-popup-btn assets-name-btn" onclick="stepThankYou()">
-            <span class="assets-popup-btn-icon"></span>
+            <span class="assets-popup-btn-icon">🙏</span>
             <span>Mulțumesc frumos.</span>
         </button>
     `);
