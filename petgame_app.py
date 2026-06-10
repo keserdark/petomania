@@ -1076,6 +1076,15 @@ def api_battle_start():
     })
 
 
+@app.route('/joc/petomania/api/loadout/count')
+@login_required
+def api_loadout_count():
+    uid   = int(get_current_user()['id'])
+    slots = build_loadout_context(uid)
+    count       = sum(1 for s in slots if not s.get('empty'))
+    alive_count = sum(1 for s in slots if not s.get('empty') and s.get('hp_current', 0) > 0)
+    return jsonify({'ok': True, 'count': count, 'alive': alive_count})
+
 @app.route('/joc/petomania/api/battle/turn', methods=['POST'])
 @login_required
 def api_battle_turn():
