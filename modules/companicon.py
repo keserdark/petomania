@@ -11,6 +11,8 @@ GENDERED_SPECIES = {
     'blackcat': [1, 2, 3],
     'dog':      [1, 2, 3],
     'duck':     [2, 3],
+    'fox':      [2, 3],
+    'rhino':    [2, 3],
 }
 
 
@@ -18,7 +20,7 @@ def _img_url(species, form, gender):
     if species in ('blackcat', 'dog'):
         suffix = 'Male' if gender == 'male' else 'Female'
         return f"/static/00transparent/{species}/Stage{form}-Basic-Form-{suffix}.png"
-    elif species == 'duck' and form > 1:
+    elif species in ('duck', 'fox', 'rhino') and form > 1:
         suffix = 'Male' if gender == 'male' else 'Female'
         return f"/static/00transparent/{species}/Stage{form}-Basic-Form-{suffix}.png"
     else:
