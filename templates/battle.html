@@ -309,7 +309,8 @@ async function doSwitch(petId) {
     const data = await resp.json();
     if (!data.ok) { addLog('❌ ' + data.error); setBusy(false); return; }
     battleData.player = data.player;
-    battleData.bench  = battleData.bench.filter(p => p.id !== petId);
+    if (data.bench !== undefined) battleData.bench = data.bench;
+    else battleData.bench = battleData.bench.filter(p => p.id !== petId);
     updateUI('player', data.player);
     renderMoves(data.player.moveset);
     addLog(`🔄 ${data.player.name} intră în luptă!`);

@@ -1295,6 +1295,7 @@ def api_battle_switch():
             'hp_current': new_player['hp_current'], 'image_url': new_player['image_url'],
             'moveset': moveset_data, 'status': None, 'shield': 0,
         },
+        'bench': session.get('battle_bench', []),
     })
 
 
