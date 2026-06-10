@@ -116,7 +116,6 @@ NATURES = {
         'resists_from': ['fire', 'nature', 'steel'],
         'immune_to': ['fire'], 'evo_line': ['Drakling', 'Draconix', 'Drakonar'],
     },
-
 }
 
 # ─────────────────────────────────────────────
@@ -412,32 +411,5 @@ SPECIES = {
                 },
             },
         }
-    },
-
-    'fox': {
-        'starter': False,
-        'name': 'Vulpe', 'emoji': '🦊', 'button_label': '🦊 Vulpe',
-        'codes': {1: 'FOX-001', 2: 'FOX-002', 3: 'FOX-003'},
-        'available_natures': ['fire'],
-        'entries': {
-            1: {
-                'code': 'FOX-001',
-                'name': 'Vixar',
-                'description': 'O vulpiță tânără cu blana roșie ca flacăra. Natura sa de Foc o face imprevizibilă și iute.',
-                'lore': 'Vixar este prima formă a vulpii de Foc — o creatură mică, dar cu o energie arzătoare în privire.\n\nSe spune că vulpile de Foc s-au născut din scânteile unui incendiu de pădure care a durat trei zile și trei nopți. Supraviețuitorii acelui foc au ieșit schimbați, cu blana de culoarea jarului și ochii strălucind ca tăciunele.\n\nVixar este jucăuș și curios, dar temperamentul său se aprinde rapid. Un companion loial pentru cei care îi câștigă încrederea.',
-            },
-            2: {
-                'code': 'FOX-002',
-                'name': 'Foxar',
-                'description': 'Vulpea a crescut și stăpânește acum flăcările cu pricepere. Blana sa arde cu nuanțe de portocaliu și roșu.',
-                'lore': 'În forma a doua, Foxar devine un hunter redutabil. Cozile sale emit căldură perceptibilă, iar urmele sale lasă pâraie de scântei pe pământ.\n\nVulpile Foxar sunt respectate în regat ca mesageri ai Soarelui. Unii spun că pot vedea destinul în flăcările pe care le invocă.\n\nDiferențele dintre mascul și femelă devin vizibile — masculul are blana mai închisă, femela strălucește cu flăcări alb-aurii.',
-            },
-            3: {
-                'code': 'FOX-003',
-                'name': 'Emberfox',
-                'description': 'Forma finală a vulpii de Foc. O creatură legendară cu cozi de flăcări, temută și respectată în egală măsură.',
-                'lore': 'Emberfox este o legendă vie în regat. Forma sa finală se atinge doar după ani de luptă și devotament față de stăpân.\n\nSe spune că apariția unui Emberfox anunță schimbări mari — fie victoria absolută, fie o catastrofă de proporții. Flăcările pure care o înconjoară reprezintă fiecare luptă câștigată.\n\nZamolxe însuși ar fi binecuvântat prima vulpe de Foc, dăruindu-i nemurirea prin flacără. Emberfox nu moare — se transformă în scântei și renaște din propria cenușă.',
-            },
-        },
     },
 }
