@@ -404,13 +404,13 @@ def api_activa():
         conn.execute('''
             INSERT INTO menagerie
             (user_id, name, gender, species, nature, level, xp, hunger, happiness,
-             cleanliness, energy, sleeping, sleep_started, last_decay, last_xp_tick, born_at, stored_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+             cleanliness, energy, sleeping, sleep_started, last_decay, last_xp_tick, born_at, stored_at, hp_current)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ''', (active['user_id'], active['name'], active['gender'], active['species'],
               active['nature'], active['level'], active['xp'], active['hunger'],
               active['happiness'], active['cleanliness'], active['energy'],
               active['sleeping'], active['sleep_started'], active['last_decay'],
-              active['last_xp_tick'], active['born_at'], now))
+              active['last_xp_tick'], active['born_at'], now, active.get('hp_current', 0)))
         conn.execute('DELETE FROM pets WHERE user_id = ?', (uid,))
     conn.execute('''
         INSERT OR REPLACE INTO pets
