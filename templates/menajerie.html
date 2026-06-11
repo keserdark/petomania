@@ -215,19 +215,32 @@
     flex-shrink: 0;
     display: flex;
     flex-direction: column;
-    align-items: center;
-    gap: 6px;
+    align-items: flex-start;
+    gap: 5px;
+    width: 90px;
+}
+.pet-men-image {
+    width: 90px;
+    height: 90px;
+    object-fit: contain;
 }
 .pet-men-badges-img {
     display: flex;
     flex-direction: column;
     gap: 4px;
-    align-items: center;
+    align-items: flex-start;
+    width: 100%;
+}
+.pet-men-badges-img .pet-badge {
+    font-size: 11px;
+    padding: 2px 7px;
+    white-space: nowrap;
 }
 .pet-men-info {
     flex: 1;
     position: relative;
     padding-top: 4px;
+    min-width: 0;
 }
 .pet-men-form-badge {
     position: absolute;
@@ -245,9 +258,11 @@
     display: flex;
     gap: 8px;
 }
-.pet-men-action .pet-btn {
+.pet-men-action .pet-btn-elibereaza,
+.pet-men-action .pet-btn-activa {
     flex: 1;
     margin-top: 0;
+    width: auto;
 }
 </style>
 
