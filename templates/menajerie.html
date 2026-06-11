@@ -41,24 +41,26 @@
     <div class="pet-men-grid" id="men-grid">
         {% for p in men_pets %}
         <div class="pet-men-card" id="men-card-{{ p.id }}">
-            <div class="pet-men-image-wrap">
-                <img src="{{ p.image_url }}" alt="{{ p.name }}" class="pet-men-image">
-            </div>
-            <div class="pet-men-info">
-                <div class="pet-men-name">{{ p.gender_icon }} {{ p.name }}</div>
-                <div class="pet-men-badges">
-                    <span class="pet-badge pet-badge-species">{{ p.species_name }}</span>
-                    <span class="pet-badge pet-badge-form">Forma {{ p.form }}/{{ p.form_max }}</span>
-                    {% if p.nat_data %}
-                    <span class="pet-badge pet-badge-nature"
-                          style="background: {{ p.nat_data.color }}22; border-color: {{ p.nat_data.color }}55; color: {{ p.nat_data.color }}">
-                        {{ p.nat_data.icon }} {{ p.nat_data.name }}
-                    </span>
-                    {% endif %}
+            <div class="pet-men-card-top">
+                <div class="pet-men-image-wrap">
+                    <img src="{{ p.image_url }}" alt="{{ p.name }}" class="pet-men-image">
+                    <div class="pet-men-badges-img">
+                        <span class="pet-badge pet-badge-species">{{ p.species_name }}</span>
+                        {% if p.nat_data %}
+                        <span class="pet-badge pet-badge-nature"
+                              style="background: {{ p.nat_data.color }}22; border-color: {{ p.nat_data.color }}55; color: {{ p.nat_data.color }}">
+                            {{ p.nat_data.icon }} {{ p.nat_data.name }}
+                        </span>
+                        {% endif %}
+                    </div>
                 </div>
-                <div class="pet-men-meta">
-                    <span>Nivel {{ p.level }}</span>
-                    <span>🎂 {{ p.age }}</span>
+                <div class="pet-men-info">
+                    <div class="pet-men-form-badge">{{ p.form }}/{{ p.form_max }}</div>
+                    <div class="pet-men-name">{{ p.gender_icon }} {{ p.name }}</div>
+                    <div class="pet-men-meta">
+                        <span>Nivel {{ p.level }}</span>
+                        <span>🎂 {{ p.age }}</span>
+                    </div>
                 </div>
             </div>
             <div class="pet-men-action">
@@ -196,6 +198,57 @@
     transition: background 0.15s;
 }
 .pet-btn-elibereaza:hover { background: rgba(220,50,50,0.22); }
+
+/* ── CARD REDESIGN ── */
+.pet-men-card {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.pet-men-card-top {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    position: relative;
+}
+.pet-men-image-wrap {
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+}
+.pet-men-badges-img {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    align-items: center;
+}
+.pet-men-info {
+    flex: 1;
+    position: relative;
+    padding-top: 4px;
+}
+.pet-men-form-badge {
+    position: absolute;
+    top: 0;
+    right: 0;
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 2px 7px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+.pet-men-action {
+    display: flex;
+    gap: 8px;
+}
+.pet-men-action .pet-btn {
+    flex: 1;
+    margin-top: 0;
+}
 </style>
 
 <script>
