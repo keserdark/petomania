@@ -776,7 +776,8 @@ document.getElementById('cp-btn-companicon').onclick = () => {
 document.getElementById('cp-rename-confirm').onclick = async () => {
     const name = document.getElementById('cp-rename-input').value.trim();
     if (!name) return;
-    const res = await rbPost(RB_API.rename, { name });
+    const pet_id = rbActiveComp ? (rbActiveComp.id || 0) : 0;
+    const res = await rbPost(RB_API.rename, { name, pet_id });
     rbShowMsg('cp-rename-msg', res.ok ? `✅ Redenumit în "${res.name}".` : res.error, res.ok);
     if (res.ok) {
         document.getElementById('cp-name').textContent = res.name;

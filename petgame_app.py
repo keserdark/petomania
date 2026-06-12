@@ -860,8 +860,10 @@ def api_rucsac_drop():
 def api_rucsac_rename():
     user     = get_current_user()
     uid      = int(user['id'])
-    new_name = (request.json or {}).get('name', '').strip()
-    return jsonify(rename_pet(uid, new_name))
+    body     = request.json or {}
+    new_name = body.get('name', '').strip()
+    pet_id   = int(body.get('pet_id', 0))
+    return jsonify(rename_pet(uid, new_name, pet_id))
 
 
 @app.route('/joc/petomania/api/rucsac/comp_stats', methods=['GET'])

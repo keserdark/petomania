@@ -253,15 +253,25 @@ def use_item(user_id: int, category: str, item_key: str, target_slot: int = 0) -
     return {'ok': True, 'msg': '✅ ' + ' · '.join(changed), 'new_hp': p['hp_current']}
 
 
-def rename_pet(user_id: int, new_name: str) -> dict:
+def rename_pet(user_id: int, new_name: str, pet_id: int = 0) -> dict:
     new_name = new_name.strip()[:24]
     if len(new_name) < 2:
         return {'ok': False, 'error': 'Numele trebuie să aibă cel puțin 2 caractere.'}
-    pet = get_pet(user_id)
-    if not pet:
-        return {'ok': False, 'error': 'Nu ai un companion activ.'}
     conn = get_db()
-    conn.execute('UPDATE pets SET name = ? WHERE user_id = ?', (new_name, user_id))
+    if pet_id and pet_id != 0:
+        # Pet din menajerie
+        row = conn.execute('SELECT id FROM menagerie WHERE id = ? AND user_id = ?', (pet_id, user_id)).fetchone()
+        if not row:
+            conn.close()
+            return {'ok': False, 'error': 'Companion negăsit.'}
+        conn.execute('UPDATE menagerie SET name = ? WHERE id = ? AND user_id = ?', (new_name, pet_id, user_id))
+    else:
+        # Pet activ
+        pet = get_pet(user_id)
+        if not pet:
+            conn.close()
+            return {'ok': False, 'error': 'Nu ai un companion activ.'}
+        conn.execute('UPDATE pets SET name = ? WHERE user_id = ?', (new_name, user_id))
     conn.commit()
     conn.close()
     return {'ok': True, 'name': new_name}
