@@ -20,7 +20,71 @@ QUEUE_TIMEOUT = 120 # secunde max in queue
 # QUEUE
 # ─────────────────────────────────────────────
 
-def queue_join(user_id: int, loadout_snapshot: list) -> dict:
+def queue_join(user_id: int, loadout_snapshot: list, size: int = 1) -> dict:
+    """
+    Adauga userul in queue sau gaseste un adversar.
+    Returneaza: {status: 'waiting'|'matched', match_id: int|None}
+    """
+    conn = get_db()
+
+    # Curata queue-ul de entries expirate
+    expire_time = int(time.time()) - QUEUE_TIMEOUT
+    conn.execute('DELETE FROM pvp_queue WHERE joined_at < ?', (expire_time,))
+
+    # Verifica daca userul e deja intr-un match activ
+    existing = conn.execute(
+        '''SELECT id FROM pvp_match
+           WHERE (player1_id = ? OR player2_id = ?)
+           AND state = "active"''',
+        (user_id, user_id)
+    ).fetchone()
+    if existing:
+        conn.close()
+        return {'status': 'already_in_match', 'match_id': existing['id']}
+
+    # Cauta adversar in queue cu acelasi size
+    opponent = conn.execute(
+        '''SELECT * FROM pvp_queue
+           WHERE user_id != ?
+           AND json_extract(loadout_snapshot, '$.size') = ?
+           ORDER BY joined_at ASC LIMIT 1''',
+        (user_id, size)
+    ).fetchone()
+
+    if opponent:
+        opp_id       = opponent['user_id']
+        opp_data     = json.loads(opponent['loadout_snapshot'])
+        opp_snapshot = opp_data['pets']
+
+        session_data = _build_match_session(
+            user_id, loadout_snapshot,
+            opp_id,  opp_snapshot,
+            size
+        )
+
+        conn.execute('DELETE FROM pvp_queue WHERE user_id = ?', (opp_id,))
+        conn.execute('DELETE FROM pvp_queue WHERE user_id = ?', (user_id,))
+
+        conn.execute(
+            '''INSERT INTO pvp_match (player1_id, player2_id, state, session_data, created_at, updated_at)
+               VALUES (?, ?, "active", ?, ?, ?)''',
+            (user_id, opp_id, json.dumps(session_data), int(time.time()), int(time.time()))
+        )
+        conn.commit()
+        match_id = conn.execute('SELECT last_insert_rowid() as id').fetchone()['id']
+        conn.close()
+        return {'status': 'matched', 'match_id': match_id}
+
+    else:
+        # Salveaza size impreuna cu snapshot
+        payload = json.dumps({'pets': loadout_snapshot, 'size': size})
+        conn.execute(
+            'INSERT OR REPLACE INTO pvp_queue (user_id, loadout_snapshot, joined_at) VALUES (?, ?, ?)',
+            (user_id, payload, int(time.time()))
+        )
+        conn.commit()
+        conn.close()
+        return {'status': 'waiting', 'match_id': None}
     """
     Adauga userul in queue sau gaseste un adversar.
     Returneaza: {status: 'waiting'|'matched', match_id: int|None}
@@ -126,23 +190,30 @@ def queue_poll(user_id: int) -> dict:
 # MATCH SESSION
 # ─────────────────────────────────────────────
 
-def _build_match_session(p1_id: int, p1_snapshot: list, p2_id: int, p2_snapshot: list) -> dict:
+def _build_match_session(p1_id: int, p1_snapshot: list, p2_id: int, p2_snapshot: list, size: int = 1) -> dict:
     """Construieste session_data initiala pentru un match."""
     p1_combatant = _snapshot_to_combatant(p1_snapshot[0], p1_id)
     p2_combatant = _snapshot_to_combatant(p2_snapshot[0], p2_id)
 
+    # Bench — restul petilor din snapshot (pentru 5v5)
+    p1_bench = [_snapshot_to_combatant(p, p1_id) for p in p1_snapshot[1:]]
+    p2_bench = [_snapshot_to_combatant(p, p2_id) for p in p2_snapshot[1:]]
+
     return {
-        'p1_id':       p1_id,
-        'p2_id':       p2_id,
-        'p1':          p1_combatant,
-        'p2':          p2_combatant,
-        'p1_move':     None,   # mutarea aleasa de p1 in turul curent
-        'p2_move':     None,   # mutarea aleasa de p2 in turul curent
+        'p1_id':        p1_id,
+        'p2_id':        p2_id,
+        'size':         size,
+        'p1':           p1_combatant,
+        'p2':           p2_combatant,
+        'p1_bench':     p1_bench,
+        'p2_bench':     p2_bench,
+        'p1_move':      None,
+        'p2_move':      None,
         'turn_started': int(time.time()),
-        'turn':        1,
-        'log':         [],
-        'winner':      None,   # None | p1_id | p2_id | 'draw'
-        'state':       'choosing',  # choosing | resolving | finished
+        'turn':         1,
+        'log':          [],
+        'winner':       None,
+        'state':        'choosing',
     }
 
 

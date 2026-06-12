@@ -2729,9 +2729,12 @@ def pvp_battle_page(match_id):
 @login_required
 def api_pvp_queue_join():
     from modules.pvp import queue_join
-    from modules.loadout import get_loadout, build_loadout_slot
+    from modules.loadout import get_loadout
     user = get_current_user()
     uid  = int(user['id'])
+    body = request.json or {}
+    size = int(body.get('size', 1))
+    size = max(1, min(5, size))  # clamp 1-5
 
     # Construieste loadout snapshot
     loadout = get_loadout(uid)
@@ -2766,7 +2769,14 @@ def api_pvp_queue_join():
     if not slots:
         return jsonify({'ok': False, 'error': 'Toți companionii tăi sunt KO! Vindecă-i la Biserică înainte de PvP.'})
 
-    result = queue_join(uid, slots)
+    # Verifica ca are destui peti pentru formatul ales
+    if len(slots) < size:
+        return jsonify({'ok': False, 'error': f'Ai nevoie de cel puțin {size} companioni valizi pentru acest format.'})
+
+    # Trimite doar primii `size` peti
+    slots = slots[:size]
+
+    result = queue_join(uid, slots, size)
     return jsonify({'ok': True, **result})
 
 

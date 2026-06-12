@@ -25,14 +25,34 @@
                 <span class="assets-popup-btn-icon">📚</span>
                 <span>Antrenează</span>
             </button>
-            <button class="assets-popup-btn" onclick="closeCorvinPopup(); enterPvpQueue()">
+            <button class="assets-popup-btn" onclick="closeCorvinPopup(); openPvpMenu()">
                 <span class="assets-popup-btn-icon">🏹</span>
                 <span>Provoacă un alt cetățean</span>
             </button>
         </div>
     </div>
 
-    <!-- Popup Arena — alegere format -->
+    <!-- Popup PvP — alegere format -->
+    <div class="assets-popup-overlay" id="pvp-menu-overlay">
+        <div class="assets-popup">
+            <button class="assets-popup-close" onclick="closePvpMenu()">✕</button>
+            <div class="assets-popup-deco"></div>
+            <div class="assets-popup-title">🏹 Alege formatul</div>
+            <div id="pvp-format-msg" style="font-size:12px;color:var(--danger);text-align:center;min-height:16px;margin-bottom:4px;"></div>
+            <button class="assets-popup-btn" onclick="enterPvpQueue(1)">
+                <span class="assets-popup-btn-icon">🐾</span>
+                <span>1 vs 1</span>
+            </button>
+            <button class="assets-popup-btn" onclick="enterPvpQueue(5)">
+                <span class="assets-popup-btn-icon">🐾🐾🐾🐾🐾</span>
+                <span>5 vs 5</span>
+            </button>
+            <button class="assets-popup-btn" onclick="closePvpMenu()">
+                <span class="assets-popup-btn-icon">↩️</span>
+                <span>Înapoi</span>
+            </button>
+        </div>
+    </div>
     <div class="assets-popup-overlay" id="arena-menu-overlay">
         <div class="assets-popup">
             <button class="assets-popup-close" onclick="closeArenaMenu()">✕</button>
@@ -928,16 +948,31 @@ async function forgetMove(oldMoveKey) {
     alert('✅ ' + newMove.name + ' a înlocuit abilitatea selectată!');
 }
 
-async function enterPvpQueue() {
+function openPvpMenu() {
+    document.getElementById('pvp-menu-overlay').classList.add('open');
+}
+function closePvpMenu() {
+    document.getElementById('pvp-menu-overlay').classList.remove('open');
+}
+
+async function enterPvpQueue(size) {
     // Verifica loadout count
     const resp = await fetch('/joc/petomania/api/loadout/count');
     const data = await resp.json();
-    if (!data.ok || data.count < 1) {
-        alert('Trebuie să ai cel puțin un companion în loadout pentru PvP!');
+    const needed = size;
+    if (!data.ok || data.count < needed) {
+        document.getElementById('pvp-format-msg').textContent =
+            `Ai nevoie de cel puțin ${needed} companion${needed > 1 ? 'i' : ''} în loadout!`;
         return;
     }
+    document.getElementById('pvp-format-msg').textContent = '';
+    closePvpMenu();
     // Intra in queue
-    const qResp = await fetch('/joc/petomania/api/pvp/queue/join', {method: 'POST'});
+    const qResp = await fetch('/joc/petomania/api/pvp/queue/join', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({size})
+    });
     const qData = await qResp.json();
     if (!qData.ok) { alert(qData.error || 'Eroare la intrare în coadă.'); return; }
     if (qData.status === 'matched') {
@@ -949,7 +984,7 @@ async function enterPvpQueue() {
 
 // Close overlays on backdrop click
 ['training-overlay','training-zones-overlay','training-moves-overlay',
- 'training-confirm-overlay','training-forget-overlay'].forEach(id => {
+ 'training-confirm-overlay','training-forget-overlay','pvp-menu-overlay'].forEach(id => {
     document.getElementById(id).addEventListener('click', e => {
         if (e.target.id === id) document.getElementById(id).classList.remove('open');
     });
