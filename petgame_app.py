@@ -745,9 +745,13 @@ def api_rucsac_use():
     # Nexus in battle -> redirectioneaza catre captură
     if category == 'nexus' and session.get('battle_npc'):
         from flask import redirect
-        # Apelam direct logica de captură
         request._cached_json = (data | {'item_key': item_key}, True)
         return api_battle_capture()
+
+    # Nexus in vanatoare -> redirectioneaza catre captura vanatoare
+    if category == 'nexus' and session.get('vanatoare_npc'):
+        request._cached_json = (data | {'item_key': item_key}, True)
+        return api_vanatoare_capture()
 
     return jsonify(use_item(uid, category, item_key, target_slot=target_slot))
 
