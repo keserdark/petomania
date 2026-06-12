@@ -555,15 +555,58 @@ def render_pet(user_id: int):
         floor_img   = f_floor.result()
         chimney_img = f_chimney.result()
         pet_img     = f_pet.result() if f_pet else None
+    # Separam obiectele in doua grupuri: z_index < 4 (sub pet) si >= 4 (peste pet)
+    from petgame_room_config import ROOM_ITEMS as _ROOM_ITEMS
+    owned_items = room.get('items', {})
+    obj_layers_under = []  # z_index < 4
+    obj_layers_over  = []  # z_index >= 4
+
+    for obj in _ROOM_ITEMS.get('obiecte', []):
+        key = obj['key']
+        if key not in owned_items:
+            continue
+        obj_path = _to_disk(f"/static/room1/{obj['file']}")
+        z = obj.get('z_index', 5)
+        pos_x = obj.get('pos_x', 0) / 100.0
+        pos_y = obj.get('pos_y', 0) / 100.0
+        width_pct = obj.get('width', 100) / 100.0
+        if z < 4:
+            obj_layers_under.append((obj_path, pos_x, pos_y, width_pct))
+        else:
+            obj_layers_over.append((obj_path, pos_x, pos_y, width_pct))
+
+    def paste_obj(canvas, obj_path, pos_x, pos_y, width_pct):
+        img = _fetch_image_cached(obj_path, ttl=3600, resize=None)
+        if not img:
+            return
+        obj_w = int(W * width_pct)
+        obj_h = int(obj_w * img.size[1] / img.size[0])
+        x = int(pos_x * W)
+        y = int(pos_y * H)
+        img = img.resize((obj_w, obj_h), Image.LANCZOS)
+        if img.mode == 'RGBA':
+            canvas.paste(img, (x, y), img)
+        else:
+            canvas.paste(img, (x, y))
+
     for img in [wall_img, floor_img, chimney_img]:
         if img:
             canvas.paste(img, (0, 0), img)
+
+    # Obiecte sub pet
+    for (op, px, py, wp) in obj_layers_under:
+        paste_obj(canvas, op, px, py, wp)
+
     if pet_img:
         pct   = {1: 0.22, 2: 0.32, 3: 0.46}.get(form, 0.28)
         pet_w = int(W * pct)
         pet_h = int(pet_w * pet_img.size[1] / pet_img.size[0])
         pet_img = pet_img.resize((pet_w, pet_h), Image.LANCZOS)
         canvas.paste(pet_img, ((W - pet_w) // 2, H - pet_h), pet_img)
+
+    # Obiecte peste pet
+    for (op, px, py, wp) in obj_layers_over:
+        paste_obj(canvas, op, px, py, wp)
     output = io.BytesIO()
     canvas.convert('RGB').save(output, format='PNG', optimize=True)
     output.seek(0)
