@@ -43,7 +43,9 @@
         {% set item_index = loop.index0 %}
 
         {# Logica vizibilitate pentru linear #}
-        {% if linear %}
+        {% if item.get('hidden_in_shop', False) %}
+            {% set show = false %}
+        {% elif linear %}
             {# Arata doar: itemul activ si urmatorul dupa el #}
             {% if item_index == active_index.val or item_index == active_index.val + 1 %}
                 {% set show = true %}

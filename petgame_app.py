@@ -288,9 +288,18 @@ def acasa():
         'chimney': get_static_url(get_room_url('chimney', room['chimney'], room)) + f'?v={v}',
     }
     owned_items  = room.get('items', {})
+    # Bundle keys: daca userul are cheia trigger, se adauga automat si cele din bundle
+    ITEM_BUNDLES = {
+        'focsub': ['foc', 'focdeasupra'],
+    }
+    effective_items = set(owned_items.keys())
+    for trigger_key, bundle_keys in ITEM_BUNDLES.items():
+        if trigger_key in effective_items:
+            effective_items.update(bundle_keys)
+
     room_objects = []
     for obj_key, obj_cfg in SHOP_ITEMS.get('obiecte', {}).items():
-        if obj_key in owned_items:
+        if obj_key in effective_items:
             room_objects.append({
                 'key':       obj_key,
                 'file':      obj_cfg.get('file', ''),
