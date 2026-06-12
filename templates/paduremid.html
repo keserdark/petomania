@@ -197,7 +197,7 @@ canvas.addEventListener('mousemove', (e) => {
         currentHover = hit;
         canvas.style.cursor   = hit ? 'pointer' : 'default';
         tooltip.style.opacity = hit ? '1' : '0';
-        if (hit) tooltip.textContent = '🌲 Intră în Pădure';
+        if (hit) tooltip.textContent = '🌲 Mergi mai adânc';
         redraw(hit);
     }
 });
@@ -209,7 +209,7 @@ canvas.addEventListener('click', (e) => {
     const y = Math.floor((e.clientY - rect.top)  * H / rect.height);
     const oc    = arrowOff.getContext('2d', { willReadFrequently: true });
     const alpha = oc.getImageData(x, y, 1, 1).data[3];
-    if (alpha > 20) window.location.href = '/joc/petomania/paduremid2';
+    if (alpha > 20) window.location.href = '/joc/petomania/paduredeep';
 });
 
 canvas.addEventListener('mouseleave', () => {
