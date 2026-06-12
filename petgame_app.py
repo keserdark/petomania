@@ -48,7 +48,7 @@ from modules.discord_helpers import (get_member_roles, get_lady_interaction,
 from inventory_config     import get_item as inv_get_item
 from shop_config          import get_shop
 from modules.shop         import build_shop_context, shop_buy
-from petgame_room_config  import ROOM_ITEMS
+from petgame_room_config  import ROOM_ITEMS, ITEM_BUNDLES
 from cogs.petgame_config  import SPECIES
 from cogs.petgame_natures import NATURES
 from cogs.petgame_stats   import get_stats_at_level
@@ -289,9 +289,6 @@ def acasa():
     }
     owned_items  = room.get('items', {})
     # Bundle keys: daca userul are cheia trigger, se adauga automat si cele din bundle
-    ITEM_BUNDLES = {
-        'focsub': ['foc', 'focdeasupra'],
-    }
     effective_items = set(owned_items.keys())
     for trigger_key, bundle_keys in ITEM_BUNDLES.items():
         if trigger_key in effective_items:

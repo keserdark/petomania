@@ -337,6 +337,15 @@ ROOM_ITEMS = {
 }
 
 # ─────────────────────────────────────────────
+# ITEM_BUNDLES
+# Daca userul cumpara cheia trigger, se adauga automat si cheile din bundle.
+# Nu modifica logica din petgame_app.py — adauga doar aici.
+# ─────────────────────────────────────────────
+ITEM_BUNDLES = {
+    'focsub': ['foc', 'focdeasupra'],
+}
+
+# ─────────────────────────────────────────────
 # HELPER — conversie lista -> dict pentru lookup rapid
 # Nu modifica aceasta functie
 # ─────────────────────────────────────────────
