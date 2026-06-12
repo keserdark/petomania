@@ -248,10 +248,11 @@ async function pollMatch() {
             document.getElementById('pvp-waiting-overlay').classList.remove('show');
         }
 
-        // Daca s-a rezolvat turul — re-render moves
+        // Daca s-a rezolvat turul — re-render moves, dar nu ascunde panoul daca e deschis
         if (!s.i_chose && s.state === 'choosing') {
             renderMoves(s.moveset_data, s.me.mp);
-            showMenu();
+            const panelOpen = document.getElementById('battle-moves-panel').classList.contains('open');
+            if (!panelOpen) showMenu();
         }
 
         if (s.state === 'finished') {
