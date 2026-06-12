@@ -274,7 +274,7 @@ ROOM_ITEMS = {
             'name':      'Glob Pamantesc',
             'desc':      'Glob Pamantesc.',
             'price':     300,
-            'file':      'lumanari.png',
+            'file':      'glob.png',
             'default':   False,
             'clickable': False,
             'action':    None,
