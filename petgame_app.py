@@ -774,6 +774,7 @@ def api_rucsac_data():
         hp_max = pet_ctx['stats']['hp']
         hp_cur = p['hp_current']
         companions[0] = {
+            'id': 0,
             'name': pet_ctx['name'], 'species': pet_ctx['species_name'],
             'level': pet_ctx['level'], 'form': pet_ctx['form'],
             'nature': pet_ctx['nat_data']['name'] if pet_ctx['nat_data'] else None,
@@ -798,6 +799,7 @@ def api_rucsac_data():
                 mhp_max = get_stats_at_level(mp['species'], mp.get('nature'), mp['level'], mform)['hp']
                 mhp_cur = mp['hp_current']
                 companions[i] = {
+                    'id': men_id,
                     'name': mp['name'],
                     'species': SPECIES.get(mp['species'], {}).get('name', mp['species']),
                     'level': mp['level'], 'form': mform,
