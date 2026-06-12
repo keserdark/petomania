@@ -2741,7 +2741,7 @@ def api_pvp_queue_join():
         pet = get_pet(uid)
         if not pet:
             return jsonify({'ok': False, 'error': 'Nu ai niciun companion activ.'})
-        slots = [pet]
+        slots = [dict(pet)]
     else:
         conn = get_db()
         pets = []
@@ -2750,10 +2750,9 @@ def api_pvp_queue_join():
                 p = get_pet(uid)
             else:
                 row = conn.execute('SELECT * FROM menagerie WHERE id = ? AND user_id = ?', (pid, uid)).fetchone()
-                p = dict(row) if row else None
+                p = row if row else None
             if p:
-                if not isinstance(p, dict):
-                    p = dict(p)
+                p = dict(p)
                 p['user_id'] = uid
                 pets.append(p)
         conn.close()
