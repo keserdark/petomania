@@ -2533,12 +2533,6 @@ def paduredeep():
 
 # ── CASTEL ────────────────────────────────────────────────────────────────
 
-@app.route('/joc/petomania/castel')
-@login_required
-def castel():
-    return render_template('castel.html')
-
-
 @app.route('/joc/petomania/api/castel/aldric', methods=['GET'])
 @login_required
 def api_castel_aldric():
