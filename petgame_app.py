@@ -2141,8 +2141,7 @@ def api_vanatoare_turn():
             # Mai sunt NPC-uri — genereaza urmatorul
             from modules.battle import generate_npc as _gen_npc
             new_npc = _gen_npc(player['level'])
-            partial_reward = calculate_reward(player['level'], npc['level'], True)
-            session['vanatoare_accumulated_reward'] = session.get('vanatoare_accumulated_reward', 0) + partial_reward
+            pass  # fara dacoins la vanatoare
             session['vanatoare_npc']       = new_npc
             session['vanatoare_npc_index'] = npc_index + 1
             session['battle_player']    = player
@@ -2162,16 +2161,10 @@ def api_vanatoare_turn():
             })
 
         # Ultimul NPC doborat — victorie finala
-        reward = calculate_reward(player['level'], npc['level'], True)
-        reward += session.get('vanatoare_accumulated_reward', 0)
-        if reward > 0:
-            conn = get_db()
-            conn.execute('UPDATE dacoins SET balance = balance + ? WHERE user_id = ?', (reward, uid))
-            conn.commit()
-            conn.close()
+        reward = 0
         _save_bench_hp(session.get('vanatoare_bench', []))
         # Acorda XP participantilor
-        xp_total = max(1, reward // 3)
+        xp_total = max(1, calculate_reward(player['level'], npc['level'], True) // 3)
         participants = session.get('vanatoare_participants', [player['id']])
         xp_results = add_battle_xp(uid, xp_total, participants)
         session.pop('battle_player', None)
