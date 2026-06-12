@@ -559,6 +559,11 @@ function _renderDaianaStep(step) {
         mk('Nu... nu știam că am nevoie.', () => _renderDaianaStep('nu_are'));
     }
     else if (step === 'are_concesiune') {
+        // Verifica daca chiar are concesiune
+        if (!_daiana_data.concesiunevanatoare) {
+            _renderDaianaStep('minte');
+            return;
+        }
         textEl.innerHTML = `<em>*Daiana verifică rapid registrul mental al concesiunilor.*</em><br><br>
             Bine. Apreciez că respecți legea — nu mulți o fac din proprie inițiativă.<br><br>
             Continuă-ți vânătoarea și ai grijă de pădure.<br><br>
@@ -566,6 +571,21 @@ function _renderDaianaStep(step) {
         mk('Mulțumesc. O zi bună și ție.', () => {
             document.getElementById('daiana-overlay').style.display = 'none';
         });
+    }
+    else if (step === 'minte') {
+        textEl.innerHTML = `<em>*Daiana te privește fix câteva secunde, cu o expresie de piatră.*</em><br><br>
+            Interesant. Am verificat registrele și numele tău nu apare în nicio concesiune activă.<br><br>
+            Minți unui Gardian al Regatului. Asta agravează situația considerabil.<br><br>
+            ${_daiana_data.daiana_warned === 0
+                ? `De data aceasta, îți acord un avertisment — dar să nu mai încerc răbdarea mea.<br><br>
+                   Du-te la Castel și obține o concesiune legitimă.`
+                : `Nu e prima dată când te văd fără concesiune. Va fi <span style="color:#e05252">1.000 Dacoins</span> amendă.`
+            }`;
+        if (_daiana_data.daiana_warned === 0) {
+            mk('Îmi pare rău. Mă duc imediat.', () => applyDaianaAvertisment());
+        } else {
+            mk('Plătesc amenda.', () => applyDaianaAmenda());
+        }
     }
     else if (step === 'nu_are') {
         if (_daiana_data.daiana_warned === 0) {
