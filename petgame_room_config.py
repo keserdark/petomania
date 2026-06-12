@@ -153,7 +153,7 @@ ROOM_ITEMS = {
             'name':      'Draperii',
             'desc':      'Draperii din catifea roșie.',
             'price':     500,
-            'file':      'Draperii.png',
+            'file':      'draperii.png',
             'default':   False,
             'clickable': False,
             'action':    None,
