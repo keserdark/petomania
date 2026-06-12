@@ -537,9 +537,14 @@ def render_pet(user_id: int):
     else:
         form    = 1
         pet_url = None
-    wall_url    = get_room_url('wall',    room['wall'],    room)
-    floor_url   = get_room_url('floor',   room['floor'],   room)
-    chimney_url = get_room_url('chimney', room['chimney'], room)
+    def _to_disk(url):
+        if url and url.startswith('/static/'):
+            return os.path.join(os.path.dirname(os.path.abspath(__file__)), url.lstrip('/'))
+        return url
+
+    wall_url    = _to_disk(get_room_url('wall',    room['wall'],    room))
+    floor_url   = _to_disk(get_room_url('floor',   room['floor'],   room))
+    chimney_url = _to_disk(get_room_url('chimney', room['chimney'], room))
     canvas = Image.new('RGBA', (W, H), (10, 10, 16, 255))
     with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
         f_wall    = executor.submit(_fetch_image_cached, wall_url)
