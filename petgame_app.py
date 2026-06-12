@@ -126,6 +126,10 @@ def _invalidate_cache(url: str):
 def _fetch_image(url: str):
     try:
         from PIL import Image
+        # Path pe disk
+        if url and (url.startswith('/') or (len(url) > 2 and url[1] == ':')):
+            return Image.open(url).convert('RGBA')
+        # URL HTTP
         req = urllib.request.Request(url, headers={'User-Agent': 'PetomaniaBotRender/1.0'})
         with urllib.request.urlopen(req, timeout=8) as resp:
             data = resp.read()
@@ -522,7 +526,14 @@ def render_pet(user_id: int):
         p       = dict(pet_row)
         form    = get_form(p['level'])
         state   = get_state(p['hunger'], p['happiness'], p['cleanliness'], p['energy'], bool(p['sleeping']))
-        pet_url = get_image_url(p['species'], form, state, p.get('gender', 'male'))
+        _pet_url_raw = get_image_url(p['species'], form, state, p.get('gender', 'male'))
+        # Citeste direct de pe disk in loc de HTTP request
+        if _pet_url_raw.startswith('/static/'):
+            pet_url = os.path.join(os.path.dirname(os.path.abspath(__file__)), _pet_url_raw.lstrip('/'))
+        elif _pet_url_raw.startswith('/'):
+            pet_url = f"https://regnum-dacorum.ro{_pet_url_raw}"
+        else:
+            pet_url = _pet_url_raw
     else:
         form    = 1
         pet_url = None
