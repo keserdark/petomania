@@ -2528,6 +2528,12 @@ def padure():
 def paduremid():
     return render_template('paduremid.html')
 
+
+@app.route('/joc/petomania/paduredeep')
+@login_required
+def paduredeep():
+    return render_template('paduredeep.html')
+
 if __name__ == '__main__':
     init_db()
     app.run(host='0.0.0.0', port=5002, debug=False)
