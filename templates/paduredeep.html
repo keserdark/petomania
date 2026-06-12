@@ -203,7 +203,7 @@ canvas.addEventListener('click', (e) => {
     const y = Math.floor((e.clientY - rect.top)  * H / rect.height);
     const oc    = arrowOff.getContext('2d', { willReadFrequently: true });
     const alpha = oc.getImageData(x, y, 1, 1).data[3];
-    if (alpha > 20) // capatul padurii
+    // capatul padurii - sageta nu duce nicaieri
 });
 
 canvas.addEventListener('mouseleave', () => {
