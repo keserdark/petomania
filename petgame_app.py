@@ -2531,6 +2531,45 @@ def paduremid():
 def paduredeep():
     return render_template('paduredeep.html')
 
+# ── CASTEL ────────────────────────────────────────────────────────────────
+
+@app.route('/joc/petomania/castel')
+@login_required
+def castel():
+    return render_template('castel.html')
+
+
+@app.route('/joc/petomania/api/castel/aldric', methods=['GET'])
+@login_required
+def api_castel_aldric():
+    from modules.db import get_user_permissions, get_dacoins
+    user = get_current_user()
+    uid  = int(user['id'])
+    perms = get_user_permissions(uid)
+    balance = get_dacoins(uid)
+    return jsonify({
+        'ok': True,
+        'concesiunevanatoare': perms.get('concesiunevanatoare', 0),
+        'balance': balance,
+    })
+
+
+@app.route('/joc/petomania/api/castel/concesiune', methods=['POST'])
+@login_required
+def api_castel_concesiune():
+    from modules.db import get_user_permissions, spend_dacoins, set_user_permission
+    user = get_current_user()
+    uid  = int(user['id'])
+    perms = get_user_permissions(uid)
+    if perms.get('concesiunevanatoare', 0):
+        return jsonify({'ok': False, 'already': True})
+    ok = spend_dacoins(uid, 5000)
+    if not ok:
+        return jsonify({'ok': False, 'insufficient': True})
+    set_user_permission(uid, 'concesiunevanatoare', 1)
+    return jsonify({'ok': True})
+
+
 if __name__ == '__main__':
     init_db()
     app.run(host='0.0.0.0', port=5002, debug=False)

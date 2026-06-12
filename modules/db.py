@@ -55,6 +55,17 @@ def init_db():
         pass
 
     c.execute('''
+        CREATE TABLE IF NOT EXISTS user_permissions (
+            user_id              INTEGER PRIMARY KEY,
+            concesiunevanatoare  INTEGER NOT NULL DEFAULT 0
+        )
+    ''')
+    try:
+        c.execute('ALTER TABLE user_permissions ADD COLUMN concesiunevanatoare INTEGER NOT NULL DEFAULT 0')
+    except Exception:
+        pass
+
+    c.execute('''
         CREATE TABLE IF NOT EXISTS inventory (
             id          INTEGER PRIMARY KEY AUTOINCREMENT,
             user_id     INTEGER NOT NULL,
@@ -100,31 +111,32 @@ def init_db():
             slot_5     INTEGER
         )
     ''')
-    c.execute('''
-        CREATE TABLE IF NOT EXISTS known_moves (
-            id         INTEGER PRIMARY KEY AUTOINCREMENT,
-            user_id    INTEGER NOT NULL,
-            pet_id     INTEGER NOT NULL,
-            move_key   TEXT NOT NULL,
-            learned_at INTEGER NOT NULL DEFAULT (strftime('%s','now')),
-            UNIQUE(user_id, pet_id, move_key)
-        )
-    ''')
-    c.execute('''
-        CREATE TABLE IF NOT EXISTS active_moves (
-            user_id    INTEGER NOT NULL,
-            pet_id     INTEGER NOT NULL,
-            slot       INTEGER NOT NULL,
-            move_key   TEXT NOT NULL,
-            PRIMARY KEY (user_id, pet_id, slot)
-        )
-    ''')
 
     conn.commit()
     conn.close()
 
 
 # ── DACOINS ──────────────────────────────────────────────
+
+def get_user_permissions(user_id: int) -> dict:
+    conn = get_db()
+    row = conn.execute('SELECT * FROM user_permissions WHERE user_id = ?', (user_id,)).fetchone()
+    conn.close()
+    if row:
+        return dict(row)
+    return {'user_id': user_id, 'concesiunevanatoare': 0}
+
+
+def set_user_permission(user_id: int, key: str, value: int):
+    conn = get_db()
+    conn.execute(
+        'INSERT INTO user_permissions (user_id) VALUES (?) ON CONFLICT(user_id) DO NOTHING',
+        (user_id,)
+    )
+    conn.execute(f'UPDATE user_permissions SET {key} = ? WHERE user_id = ?', (value, user_id))
+    conn.commit()
+    conn.close()
+
 
 def get_dacoins(user_id: int) -> int:
     conn = get_db()
