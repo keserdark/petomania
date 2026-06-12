@@ -638,7 +638,14 @@ async function tryFlee() {
     const chance    = Math.max(0.1, 0.8 - diff * 0.1);
     if (Math.random() < chance) {
         await fetch('/joc/petomania/api/vanatoare/flee', {method:'POST'});
-        window.location = '/joc/petomania/padure';
+        const daianaResp = await fetch('/joc/petomania/api/daiana/check');
+        const daianaData = await daianaResp.json();
+        if (daianaData.trigger) {
+            _daiana_data = daianaData;
+            showDaianaOverlay();
+        } else {
+            window.location = '/joc/petomania/padure';
+        }
     } else {
         addLog('❌ Nu ai reușit să fugi!');
         setBusy(true);
