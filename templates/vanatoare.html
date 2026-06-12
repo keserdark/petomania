@@ -24,7 +24,7 @@
                     <div style="text-align:right"><span class="bc-nature-badge" id="npc-nature"></span></div>
                 </div>
                 <div class="bc-ground-wrap">
-                    <img src="/static/arena/groundpatch.png" class="bc-ground-patch bc-ground-patch-enemy" alt="">
+                    <img src="/static/padure/grasspatch.png" class="bc-ground-patch bc-ground-patch-enemy" alt="">
                     <img id="npc-img" src="" alt="" class="bc-img bc-img-enemy">
                 </div>
             </div>
@@ -43,7 +43,7 @@
                     <div style="text-align:right"><span class="bc-nature-badge" id="player-nature"></span></div>
                 </div>
                 <div class="bc-ground-wrap">
-                    <img src="/static/arena/groundpatch.png" class="bc-ground-patch" alt="">
+                    <img src="/static/padure/grasspatch.png" class="bc-ground-patch" alt="">
                     <img id="player-img" src="" alt="" class="bc-img bc-img-player">
                 </div>
             </div>
@@ -174,7 +174,7 @@ const ctx    = canvas.getContext('2d');
 canvas.width = W; canvas.height = H;
 
 const bgImg = new Image();
-bgImg.src   = '/static/arena/battle.png';
+bgImg.src   = '/static/padure/vanatoare.png';
 bgImg.onload = () => ctx.drawImage(bgImg, 0, 0, W, H);
 
 let battleData = { player: null, npc: null, bench: [], busy: false };
