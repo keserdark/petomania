@@ -269,6 +269,21 @@ ROOM_ITEMS = {
             'z_index':   5,
             'linear':    True,
         },
+        {
+            'key':       'glob',
+            'name':      'Glob Pamantesc',
+            'desc':      'Glob Pamantesc.',
+            'price':     300,
+            'file':      'lumanari.png',
+            'default':   False,
+            'clickable': False,
+            'action':    None,
+            'pos_x':     0,
+            'pos_y':     0,
+            'width':     100,
+            'z_index':   5,
+            'linear':    True,
+        },
     ],
 }
 
