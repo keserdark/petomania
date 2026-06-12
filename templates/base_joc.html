@@ -781,7 +781,7 @@ document.getElementById('cp-rename-confirm').onclick = async () => {
     rbShowMsg('cp-rename-msg', res.ok ? `✅ Redenumit în "${res.name}".` : res.error, res.ok);
     if (res.ok) {
         document.getElementById('cp-name').textContent = res.name;
-        if (rbData.companions[0]) rbData.companions[0].name = res.name;
+        if (rbActiveComp) rbActiveComp.name = res.name;
         rbRenderCompanions();
     }
 };
