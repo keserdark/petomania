@@ -253,6 +253,10 @@ ROOM_ITEMS = {
             'width':     100,
             'z_index':   4,
             'linear':    True,
+            'variants': {
+                'foc': 'focgif.gif',  # reflexie fereastra
+                'foc': 'focdeasupra',
+            },
         },
         {
             'key':       'lumanari',
