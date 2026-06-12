@@ -519,7 +519,7 @@
     position: relative;
     width: 100%;
     aspect-ratio: 16 / 9;
-    background: #0a0a0a;
+    background: var(--bg-elev);
     overflow: hidden;
 }
 .shop-preview-img {
