@@ -2737,29 +2737,30 @@ def api_pvp_queue_join():
     size = max(1, min(5, size))  # clamp 1-5
 
     # Construieste loadout snapshot
+    # slot_1 = pet activ din tabela pets
+    # slot_2..5 = menajerie din tabela loadout
     loadout = get_loadout(uid)
-    slots   = [loadout.get(f'slot_{i}') for i in range(1, 6) if loadout.get(f'slot_{i}')]
-    if not slots:
-        # Fallback — pet activ
-        pet = get_pet(uid)
-        if not pet:
-            return jsonify({'ok': False, 'error': 'Nu ai niciun companion activ.'})
-        slots = [dict(pet)]
-    else:
-        conn = get_db()
-        pets = []
-        for pid in slots:
-            if pid == 0:
-                p = get_pet(uid)
-            else:
-                row = conn.execute('SELECT * FROM menagerie WHERE id = ? AND user_id = ?', (pid, uid)).fetchone()
-                p = row if row else None
-            if p:
-                p = dict(p)
+    conn = get_db()
+    pets = []
+
+    # Slot 1 — pet activ
+    p = get_pet(uid)
+    if p:
+        p = dict(p)
+        p['user_id'] = uid
+        pets.append(p)
+
+    # Slot 2-5 — menajerie
+    for i in range(2, 6):
+        pid = loadout.get(f'slot_{i}')
+        if pid:
+            row = conn.execute('SELECT * FROM menagerie WHERE id = ? AND user_id = ?', (pid, uid)).fetchone()
+            if row:
+                p = dict(row)
                 p['user_id'] = uid
                 pets.append(p)
-        conn.close()
-        slots = pets
+    conn.close()
+    slots = pets
 
     if not slots:
         return jsonify({'ok': False, 'error': 'Nu ai companioni în loadout.'})
