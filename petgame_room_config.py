@@ -229,7 +229,7 @@ ROOM_ITEMS = {
             'name':      'Gratii',
             'desc':      'Gratii la semineu.',
             'price':     300,
-            'file':      'covor.png',
+            'file':      'gratii.png',
             'default':   False,
             'clickable': False,
             'action':    None,
