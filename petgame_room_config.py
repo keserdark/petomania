@@ -101,14 +101,7 @@ ROOM_ITEMS = {
             'file':    'Room1-Chimney1-Stone.png',
             'default': True,
         },
-        {
-            'key':     'Chimney2-Stone',
-            'name':    'Gratii de fier',
-            'desc':    'Semineu cu gratii de fier.',
-            'price':   500,
-            'file':    'Room1-Chimney2-Stone.png',
-            'default': True,
-        },
+
         # Adauga Chimney2 cu foc etc. aici
     ],
 
@@ -221,6 +214,21 @@ ROOM_ITEMS = {
             'name':      'Covor',
             'desc':      'Covor persan, țesut manual.',
             'price':     1000,
+            'file':      'covor.png',
+            'default':   False,
+            'clickable': False,
+            'action':    None,
+            'pos_x':     0,
+            'pos_y':     0,
+            'width':     100,
+            'z_index':   2,
+            'linear':    True,
+        },
+        {
+            'key':       'gratii',
+            'name':      'Gratii',
+            'desc':      'Gratii la semineu.',
+            'price':     300,
             'file':      'covor.png',
             'default':   False,
             'clickable': False,
