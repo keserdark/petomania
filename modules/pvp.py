@@ -149,6 +149,8 @@ def _build_match_session(p1_id: int, p1_snapshot: list, p2_id: int, p2_snapshot:
 def _snapshot_to_combatant(pet_data: dict, user_id: int) -> dict:
     """Converteste un pet snapshot din loadout in combatant."""
     from modules.battle import build_combatant as _bc
+    if not isinstance(pet_data, dict):
+        pet_data = dict(pet_data)
     pet_data['user_id'] = user_id
     return _bc(pet_data)
 
