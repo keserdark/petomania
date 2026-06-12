@@ -288,7 +288,7 @@ ROOM_ITEMS = {
             'key':       'scut',
             'name':      'Scut',
             'desc':      'Scut Regnum Dacorum.',
-            'price':     300,
+            'price':     500,
             'file':      'scut.png',
             'default':   False,
             'clickable': False,
