@@ -263,7 +263,7 @@ ROOM_ITEMS = {
             'default':   False,
             'clickable': False,
             'action':    None,
-            'pos_x':     40,
+            'pos_x':     50,
             'pos_y':     40,
             'width':     30,
             'z_index':   3,
