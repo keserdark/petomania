@@ -106,6 +106,16 @@ ZONE_POOLS = {
         ],
     },
 
+    'pescuit': {
+        'species': [
+            ('goldfish', 'legendary'),
+        ],
+        'natures': [
+            ('water',  'common'),
+            ('dragon', 'legendary'),
+        ],
+    },
+
 }
 
 # Fallback daca zona nu e definita

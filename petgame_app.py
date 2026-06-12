@@ -843,6 +843,11 @@ def api_rucsac_use():
         request._cached_json = (data | {'item_key': item_key}, True)
         return api_vanatoare_capture()
 
+    # Nexus in pescuit -> redirectioneaza catre captura pescuit
+    if category == 'nexus' and session.get('pescuit_npc'):
+        request._cached_json = (data | {'item_key': item_key}, True)
+        return api_pescuit_capture()
+
     return jsonify(use_item(uid, category, item_key, target_slot=target_slot))
 
 
@@ -2623,6 +2628,285 @@ def api_vanatoare_capture():
         'gender':  gender,
         'msg':     f'{default_name} a fost capturat!',
     })
+
+# ── PESCUIT APĂ DULCE ────────────────────────────────────────────────────
+
+@app.route('/joc/petomania/pescuit')
+@login_required
+def pescuit():
+    return render_template('pescuit.html')
+
+
+@app.route('/joc/petomania/api/pescuit/start', methods=['POST'])
+@login_required
+def api_pescuit_start():
+    from modules.battle import build_combatant, generate_npc, save_combatant_mp
+    from moves_config import get_move
+    from modules.pets import sync_pet
+    import random as _rand
+    user = get_current_user()
+    uid  = int(user['id'])
+
+    # Roll 1% sansa sa apara goldfish
+    if _rand.random() > 0.01:
+        return jsonify({'ok': True, 'appeared': False, 'msg': 'Liniște... Nimic nu a mușcat. Încearcă din nou.'})
+
+    pet = sync_pet(uid)
+    if not pet:
+        return jsonify({'ok': False, 'error': 'Nu ai un companion activ.'})
+    pet = dict(pet)
+    pet.setdefault('id', 0)
+    pet.setdefault('user_id', uid)
+
+    player = build_combatant(pet)
+    if player['hp_current'] <= 0:
+        return jsonify({'ok': False, 'error': 'Companionul tău este KO. Vindecă-l înainte.'})
+
+    npc = generate_npc(player['level'], zone='pescuit')
+
+    moveset_data = []
+    for mk in player['moveset']:
+        m = get_move(mk)
+        if m:
+            moveset_data.append({'key': m['key'], 'name': m['name'], 'icon': m['icon'],
+                                  'type': m['type'], 'power': m['power'],
+                                  'mp': player['mp'].get(m['key'], 15),
+                                  'max_mp': m.get('max_mp', 15), 'nature': m.get('nature')})
+
+    session['battle_player']          = player
+    session['pescuit_npc']            = npc
+    session['pescuit_participants']   = [player['id']]
+
+    return jsonify({
+        'ok': True, 'appeared': True,
+        'player': {
+            'id': player['id'], 'name': player['name'], 'species': player['species'],
+            'nature': player['nature'], 'level': player['level'],
+            'hp_max': player['hp_max'], 'hp_current': player['hp_current'],
+            'image_url': player['image_url'], 'moveset': moveset_data,
+            'status': None, 'shield': 0,
+        },
+        'npc': {
+            'id': npc['id'], 'name': npc['name'], 'species': npc['species'],
+            'nature': npc['nature'], 'level': npc['level'],
+            'hp_max': npc['hp_max'], 'hp_current': npc['hp_current'],
+            'image_url': npc['image_url'], 'status': None, 'shield': 0,
+        },
+    })
+
+
+@app.route('/joc/petomania/api/pescuit/state')
+@login_required
+def api_pescuit_state():
+    from moves_config import get_move
+    player = session.get('battle_player')
+    npc    = session.get('pescuit_npc')
+    if not player or not npc:
+        return jsonify({'ok': False, 'active': False})
+
+    moveset_data = []
+    for mk in player.get('moveset', []):
+        m = get_move(mk)
+        if m:
+            moveset_data.append({'key': m['key'], 'name': m['name'], 'icon': m['icon'],
+                                  'type': m['type'], 'power': m['power'],
+                                  'mp': player.get('mp', {}).get(m['key'], 15),
+                                  'max_mp': m.get('max_mp', 15), 'nature': m.get('nature')})
+
+    conn = get_db()
+    fresh = conn.execute('SELECT hp_current FROM pets WHERE user_id = ?',
+                         (int(get_current_user()['id']),)).fetchone()
+    conn.close()
+    if fresh:
+        player['hp_current'] = fresh['hp_current']
+        session['battle_player'] = player
+
+    return jsonify({
+        'ok': True, 'active': True,
+        'player': {
+            'id': player['id'], 'name': player['name'],
+            'level': player.get('level', 1),
+            'hp_max': player['hp_max'], 'hp_current': player['hp_current'],
+            'image_url': player.get('image_url', ''),
+            'moveset': moveset_data, 'status': player.get('status'), 'shield': player.get('shield', 0),
+        },
+        'npc': {
+            'id': npc['id'], 'name': npc['name'],
+            'level': npc.get('level', 1),
+            'hp_max': npc['hp_max'], 'hp_current': npc['hp_current'],
+            'image_url': npc.get('image_url', ''),
+            'status': npc.get('status'), 'shield': npc.get('shield', 0),
+        },
+    })
+
+
+@app.route('/joc/petomania/api/pescuit/turn', methods=['POST'])
+@login_required
+def api_pescuit_turn():
+    from modules.battle import execute_turn, calculate_reward, save_combatant_mp
+    user   = get_current_user()
+    uid    = int(user['id'])
+    player = session.get('battle_player')
+    npc    = session.get('pescuit_npc')
+    if not player or not npc:
+        return jsonify({'ok': False, 'error': 'Nicio bătălie activă.'})
+
+    if player.get('id') is None or player.get('id') == 0:
+        conn = get_db()
+        fresh = conn.execute('SELECT hp_current FROM pets WHERE user_id = ?', (uid,)).fetchone()
+        conn.close()
+        if fresh:
+            player['hp_current'] = fresh['hp_current']
+
+    move_key = (request.json or {}).get('move_key', 'scratch')
+    result   = execute_turn(player, npc, move_key)
+
+    _save_player_hp(player, uid)
+    save_combatant_mp(player, uid)
+
+    session['battle_player'] = player
+    session['pescuit_npc']   = npc
+
+    if result['winner'] == 'player':
+        xp_total     = max(1, calculate_reward(player['level'], npc['level'], True) // 3)
+        participants = session.get('pescuit_participants', [player['id']])
+        xp_results   = add_battle_xp(uid, xp_total, participants)
+        session.pop('battle_player', None)
+        session.pop('pescuit_npc', None)
+        session.pop('pescuit_participants', None)
+        return jsonify({
+            'ok': True, 'log': result['log'],
+            'player': result['player'], 'npc': result['npc'],
+            'winner': 'player', 'reward': 0, 'xp_results': xp_results,
+        })
+
+    if result['winner'] == 'npc':
+        _save_bench_hp([])
+        session.pop('battle_player', None)
+        session.pop('pescuit_npc', None)
+        session.pop('pescuit_participants', None)
+        return jsonify({
+            'ok': True, 'log': result['log'],
+            'player': result['player'], 'npc': result['npc'],
+            'winner': 'npc', 'reward': 0,
+        })
+
+    return jsonify({
+        'ok': True, 'log': result['log'],
+        'player': result['player'], 'npc': result['npc'],
+        'winner': None, 'reward': 0,
+    })
+
+
+@app.route('/joc/petomania/api/pescuit/flee', methods=['POST'])
+@login_required
+def api_pescuit_flee():
+    session.pop('battle_player', None)
+    session.pop('pescuit_npc', None)
+    session.pop('pescuit_participants', None)
+    return jsonify({'ok': True})
+
+
+@app.route('/joc/petomania/api/pescuit/abandon', methods=['POST'])
+@login_required
+def api_pescuit_abandon():
+    session.pop('battle_player', None)
+    session.pop('pescuit_npc', None)
+    session.pop('pescuit_participants', None)
+    return jsonify({'ok': True})
+
+
+@app.route('/joc/petomania/api/pescuit/capture', methods=['POST'])
+@login_required
+def api_pescuit_capture():
+    import json, random, time
+    from cogs.petgame_config import SPECIES
+    user = get_current_user()
+    uid  = int(user['id'])
+
+    npc = session.get('pescuit_npc')
+    if not npc:
+        return jsonify({'ok': False, 'msg': 'Nu ești în luptă.'})
+
+    data     = request.json or {}
+    item_key = data.get('item_key', 'nexus_basic')
+
+    conn = get_db()
+    inv_row = conn.execute(
+        'SELECT quantity FROM inventory WHERE user_id = ? AND category = ? AND item_key = ?',
+        (uid, 'nexus', item_key)
+    ).fetchone()
+    if not inv_row or inv_row['quantity'] < 1:
+        conn.close()
+        return jsonify({'ok': False, 'msg': 'Nu ai acest Nexus în inventar.'})
+
+    hp_current = npc.get('hp_current', 1)
+    hp_max     = npc.get('hp_max', 1)
+    status     = npc.get('status')
+
+    base_rate   = 0.30
+    hp_ratio    = hp_current / max(hp_max, 1)
+    hp_modifier = (1.0 - hp_ratio) * 0.50
+    STATUS_BONUSES = {'stun': 0.15, 'freeze': 0.15, 'sleep': 0.15, 'burn': 0.10, 'poison': 0.10, 'speed_down': 0.05}
+    status_modifier = STATUS_BONUSES.get(status, 0.0)
+    capture_rate = min(0.90, base_rate + hp_modifier + status_modifier)
+    success      = random.random() <= capture_rate
+
+    new_qty = inv_row['quantity'] - 1
+    if new_qty == 0:
+        conn.execute('DELETE FROM inventory WHERE user_id = ? AND category = ? AND item_key = ?', (uid, 'nexus', item_key))
+    else:
+        conn.execute('UPDATE inventory SET quantity = ? WHERE user_id = ? AND category = ? AND item_key = ?', (new_qty, uid, 'nexus', item_key))
+    conn.commit()
+
+    if not success:
+        conn.close()
+        return jsonify({'ok': True, 'caught': False, 'rate': round(capture_rate * 100),
+                        'msg': f'Nexusul s-a spart! {npc["name"]} a scăpat. (Șansă: {round(capture_rate*100)}%)'})
+
+    species      = npc.get('species', 'goldfish')
+    nature       = npc.get('nature')
+    level        = npc.get('level', 1)
+    gender       = 'male'  # goldfish e asexuat — stocam male ca default
+
+    species_data = SPECIES.get(species, {})
+    from modules.pets import get_form
+    form         = get_form(level)
+    entry        = species_data.get('entries', {}).get(form, {})
+    default_name = entry.get('name', species_data.get('name', 'Companion'))
+
+    from cogs.petgame_stats import get_stats_at_level
+    stats     = get_stats_at_level(species, nature, level, form)
+    hp_max_new = stats['hp']
+
+    now = int(time.time())
+    conn.execute(
+        """INSERT INTO menagerie
+           (user_id, species, nature, name, level, xp, gender,
+            hunger, happiness, cleanliness, energy, sleeping,
+            born_at, stored_at, hp, hp_current)
+           VALUES (?,?,?,?,?,0,?,100,100,100,100,0,?,?,?,?)""",
+        (uid, species, nature, default_name, level, gender, now, now, hp_max_new, hp_max_new)
+    )
+    conn.commit()
+    conn.close()
+
+    from modules.companicon import sync_companicon_discovered
+    sync_companicon_discovered(uid)
+
+    session.pop('pescuit_npc', None)
+    session.pop('battle_player', None)
+    session.pop('pescuit_participants', None)
+
+    nat_icon = {'water': '💧', 'dragon': '🐉'}.get(nature, '')
+    return jsonify({
+        'ok': True, 'caught': True, 'rate': round(capture_rate * 100),
+        'name': default_name, 'species': species_data.get('name', species),
+        'nature': nature, 'level': level, 'gender': gender,
+        'msg': f'{default_name} a fost capturat!',
+    })
+
+
 @app.route('/joc/petomania/padure')
 @login_required
 def padure():
