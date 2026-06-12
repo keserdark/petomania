@@ -208,6 +208,21 @@ ROOM_ITEMS = {
             'z_index':   10,
             'linear':    True,
         },
+        {
+            'key':       'Covor',
+            'name':      'Covor',
+            'desc':      'Covor persan, țesut manual.',
+            'price':     1000,
+            'file':      'covor.png',
+            'default':   False,
+            'clickable': False,
+            'action':    None,
+            'pos_x':     0,
+            'pos_y':     0,
+            'width':     100,
+            'z_index':   2,
+            'linear':    True,
+        },
     ],
 }
 
