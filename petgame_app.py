@@ -1831,6 +1831,10 @@ def api_battle_capture():
     user = get_current_user()
     uid  = int(user['id'])
 
+    # Captura blocata in arena — Corvin nu permite
+    return jsonify({'ok': False, 'caught': False, 'blocked': True,
+                    'msg': 'Captura nu este permisă în Arenă.'})
+
     # Verifica ca suntem in lupta
     npc = session.get('battle_npc')
     if not npc:
