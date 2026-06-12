@@ -2522,6 +2522,12 @@ def api_vanatoare_capture():
 def padure():
     return render_template('padure.html')
 
+
+@app.route('/joc/petomania/paduremid')
+@login_required
+def paduremid():
+    return render_template('paduremid.html')
+
 if __name__ == '__main__':
     init_db()
     app.run(host='0.0.0.0', port=5002, debug=False)

@@ -3,58 +3,317 @@
 {% block title %}Pădure{% endblock %}
 
 {% block content %}
-<div class="padure-wrap">
-    <div class="padure-placeholder">
-        <div class="padure-icon">🌲</div>
-        <h1 class="padure-title">Pădurea Regnum Dacorum</h1>
-        <p class="padure-desc">Această zonă este în curs de dezvoltare.<br>Curând vei putea vâna și explora adâncurile pădurii.</p>
-        <a href="{{ url_for('oras') }}" class="padure-back">← Înapoi la Oraș</a>
+<div class="arena-wrap" id="padure-wrap">
+    <canvas id="padure-canvas"></canvas>
+    <div id="padure-tooltip" class="city-tooltip"></div>
+        
+        </div>
     </div>
+
+    <!-- BATTLE UI -->
+    <div id="battle-ui" style="display:none">
+        <div class="battle-scene">
+
+            <!-- NPC — dreapta sus -->
+            <div class="battle-combatant battle-enemy">
+                <div class="battle-info battle-info-enemy">
+                    <div class="battle-name" id="npc-name">—</div>
+                    <div class="battle-level" id="npc-level">Nv.—</div>
+                    <div class="battle-status" id="npc-status"></div>
+                    <div class="battle-hp-bar-bg">
+                        <div class="battle-hp-bar-fill" id="npc-hp-bar" style="width:100%"></div>
+                    </div>
+                    <div class="battle-hp-text" id="npc-hp-text">—/—</div>
+                </div>
+                <img id="npc-img" src="" alt="" class="battle-pet-img battle-enemy-img">
+            </div>
+
+            <!-- PLAYER — stanga jos -->
+            <div class="battle-combatant battle-player">
+                <img id="player-img" src="" alt="" class="battle-pet-img battle-player-img">
+                <div class="battle-info battle-info-player">
+                    <div class="battle-name" id="player-name">—</div>
+                    <div class="battle-level" id="player-level">Nv.—</div>
+                    <div class="battle-status" id="player-status"></div>
+                    <div class="battle-hp-bar-bg">
+                        <div class="battle-hp-bar-fill" id="player-hp-bar" style="width:100%"></div>
+                    </div>
+                    <div class="battle-hp-text" id="player-hp-text">—/—</div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- LOG -->
+        <div class="battle-log" id="battle-log"></div>
+
+        <!-- CONTROLS -->
+        <div class="battle-controls" id="battle-controls">
+            <div class="battle-moves" id="battle-moves"></div>
+            <button class="battle-flee-btn" onclick="fleeBattle()">🏃 Fugi</button>
+        </div>
+
+        <!-- RESULT overlay -->
+        <div class="battle-result" id="battle-result" style="display:none">
+            <div class="battle-result-box">
+                <div class="battle-result-icon" id="result-icon"></div>
+                <div class="battle-result-title" id="result-title"></div>
+                <div class="battle-result-reward" id="result-reward"></div>
+                <button class="assets-popup-btn" onclick="closeBattle()">
+                    <span class="assets-popup-btn-icon">🏟️</span>
+                    <span>Înapoi la Arenă</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Buton Inapoi -->
+    <a href="{{ url_for('oras') }}" class="room-care-btn" id="btn-back-oras"
+       style="z-index:30; top:auto; bottom:14px; right:auto; left:14px;">
+        ← Oraș
+    </a>
 </div>
+    </div>
+    </div>
+    </div>
+    </div>
+
+
 {% endblock %}
 
 {% block scripts %}
 <style>
-.padure-wrap {
+.training-zones {
     display: flex;
-    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+    flex-wrap: nowrap;
     justify-content: center;
-    height: calc(100vh - var(--footbar-h));
 }
-.padure-placeholder {
-    text-align: center;
-    padding: 40px;
-}
-.padure-icon {
-    font-size: 72px;
-    margin-bottom: 20px;
-}
-.padure-title {
-    font-family: 'Cinzel', serif;
-    font-size: clamp(20px, 2vw, 28px);
-    color: var(--gold);
-    margin-bottom: 12px;
-}
-.padure-desc {
-    font-size: 15px;
-    color: var(--text-muted);
-    line-height: 1.7;
-    margin-bottom: 28px;
-}
-.padure-back {
-    display: inline-block;
-    padding: 10px 24px;
+.zone-btn {
+    flex: 1;
+    padding: clamp(10px,1vh,16px) clamp(8px,0.8vw,14px);
     background: var(--bg-elev);
     border: 1px solid var(--border);
+    border-left: 3px solid var(--border);
     border-radius: 10px;
-    color: var(--text-secondary);
-    text-decoration: none;
-    font-size: 13px;
-    transition: border-color 0.15s, color 0.15s;
+    color: var(--text-primary);
+    cursor: pointer;
+    text-align: center;
+    font-family: 'Cinzel', serif;
+    font-size: clamp(10px,0.9vw,13px);
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
 }
-.padure-back:hover {
+.zone-btn:hover {
+    background: var(--gold-soft);
     border-color: var(--gold-dim);
     color: var(--gold);
 }
+.zone-btn .zone-name { font-weight: 700; font-size: clamp(11px,1vw,14px); display: block; margin-bottom: 4px; }
+.zone-btn .zone-range { opacity: 0.6; font-size: clamp(9px,0.8vw,11px); }
+.zone-btn.locked { opacity: 0.35; cursor: not-allowed; }
+.zone-btn.locked:hover { background: var(--bg-elev); border-color: var(--border); color: var(--text-primary); }
+.move-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: clamp(10px,1vh,14px) clamp(12px,1.2vw,18px);
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: background 0.1s, border-color 0.1s;
+    border-left: 3px solid transparent;
+}
+.move-item:hover { background: var(--gold-soft); border-left-color: var(--gold-dim); }
+.move-item.known { opacity: 0.45; cursor: default; pointer-events: none; }
+.move-icon { font-size: clamp(18px,1.8vw,26px); width: 32px; text-align: center; }
+.move-info { flex: 1; }
+.move-name { font-size: clamp(12px,1.1vw,15px); font-weight: 600; font-family: 'Cinzel', serif; color: var(--text-primary); }
+.move-meta { font-size: clamp(10px,0.9vw,12px); color: var(--text-muted); margin-top: 3px; }
+.move-cost { font-size: clamp(11px,1vw,13px); color: var(--gold); white-space: nowrap; font-family: 'Cinzel', serif; }
+.move-known-badge { font-size: clamp(10px,0.9vw,12px); color: #4caf7d; white-space: nowrap; }
+.training-pet-btn {
+    display: flex;
+    align-items: center;
+    gap: clamp(10px,1vw,16px);
+    padding: clamp(10px,1vh,16px) clamp(14px,1.4vw,22px);
+    background: var(--bg-elev);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--border);
+    border-radius: 10px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    width: 100%;
+    color: var(--text-primary);
+    font-family: 'Cinzel', serif;
+    font-size: clamp(11px,1.1vw,15px);
+    font-weight: 600;
+    transition: background 0.15s, border-color 0.15s, color 0.15s;
+    text-align: left;
+}
+.training-pet-btn:hover { background: var(--gold-soft); border-color: var(--gold-dim); color: var(--gold); }
+.training-pet-nature { font-size: clamp(20px,2vw,28px); flex-shrink: 0; }
+.training-pet-info { flex: 1; }
+.training-pet-name { font-size: clamp(12px,1.1vw,16px); font-weight: 700; }
+.training-pet-sub { font-size: clamp(10px,0.9vw,12px); color: var(--text-muted); margin-top: 3px; font-family: 'Inter', sans-serif; font-weight: 400; }
 </style>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/assets.css') }}">
+<style>
+.arena-wrap {
+    position: relative;
+    height: calc(100vh - var(--footbar-h));
+    width: auto;
+    aspect-ratio: 1287 / 816;
+    max-width: calc(100vw - var(--sidebar-w));
+    min-width: 0;
+    max-height: calc((100vw - var(--sidebar-w)) * 816 / 1287);
+    overflow: hidden;
+    background: #0a0a0a;
+    flex-shrink: 0;
+}
+#arena-canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+}
+</style>
+<script>
+const W = 1287;
+const H = 816;
+const BASE = '/static/padure/';
+
+const canvas  = document.getElementById('padure-canvas');
+const ctx     = canvas.getContext('2d', { willReadFrequently: true });
+const tooltip = document.getElementById('padure-tooltip');
+const wrap    = document.getElementById('padure-wrap');
+
+canvas.width  = W;
+canvas.height = H;
+
+const bgImg     = new Image();
+bgImg.crossOrigin = 'anonymous';
+bgImg.src = BASE + 'ForestEntry.png';
+
+const arrowImg = new Image();
+arrowImg.crossOrigin = 'anonymous';
+arrowImg.src = BASE + 'ForestEntryArrow.png';
+
+// Battle background
+const battleBg = new Image();
+battleBg.crossOrigin = 'anonymous';
+battleBg.src = BASE + 'battle.png';
+
+const arrowOff = document.createElement('canvas');
+arrowOff.width  = W;
+arrowOff.height = H;
+
+let loaded = 0;
+function onLoad() {
+    loaded++;
+    if (loaded < 2) return;
+    ctx.drawImage(bgImg, 0, 0, W, H);
+    ctx.drawImage(arrowImg, 0, 0, W, H);
+    const oc = arrowOff.getContext('2d', { willReadFrequently: true });
+    oc.drawImage(arrowImg, 0, 0, W, H);
+}
+bgImg.onload     = onLoad;
+arrowImg.onload = onLoad;
+battleBg.onload  = () => {};  // preload
+
+function redraw(hover) {
+    ctx.clearRect(0, 0, W, H);
+    ctx.drawImage(bgImg, 0, 0, W, H);
+    ctx.drawImage(arrowImg, 0, 0, W, H);
+    if (hover) {
+        ctx.save();
+        ctx.globalAlpha = 0.45;
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.drawImage(arrowImg, 0, 0, W, H);
+        ctx.restore();
+    }
+}
+
+let lastHit      = 0;
+let currentHover = false;
+let popupOpen    = false;
+let inBattle     = false;
+
+canvas.addEventListener('mousemove', (e) => {
+    if (popupOpen || inBattle) return;
+    if (currentHover) {
+        tooltip.style.left = (e.clientX - wrap.getBoundingClientRect().left + 14) + 'px';
+        tooltip.style.top  = (e.clientY - wrap.getBoundingClientRect().top  - 8)  + 'px';
+    }
+    const now = Date.now();
+    if (now - lastHit < 33) return;
+    lastHit = now;
+    const rect  = canvas.getBoundingClientRect();
+    const x = Math.floor((e.clientX - rect.left) * W / rect.width);
+    const y = Math.floor((e.clientY - rect.top)  * H / rect.height);
+    const oc    = arrowOff.getContext('2d', { willReadFrequently: true });
+    const alpha = oc.getImageData(x, y, 1, 1).data[3];
+    const hit   = alpha > 20;
+    if (hit !== currentHover) {
+        currentHover = hit;
+        canvas.style.cursor   = hit ? 'pointer' : 'default';
+        tooltip.style.opacity = hit ? '1' : '0';
+        if (hit) tooltip.textContent = '🌲 Intră în Pădure';
+        redraw(hit);
+    }
+});
+
+canvas.addEventListener('click', (e) => {
+    if (inBattle) return;
+    const rect  = canvas.getBoundingClientRect();
+    const x = Math.floor((e.clientX - rect.left) * W / rect.width);
+    const y = Math.floor((e.clientY - rect.top)  * H / rect.height);
+    const oc    = arrowOff.getContext('2d', { willReadFrequently: true });
+    const alpha = oc.getImageData(x, y, 1, 1).data[3];
+    if (alpha > 20) window.location.href = '/joc/petomania/paduremid';
+});
+
+canvas.addEventListener('mouseleave', () => {
+    tooltip.style.opacity = '0';
+    canvas.style.cursor   = 'default';
+    currentHover = false;
+    if (!inBattle) redraw(false);
+});
+
+// Fade pulse
+let isHovering = false;
+let fadeAlpha = 0, fadeDir = 1, fadActive = false;
+
+function fadeStep() {
+    if (isHovering || inBattle) return;
+    fadeAlpha += fadeDir * 0.05;
+    if (fadeAlpha >= 1) { fadeAlpha = 1; fadeDir = -1; }
+    else if (fadeAlpha <= 0) {
+        fadeAlpha = 0; fadeDir = 1; fadActive = false;
+        ctx.clearRect(0, 0, W, H);
+        ctx.drawImage(bgImg, 0, 0, W, H);
+        ctx.drawImage(arrowImg, 0, 0, W, H);
+        return;
+    }
+    ctx.clearRect(0, 0, W, H);
+    ctx.drawImage(bgImg, 0, 0, W, H);
+    ctx.drawImage(arrowImg, 0, 0, W, H);
+    ctx.save();
+    ctx.globalAlpha = fadeAlpha * 0.35;
+    ctx.globalCompositeOperation = 'lighter';
+    ctx.drawImage(arrowImg, 0, 0, W, H);
+    ctx.restore();
+    requestAnimationFrame(fadeStep);
+}
+
+setInterval(() => {
+    if (isHovering || fadActive || inBattle) return;
+    fadActive = true; fadeAlpha = 0; fadeDir = 1;
+    requestAnimationFrame(fadeStep);
+}, 3000);
+
+canvas.addEventListener('mouseenter', () => { isHovering = true; fadActive = false; });
+canvas.addEventListener('mouseleave', () => { isHovering = false; if (!inBattle) redraw(false); });
+
+
+</script>
 {% endblock %}

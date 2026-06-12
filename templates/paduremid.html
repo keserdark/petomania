@@ -1,0 +1,26 @@
+{% extends "base_joc.html" %}
+{% block content_class %}pet-content-city{% endblock %}
+{% block title %}Pădure Adâncă{% endblock %}
+
+{% block content %}
+<div class="padure-wrap">
+    <div class="padure-placeholder">
+        <div class="padure-icon">🌳</div>
+        <h1 class="padure-title">Adâncurile Pădurii</h1>
+        <p class="padure-desc">Această zonă este în curs de dezvoltare.<br>Curând vei putea vâna creaturi rare în inima pădurii.</p>
+        <a href="{{ url_for('padure') }}" class="padure-back">← Înapoi la Intrare</a>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<style>
+.padure-wrap { display:flex; align-items:center; justify-content:center; height:calc(100vh - var(--footbar-h)); }
+.padure-placeholder { text-align:center; padding:40px; }
+.padure-icon { font-size:72px; margin-bottom:20px; }
+.padure-title { font-family:'Cinzel',serif; font-size:clamp(20px,2vw,28px); color:var(--gold); margin-bottom:12px; }
+.padure-desc { font-size:15px; color:var(--text-muted); line-height:1.7; margin-bottom:28px; }
+.padure-back { display:inline-block; padding:10px 24px; background:var(--bg-elev); border:1px solid var(--border); border-radius:10px; color:var(--text-secondary); text-decoration:none; font-size:13px; transition:border-color .15s,color .15s; }
+.padure-back:hover { border-color:var(--gold-dim); color:var(--gold); }
+</style>
+{% endblock %}
