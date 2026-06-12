@@ -442,9 +442,7 @@ function openBag() {
     }
 }
 
-// Interceptor pentru captură — rucsac_widget.js apeleaza /api/rucsac/use
-// Suprascriem fetch global ca sa detectam raspunsuri de captura
-// Interceptor fetch pentru captură
+// Interceptor fetch — nexus in arena -> Corvin furios
 const _origFetch = window.fetch;
 window.fetch = async function(...args) {
     const resp = await _origFetch(...args);
@@ -454,14 +452,10 @@ window.fetch = async function(...args) {
         try {
             const data = await clone.json();
             if (data.caught !== undefined) {
-                if (data.caught) {
-                    if (typeof rucsacToggle === 'function' && typeof rbOpen !== 'undefined' && rbOpen) {
-                        rucsacToggle();
-                    }
-                    setTimeout(() => showCaptureSuccess(data), 400);
-                } else {
-                    addLog(`🔮 ${data.msg}`);
+                if (typeof rucsacToggle === 'function' && typeof rbOpen !== 'undefined' && rbOpen) {
+                    rucsacToggle();
                 }
+                setTimeout(() => showCorvinFurios(), 300);
             }
         } catch(e) {}
         return resp;
@@ -469,32 +463,28 @@ window.fetch = async function(...args) {
     return resp;
 };
 
-function showCaptureSuccess(data) {
-    battleData.npc  = null;
+function showCorvinFurios() {
     battleData.busy = false;
-    const NICONS = {fire:'🔥',water:'💧',nature:'🌿',earth:'⛰️',storm:'⚡',ice:'❄️',shadow:'🌑',crystal:'💎',steel:'⚙️',light:'✨',dragon:'🐉'};
-    const natIcon    = data.nature && NICONS[data.nature] ? NICONS[data.nature] : '';
-    const genderIcon = data.gender === 'male' ? '♂️' : '♀️';
-    let overlay = document.getElementById('capture-overlay');
+    let overlay = document.getElementById('corvin-furios-overlay');
     if (!overlay) {
         overlay = document.createElement('div');
-        overlay.id = 'capture-overlay';
-        overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:500;display:flex;align-items:center;justify-content:center';
+        overlay.id = 'corvin-furios-overlay';
+        overlay.style.cssText = 'position:fixed;inset:0;z-index:500;display:flex;align-items:center;justify-content:center;';
         document.body.appendChild(overlay);
     }
     overlay.innerHTML = `
-        <div style="background:var(--bg-card,#1a1a2e);border:1px solid rgba(201,168,76,0.3);border-radius:16px;padding:36px 40px;text-align:center;max-width:380px;width:90vw;box-shadow:0 8px 40px rgba(0,0,0,0.6)">
-            <div style="font-size:48px;margin-bottom:12px">🔮</div>
-            <div style="font-family:'Cinzel',serif;font-size:22px;font-weight:700;color:var(--gold,#c9a84c);margin-bottom:8px">Capturat!</div>
-            <div style="font-size:16px;font-weight:600;margin-bottom:4px">${data.name}</div>
-            <div style="font-size:13px;opacity:0.6;margin-bottom:20px">${data.species} ${genderIcon} · Nv.${data.level} · ${natIcon} ${data.nature || ''}</div>
-            <button onclick="document.getElementById('capture-overlay').remove();window.location.href='/joc/petomania/menajerie';"
+        <div style="position:absolute;inset:0;background-size:cover;background-position:center top;background-image:url('/static/arena/CorvinAngry.png');filter:brightness(0.4)"></div>
+        <div style="position:relative;z-index:1;background:var(--bg-card,#1a1a2e);border:1px solid rgba(220,50,50,0.4);border-radius:16px;padding:32px 36px;max-width:460px;width:90vw;box-shadow:0 8px 40px rgba(0,0,0,0.85);text-align:center">
+            <div style="font-family:'Cinzel',serif;font-size:20px;font-weight:700;color:#e05252;margin-bottom:16px">Corvin Vargan</div>
+            <div style="font-size:14px;line-height:1.9;color:var(--text-secondary,#aaa);margin-bottom:24px">
+                "Ce crezi exact că faci? Unde te crezi aici, pe coclauri!?<br>
+                Aici nu se prind companioni, aici doar se luptă!<br>
+                Acești companioni sunt ai mei!<br><br>
+                Dacă vrei companioni noi, du-te în pădure!!!"
+            </div>
+            <button onclick="document.getElementById('corvin-furios-overlay').remove();window.location.href='/joc/petomania/arena';"
                 style="background:rgba(201,168,76,0.15);border:1px solid rgba(201,168,76,0.4);color:var(--gold,#c9a84c);font-family:'Cinzel',serif;font-size:14px;font-weight:600;padding:12px 28px;border-radius:10px;cursor:pointer;width:100%">
-                Mergi la Menajerie
-            </button>
-            <button onclick="document.getElementById('capture-overlay').remove();window.location.href='/joc/petomania/arena';"
-                style="background:transparent;border:1px solid rgba(255,255,255,0.15);color:rgba(255,255,255,0.6);font-size:13px;padding:10px 28px;border-radius:10px;cursor:pointer;width:100%;margin-top:8px">
-                Înapoi la Arenă
+                Scuze, nu știam.
             </button>
         </div>`;
 }
