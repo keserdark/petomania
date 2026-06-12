@@ -6,79 +6,13 @@
 <div class="arena-wrap" id="padure-wrap">
     <canvas id="padure-canvas"></canvas>
     <div id="padure-tooltip" class="city-tooltip"></div>
-        
-        </div>
-    </div>
-
-    <!-- BATTLE UI -->
-    <div id="battle-ui" style="display:none">
-        <div class="battle-scene">
-
-            <!-- NPC — dreapta sus -->
-            <div class="battle-combatant battle-enemy">
-                <div class="battle-info battle-info-enemy">
-                    <div class="battle-name" id="npc-name">—</div>
-                    <div class="battle-level" id="npc-level">Nv.—</div>
-                    <div class="battle-status" id="npc-status"></div>
-                    <div class="battle-hp-bar-bg">
-                        <div class="battle-hp-bar-fill" id="npc-hp-bar" style="width:100%"></div>
-                    </div>
-                    <div class="battle-hp-text" id="npc-hp-text">—/—</div>
-                </div>
-                <img id="npc-img" src="" alt="" class="battle-pet-img battle-enemy-img">
-            </div>
-
-            <!-- PLAYER — stanga jos -->
-            <div class="battle-combatant battle-player">
-                <img id="player-img" src="" alt="" class="battle-pet-img battle-player-img">
-                <div class="battle-info battle-info-player">
-                    <div class="battle-name" id="player-name">—</div>
-                    <div class="battle-level" id="player-level">Nv.—</div>
-                    <div class="battle-status" id="player-status"></div>
-                    <div class="battle-hp-bar-bg">
-                        <div class="battle-hp-bar-fill" id="player-hp-bar" style="width:100%"></div>
-                    </div>
-                    <div class="battle-hp-text" id="player-hp-text">—/—</div>
-                </div>
-            </div>
-
-        </div>
-
-        <!-- LOG -->
-        <div class="battle-log" id="battle-log"></div>
-
-        <!-- CONTROLS -->
-        <div class="battle-controls" id="battle-controls">
-            <div class="battle-moves" id="battle-moves"></div>
-            <button class="battle-flee-btn" onclick="fleeBattle()">🏃 Fugi</button>
-        </div>
-
-        <!-- RESULT overlay -->
-        <div class="battle-result" id="battle-result" style="display:none">
-            <div class="battle-result-box">
-                <div class="battle-result-icon" id="result-icon"></div>
-                <div class="battle-result-title" id="result-title"></div>
-                <div class="battle-result-reward" id="result-reward"></div>
-                <button class="assets-popup-btn" onclick="closeBattle()">
-                    <span class="assets-popup-btn-icon">🏟️</span>
-                    <span>Înapoi la Arenă</span>
-                </button>
-            </div>
-        </div>
-    </div>
 
     <!-- Buton Inapoi -->
-    <a href="{{ url_for('oras') }}" class="room-care-btn" id="btn-back-oras"
+    <a href="{{ url_for('oras') }}" class="room-care-btn"
        style="z-index:30; top:auto; bottom:14px; right:auto; left:14px;">
         ← Oraș
     </a>
 </div>
-    </div>
-    </div>
-    </div>
-    </div>
-
-
 {% endblock %}
 
 {% block scripts %}
@@ -170,7 +104,7 @@
     background: #0a0a0a;
     flex-shrink: 0;
 }
-#arena-canvas {
+#padure-canvas {
     position: absolute;
     inset: 0;
     width: 100%;
