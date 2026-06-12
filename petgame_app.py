@@ -2517,6 +2517,11 @@ def api_vanatoare_capture():
         'gender':  gender,
         'msg':     f'{default_name} a fost capturat!',
     })
+@app.route('/joc/petomania/padure')
+@login_required
+def padure():
+    return render_template('padure.html')
+
 if __name__ == '__main__':
     init_db()
     app.run(host='0.0.0.0', port=5002, debug=False)

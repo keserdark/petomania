@@ -53,6 +53,13 @@
                 <div class="city-loc-desc">Luptă PvP</div>
             </div>
         </a>
+        <a href="{{ url_for('padure') }}" class="city-loc-item">
+            <span class="city-loc-icon">🌲</span>
+            <div>
+                <div class="city-loc-name">Pădure</div>
+                <div class="city-loc-desc">Vânătoare și explorare</div>
+            </div>
+        </a>
     </div>
 
 </div>
@@ -75,6 +82,7 @@ const ZONES = [
     { file: 'piata.png',    href: '{{ url_for("piata") }}',    label: '🏪 Piață' },
     { file: 'aventura.png', href: '{{ url_for("aventura") }}', label: '⚔️ Aventură' },
     { file: 'arena.png',    href: '{{ url_for("arena") }}',    label: '🏟️ Arenă' },
+    { file: 'padure.png',   href: '{{ url_for("padure") }}',   label: '🌲 Pădure' },
 ];
 
 const BASE = '/static/city/';
