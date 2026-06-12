@@ -2177,6 +2177,10 @@ def api_vanatoare_turn():
         session.pop('vanatoare_npc_index', None)
         session.pop('vanatoare_accumulated_reward', None)
         session.pop('vanatoare_participants', None)
+        # 5% sansa de trigger Daiana Solaris
+        import random as _random
+        if _random.random() < 0.05:
+            session['daiana_trigger'] = True
     elif result['winner'] == 'npc':
         _save_player_hp(player, uid, hp_override=0)
         bench = session.get('vanatoare_bench', [])
@@ -2193,6 +2197,9 @@ def api_vanatoare_turn():
             session.pop('vanatoare_npc_index', None)
             session.pop('vanatoare_accumulated_reward', None)
             session.pop('vanatoare_participants', None)
+            import random as _random3
+            if _random3.random() < 0.05:
+                session['daiana_trigger'] = True
 
     return jsonify({
         'ok': True, 'log': result['log'],
@@ -2214,6 +2221,9 @@ def api_vanatoare_flee():
         _save_player_hp(player, uid, hp_override=hp_flee)
     session.pop('battle_player', None)
     session.pop('vanatoare_npc', None)
+    import random as _random
+    if _random.random() < 0.05:
+        session['daiana_trigger'] = True
     return jsonify({'ok': True})
 
 
@@ -2376,6 +2386,9 @@ def api_vanatoare_abandon():
     session.pop('battle_player', None)
     session.pop('vanatoare_npc', None)
     session.pop('vanatoare_bench', None)
+    import random as _random2
+    if _random2.random() < 0.05:
+        session['daiana_trigger'] = True
     return jsonify({'ok': True})
 
 
@@ -2562,6 +2575,46 @@ def api_castel_concesiune():
         return jsonify({'ok': False, 'insufficient': True})
     set_user_permission(uid, 'concesiunevanatoare', 1)
     return jsonify({'ok': True})
+
+
+# ── DAIANA SOLARIS ────────────────────────────────────────────────────────
+
+@app.route('/joc/petomania/api/daiana/check')
+@login_required
+def api_daiana_check():
+    from modules.db import get_user_permissions, get_dacoins
+    user  = get_current_user()
+    uid   = int(user['id'])
+    trigger = session.pop('daiana_trigger', False)
+    if not trigger:
+        return jsonify({'trigger': False})
+    perms   = get_user_permissions(uid)
+    balance = get_dacoins(uid)
+    return jsonify({
+        'trigger':              True,
+        'concesiunevanatoare':  perms.get('concesiunevanatoare', 0),
+        'daiana_warned':        perms.get('daiana_warned', 0),
+        'balance':              balance,
+    })
+
+
+@app.route('/joc/petomania/api/daiana/amenda', methods=['POST'])
+@login_required
+def api_daiana_amenda():
+    from modules.db import get_user_permissions, get_dacoins, set_user_permission, spend_dacoins
+    user  = get_current_user()
+    uid   = int(user['id'])
+    perms = get_user_permissions(uid)
+
+    # Markeaza ca a fost avertizat
+    set_user_permission(uid, 'daiana_warned', 1)
+
+    balance = get_dacoins(uid)
+    amenda  = min(1000, balance)
+    if amenda > 0:
+        spend_dacoins(uid, amenda)
+
+    return jsonify({'ok': True, 'amenda': amenda, 'balance_ramas': balance - amenda})
 
 
 if __name__ == '__main__':
