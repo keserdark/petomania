@@ -1964,6 +1964,559 @@ def api_menajerie_delete():
     return jsonify({'ok': True})
 
 
+
+# ── VÂNĂTOARE (CLONA BATTLE) ────────────────────────────────────────────
+
+@app.route('/joc/petomania/api/vanatoare/start', methods=['POST'])
+@login_required
+def api_vanatoare_start():
+    from modules.battle import build_combatant, generate_npc, save_combatant_mp
+    from moves_config import get_move
+    from modules.pets import sync_pet, get_form, get_state
+    user = get_current_user()
+    uid  = int(user['id'])
+
+    data_req     = request.json or {}
+    battle_size  = min(max(int(data_req.get('size', 1)), 1), 3)
+
+    # Petul activ (slot 1)
+    pet = sync_pet(uid)
+    if not pet:
+        return jsonify({'ok': False, 'error': 'Nu ai un companion activ.'})
+    pet = dict(pet)
+    pet.setdefault('id', 0)
+    pet.setdefault('user_id', uid)
+
+    player = build_combatant(pet)
+
+    # Initializeaza HP in menagerie pentru pets care nu au luptat niciodata
+    sync_menagerie_hp(uid)
+
+    # Loadout complet pentru switch
+    loadout_raw = build_loadout_context(uid)
+
+    # Numara pets vii din loadout (inclusiv petul activ)
+    alive_count = (1 if player['hp_current'] > 0 else 0)
+    for slot in loadout_raw:
+        if not slot.get('empty') and slot.get('slot') != 1 and slot.get('hp_current', 0) > 0:
+            alive_count += 1
+    if alive_count == 0:
+        return jsonify({'ok': False, 'error': 'Toți companionii tăi sunt KO. Vindecă-i înainte de luptă.'})
+    if alive_count < battle_size:
+        return jsonify({'ok': False, 'error': f'Ai nevoie de {battle_size} companioi cu HP pentru acest mod. Ai doar {alive_count}.'})
+    bench = []  # petii de pe bancă — max battle_size-1 pets, doar cu HP > 0
+    for slot in loadout_raw:
+        if slot.get('empty') or slot.get('slot') == 1:
+            continue
+        if len(bench) >= battle_size - 1:
+            break
+        if slot['hp_current'] <= 0:
+            continue
+        bench.append({
+            'id':        slot['id'],
+            'name':      slot['name'],
+            'level':     slot['level'],
+            'hp_max':    slot['hp_max'],
+            'hp_current':slot['hp_current'],
+            'image_url': slot['image_url'],
+            'species':   slot['species_key'],
+            'nature':    slot['nature_key'],
+            'gender':    slot.get('gender', 'male'),
+        })
+
+    # Daca petul activ e mort, inlocuieste-l cu primul din loadout cu HP > 0
+    if player['hp_current'] <= 0:
+        # Cauta in tot loadout-ul (nu doar in bench limitat)
+        all_bench = []
+        for slot in loadout_raw:
+            if slot.get('empty') or slot.get('slot') == 1:
+                continue
+            all_bench.append(slot)
+        alive_slots = [s for s in all_bench if s.get('hp_current', 0) > 0]
+        if not alive_slots:
+            return jsonify({'ok': False, 'error': 'Toți companionii tăi sunt KO. Vindecă-i înainte de luptă.'})
+        first = alive_slots[0]
+        conn_b = get_db()
+        row_b  = conn_b.execute('SELECT * FROM menagerie WHERE id = ? AND user_id = ?', (first['id'], uid)).fetchone()
+        conn_b.close()
+        if not row_b:
+            return jsonify({'ok': False, 'error': 'Companion negăsit.'})
+        row_b_dict = dict(row_b)
+        row_b_dict.setdefault('user_id', uid)
+        player = build_combatant(row_b_dict)
+        # Reconstruieste bench fara noul player
+        bench = []
+        for slot in loadout_raw:
+            if slot.get('empty') or slot.get('slot') == 1:
+                continue
+            if str(slot['id']) == str(first['id']):
+                continue
+            if len(bench) >= battle_size - 1:
+                break
+            bench.append({
+                'id':        slot['id'],
+                'name':      slot['name'],
+                'level':     slot['level'],
+                'hp_max':    slot['hp_max'],
+                'hp_current':slot['hp_current'],
+                'image_url': slot['image_url'],
+                'species':   slot['species_key'],
+                'nature':    slot['nature_key'],
+                'gender':    slot.get('gender', 'male'),
+            })
+
+    npc = generate_npc(player['level'])
+
+    moveset_data = []
+    for mk in player['moveset']:
+        m = get_move(mk)
+        if m:
+            moveset_data.append({'key': m['key'], 'name': m['name'], 'icon': m['icon'], 'type': m['type'], 'power': m['power'], 'mp': player['mp'].get(m['key'], 15), 'max_mp': m.get('max_mp', 15), 'nature': m.get('nature')})
+
+    session['battle_player']             = player
+    session['vanatoare_npc']                = npc
+    session['vanatoare_bench']              = bench
+    session['vanatoare_size']               = battle_size
+    session['vanatoare_npc_index']          = 1
+    session['vanatoare_accumulated_reward'] = 0
+    session['vanatoare_participants']          = [player['id']]
+
+    return jsonify({
+        'ok': True,
+        'player': {
+            'id': player['id'], 'name': player['name'], 'species': player['species'],
+            'nature': player['nature'], 'level': player['level'],
+            'hp_max': player['hp_max'], 'hp_current': player['hp_current'],
+            'image_url': player['image_url'], 'moveset': moveset_data,
+            'status': None, 'shield': 0,
+        },
+        'npc': {
+            'id': npc['id'], 'name': npc['name'], 'species': npc['species'],
+            'nature': npc['nature'], 'level': npc['level'],
+            'hp_max': npc['hp_max'], 'hp_current': npc['hp_current'],
+            'image_url': npc['image_url'], 'status': None, 'shield': 0,
+        },
+        'bench': bench,
+    })
+
+
+
+
+@app.route('/joc/petomania/api/vanatoare/turn', methods=['POST'])
+@login_required
+def api_vanatoare_turn():
+    from modules.battle import execute_turn, calculate_reward, save_combatant_mp
+    user   = get_current_user()
+    uid    = int(user['id'])
+    player = session.get('battle_player')
+    npc    = session.get('vanatoare_npc')
+    if not player or not npc:
+        return jsonify({'ok': False, 'error': 'Nicio bătălie activă.'})
+
+    # Re-citeste HP din DB inainte de tur doar daca playerul e petul activ (id=None = din pets)
+    # Daca e din menagerie (id != None), HP-ul lui e in sesiune, nu in tabela pets
+    if player.get('id') is None or player.get('id') == 0:
+        conn = get_db()
+        fresh = conn.execute('SELECT hp_current FROM pets WHERE user_id = ?', (uid,)).fetchone()
+        conn.close()
+        if fresh:
+            player['hp_current'] = fresh['hp_current']
+
+    move_key = (request.json or {}).get('move_key', 'scratch')
+    result   = execute_turn(player, npc, move_key)
+
+    # Salveaza HP si MP dupa fiecare tur in DB
+    _save_player_hp(player, uid)
+    save_combatant_mp(player, uid)
+
+    session['battle_player'] = player
+    session['vanatoare_npc']    = npc
+
+    reward = 0
+    if result['winner'] == 'player':
+        npc_index   = session.get('vanatoare_npc_index', 1)
+        battle_size = session.get('vanatoare_size', 1)
+
+        if npc_index < battle_size:
+            # Mai sunt NPC-uri — genereaza urmatorul
+            from modules.battle import generate_npc as _gen_npc
+            new_npc = _gen_npc(player['level'])
+            partial_reward = calculate_reward(player['level'], npc['level'], True)
+            session['vanatoare_accumulated_reward'] = session.get('vanatoare_accumulated_reward', 0) + partial_reward
+            session['vanatoare_npc']       = new_npc
+            session['vanatoare_npc_index'] = npc_index + 1
+            session['battle_player']    = player
+            return jsonify({
+                'ok': True, 'log': result['log'],
+                'player': result['player'],
+                'npc': {
+                    'id': new_npc['id'], 'name': new_npc['name'],
+                    'species': new_npc['species'], 'nature': new_npc['nature'],
+                    'level': new_npc['level'], 'hp_max': new_npc['hp_max'],
+                    'hp_current': new_npc['hp_current'],
+                    'image_url': new_npc['image_url'], 'status': None, 'shield': 0,
+                },
+                'winner': None,
+                'next_npc': True,
+                'reward': 0,
+            })
+
+        # Ultimul NPC doborat — victorie finala
+        reward = calculate_reward(player['level'], npc['level'], True)
+        reward += session.get('vanatoare_accumulated_reward', 0)
+        if reward > 0:
+            conn = get_db()
+            conn.execute('UPDATE dacoins SET balance = balance + ? WHERE user_id = ?', (reward, uid))
+            conn.commit()
+            conn.close()
+        _save_bench_hp(session.get('vanatoare_bench', []))
+        # Acorda XP participantilor
+        xp_total = max(1, reward // 3)
+        participants = session.get('vanatoare_participants', [player['id']])
+        xp_results = add_battle_xp(uid, xp_total, participants)
+        session.pop('battle_player', None)
+        session.pop('vanatoare_npc', None)
+        session.pop('vanatoare_size', None)
+        session.pop('vanatoare_npc_index', None)
+        session.pop('vanatoare_accumulated_reward', None)
+        session.pop('vanatoare_participants', None)
+    elif result['winner'] == 'npc':
+        _save_player_hp(player, uid, hp_override=0)
+        bench = session.get('vanatoare_bench', [])
+        alive = [p for p in bench if p.get('hp_current', 0) > 0]
+        if alive:
+            # Mai sunt pets in bench — lasa sesiunea activa pentru switch
+            session['battle_player'] = player
+        else:
+            # Niciun pet disponibil — lupta pierduta
+            _save_bench_hp(bench)
+            session.pop('battle_player', None)
+            session.pop('vanatoare_npc', None)
+            session.pop('vanatoare_size', None)
+            session.pop('vanatoare_npc_index', None)
+            session.pop('vanatoare_accumulated_reward', None)
+            session.pop('vanatoare_participants', None)
+
+    return jsonify({
+        'ok': True, 'log': result['log'],
+        'player': result['player'], 'npc': result['npc'],
+        'winner': result['winner'], 'reward': reward,
+        'bench': session.get('vanatoare_bench', []),
+        'xp_results': locals().get('xp_results', []),
+    })
+
+
+@app.route('/joc/petomania/api/vanatoare/flee', methods=['POST'])
+@login_required
+def api_vanatoare_flee():
+    user   = get_current_user()
+    uid    = int(user['id'])
+    player = session.get('battle_player')
+    if player:
+        hp_flee = max(1, player.get('hp_current', 1))
+        _save_player_hp(player, uid, hp_override=hp_flee)
+    session.pop('battle_player', None)
+    session.pop('vanatoare_npc', None)
+    return jsonify({'ok': True})
+
+
+
+# ── BATTLE PAGE ───────────────────────────────────────────────────────
+
+@app.route('/joc/petomania/vanatoare')
+@login_required
+def vanatoare():
+    return render_template('vanatoare.html')
+
+
+@app.route('/joc/petomania/api/vanatoare/switch', methods=['POST'])
+@login_required
+def api_vanatoare_switch():
+    from modules.battle import build_combatant, save_combatant_mp
+    from moves_config import get_move
+    user   = get_current_user()
+    uid    = int(user['id'])
+    pet_id = (request.json or {}).get('pet_id')
+    bench  = session.get('vanatoare_bench', [])
+
+    pet_data = next((p for p in bench if str(p['id']) == str(pet_id)), None)
+    if not pet_data:
+        return jsonify({'ok': False, 'error': 'Pet negasit pe bancă.'})
+    if pet_data['hp_current'] <= 0:
+        return jsonify({'ok': False, 'error': 'Acest companion a căzut.'})
+
+    # Construieste noul combatant
+    from modules.db import get_db
+    conn = get_db()
+    if pet_data.get('from_pets') or str(pet_data['id']) == '0':
+        row = conn.execute('SELECT *, ? as user_id, 0 as id FROM pets WHERE user_id = ?', (uid, uid)).fetchone()
+    else:
+        row = conn.execute('SELECT * FROM menagerie WHERE id = ? AND user_id = ?', (pet_data['id'], uid)).fetchone()
+    conn.close()
+    if not row:
+        return jsonify({'ok': False, 'error': 'Pet negasit în DB.'})
+
+    new_player_dict = dict(row)
+    new_player_dict.setdefault('user_id', uid)
+    new_player = build_combatant(new_player_dict)
+    moveset_data = []
+    for mk in new_player['moveset']:
+        m = get_move(mk)
+        if m:
+            moveset_data.append({'key': m['key'], 'name': m['name'], 'icon': m['icon'], 'type': m['type'], 'power': m['power'], 'mp': new_player['mp'].get(m['key'], 15), 'max_mp': m.get('max_mp', 15), 'nature': m.get('nature')})
+
+    # Salveaza HP-ul petului care iese din arena
+    old_player = session.get('battle_player')
+    if old_player:
+        old_id = old_player.get('id', 0)
+        old_hp = max(0, old_player.get('hp_current', 0))
+        conn2 = get_db()
+        if old_id and old_id != 0:
+            conn2.execute('UPDATE menagerie SET hp_current = ? WHERE id = ?', (old_hp, old_id))
+        else:
+            conn2.execute('UPDATE pets SET hp_current = ? WHERE user_id = ?', (old_hp, uid))
+        conn2.commit()
+        conn2.close()
+        # Salveaza MP petului care iese
+        if old_player:
+            save_combatant_mp(old_player, uid)
+
+        # Daca petul care iese e viu (switch voluntar), il adaugam inapoi in bench
+        new_bench = [p for p in bench if str(p['id']) != str(pet_id)]
+        if old_hp > 0:
+            already_in_bench = any(str(p.get('id')) == str(old_id) for p in new_bench)
+            if not already_in_bench:
+                new_bench.append({
+                    'id':        old_id,
+                    'name':      old_player.get('name'),
+                    'level':     old_player.get('level'),
+                    'hp_max':    old_player.get('hp_max'),
+                    'hp_current':old_hp,
+                    'image_url': old_player.get('image_url', ''),
+                    'species':   old_player.get('species', ''),
+                    'nature':    old_player.get('nature'),
+                    'gender':    old_player.get('gender', 'male'),
+                    'from_pets': (old_id == 0),
+                })
+        bench = new_bench
+
+    # Scoate din bench
+    session['vanatoare_bench']  = bench
+    session['battle_player'] = new_player
+    # Adauga noul player in lista de participanti daca nu e deja
+    participants = session.get('vanatoare_participants', [])
+    if new_player['id'] not in participants:
+        participants.append(new_player['id'])
+    session['vanatoare_participants'] = participants
+
+    return jsonify({
+        'ok': True,
+        'player': {
+            'id': new_player['id'], 'name': new_player['name'],
+            'species': new_player['species'], 'nature': new_player['nature'],
+            'level': new_player['level'], 'hp_max': new_player['hp_max'],
+            'hp_current': new_player['hp_current'], 'image_url': new_player['image_url'],
+            'moveset': moveset_data, 'status': None, 'shield': 0,
+        },
+        'bench': session.get('vanatoare_bench', []),
+    })
+
+
+
+# ── BATTLE STATE ─────────────────────────────────────────────────────
+
+@app.route('/joc/petomania/api/vanatoare/state')
+@login_required
+def api_vanatoare_state():
+    from moves_config import get_move
+    player = session.get('battle_player')
+    npc    = session.get('vanatoare_npc')
+    bench  = session.get('vanatoare_bench', [])
+    if not player or not npc:
+        return jsonify({'ok': False, 'active': False})
+
+    moveset_data = []
+    for mk in player.get('moveset', []):
+        m = get_move(mk)
+        if m:
+            moveset_data.append({'key': m['key'], 'name': m['name'], 'icon': m['icon'], 'type': m['type'], 'power': m['power'], 'mp': player.get('mp', {}).get(m['key'], 15), 'max_mp': m.get('max_mp', 15), 'nature': m.get('nature')})
+
+    # Re-citeste HP din DB — poate fi modificat de potiuni intre tururi
+    conn = get_db()
+    fresh = conn.execute('SELECT hp_current FROM pets WHERE user_id = ?', (int(get_current_user()['id']),)).fetchone()
+    conn.close()
+    if fresh:
+        player['hp_current'] = fresh['hp_current']
+        session['battle_player'] = player
+
+    return jsonify({
+        'ok': True, 'active': True,
+        'player': {
+            'id': player['id'], 'name': player['name'],
+            'level': player.get('level', 1),
+            'hp_max': player['hp_max'], 'hp_current': player['hp_current'],
+            'image_url': player.get('image_url', ''),
+            'moveset': moveset_data, 'status': player.get('status'), 'shield': player.get('shield', 0),
+        },
+        'npc': {
+            'id': npc['id'], 'name': npc['name'],
+            'level': npc.get('level', 1),
+            'hp_max': npc['hp_max'], 'hp_current': npc['hp_current'],
+            'image_url': npc.get('image_url', ''),
+            'status': npc.get('status'), 'shield': npc.get('shield', 0),
+        },
+        'bench': bench,
+    })
+
+
+
+# ── BATTLE ABANDON ────────────────────────────────────────────────────
+
+@app.route('/joc/petomania/api/vanatoare/abandon', methods=['POST'])
+@login_required
+def api_vanatoare_abandon():
+    """Curata sesiunea de lupta fara a salva HP."""
+    session.pop('battle_player', None)
+    session.pop('vanatoare_npc', None)
+    session.pop('vanatoare_bench', None)
+    return jsonify({'ok': True})
+
+
+@app.route('/joc/petomania/api/vanatoare/capture', methods=['POST'])
+@login_required
+def api_vanatoare_capture():
+    import json, random, time
+    from cogs.petgame_config import SPECIES
+    from inventory_config import INVENTORY_ITEMS
+
+    user = get_current_user()
+    uid  = int(user['id'])
+
+    # Verifica ca suntem in lupta
+    npc = session.get('vanatoare_npc')
+    if not npc:
+        return jsonify({'ok': False, 'msg': 'Nu ești în luptă.'})
+
+    data     = request.json or {}
+    item_key = data.get('item_key', 'nexus_basic')
+
+    # Verifica ca playerul are nexus in inventar
+    conn = get_db()
+    inv_row = conn.execute(
+        'SELECT quantity FROM inventory WHERE user_id = ? AND category = ? AND item_key = ?',
+        (uid, 'nexus', item_key)
+    ).fetchone()
+    if not inv_row or inv_row['quantity'] < 1:
+        conn.close()
+        return jsonify({'ok': False, 'msg': 'Nu ai acest Nexus în inventar.'})
+
+    # Nexus multiplier
+    NEXUS_MULTIPLIERS = {
+        'nexus_basic': 1.0,
+    }
+    nexus_mult = NEXUS_MULTIPLIERS.get(item_key, 1.0)
+
+    # NPC stats
+    hp_current = npc.get('hp_current', 1)
+    hp_max     = npc.get('hp_max', 1)
+    status     = npc.get('status')
+
+    # Calcul rata de captură
+    # Base: 30% × nexus_mult
+    base_rate = 0.30 * nexus_mult
+
+    # HP modifier: cu cat mai mic HP, cu atat mai mare sansa (max +50%)
+    hp_ratio    = hp_current / max(hp_max, 1)
+    hp_modifier = (1.0 - hp_ratio) * 0.50
+
+    # Status modifier
+    STATUS_BONUSES = {
+        'stun':       0.15,
+        'freeze':     0.15,
+        'sleep':      0.15,
+        'burn':       0.10,
+        'poison':     0.10,
+        'speed_down': 0.05,
+    }
+    status_modifier = STATUS_BONUSES.get(status, 0.0)
+
+    capture_rate = min(0.90, base_rate + hp_modifier + status_modifier)
+    roll         = random.random()
+    success      = roll <= capture_rate
+
+    # Scade nexus din inventar indiferent de rezultat
+    new_qty = inv_row['quantity'] - 1
+    if new_qty == 0:
+        conn.execute('DELETE FROM inventory WHERE user_id = ? AND category = ? AND item_key = ?',
+                     (uid, 'nexus', item_key))
+    else:
+        conn.execute('UPDATE inventory SET quantity = ? WHERE user_id = ? AND category = ? AND item_key = ?',
+                     (new_qty, uid, 'nexus', item_key))
+    conn.commit()
+
+    if not success:
+        conn.close()
+        return jsonify({
+            'ok':      True,
+            'caught':  False,
+            'rate':    round(capture_rate * 100),
+            'msg':     f'Nexusul s-a spart! {npc["name"]} a scăpat. (Șansă: {round(capture_rate*100)}%)',
+        })
+
+    # Capturat — adauga in menajerie
+    species = npc.get('species', 'cat')
+    nature  = npc.get('nature')
+    level   = npc.get('level', 1)
+    gender  = random.choice(['male', 'female'])
+
+    # Genereaza nume din species
+    species_data = SPECIES.get(species, {})
+    from modules.pets import get_form
+    form = get_form(level)
+    entry = species_data.get('entries', {}).get(form, {})
+    default_name = entry.get('name', species_data.get('name', 'Companion'))
+
+    # Stats initiale
+    from cogs.petgame_stats import get_stats_at_level
+    stats  = get_stats_at_level(species, nature, level, form)
+    hp_max_new = stats['hp']
+
+    now = int(time.time())
+    conn.execute(
+        """INSERT INTO menagerie
+           (user_id, species, nature, name, level, xp, gender,
+            hunger, happiness, cleanliness, energy, sleeping,
+            born_at, stored_at, hp, hp_current)
+           VALUES (?,?,?,?,?,0,?,100,100,100,100,0,?,?,?,?)""",
+        (uid, species, nature, default_name, level, gender,
+         now, now, hp_max_new, hp_max_new)
+    )
+    conn.commit()
+    men_id = conn.execute('SELECT last_insert_rowid() as id').fetchone()['id']
+    conn.close()
+
+    # Sync companicon
+    from modules.companicon import sync_companicon_discovered
+    sync_companicon_discovered(uid)
+
+    # Termina lupta
+    session.pop('vanatoare_npc', None)
+    session.pop('vanatoare_bench', None)
+    session.pop('vanatoare_accumulated_reward', None)
+    session.pop('vanatoare_participants', None)
+    session.pop('vanatoare_size', None)
+
+    return jsonify({
+        'ok':      True,
+        'caught':  True,
+        'rate':    round(capture_rate * 100),
+        'name':    default_name,
+        'species': species_data.get('name', species),
+        'nature':  nature,
+        'level':   level,
+        'gender':  gender,
+        'msg':     f'{default_name} a fost capturat!',
+    })
 if __name__ == '__main__':
     init_db()
     app.run(host='0.0.0.0', port=5002, debug=False)
