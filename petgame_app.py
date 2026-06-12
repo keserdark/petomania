@@ -568,21 +568,23 @@ def render_pet(user_id: int):
         obj_path = _to_disk(f"/static/room1/{obj['file']}")
         z = obj.get('z_index', 5)
         pos_x = obj.get('pos_x', 0) / 100.0
-        pos_y = obj.get('pos_y', 0) / 100.0
+        # In joc pos_y e 'bottom' (de jos), in PIL trebuie convertit la 'top'
+        pos_y_bottom = obj.get('pos_y', 0) / 100.0
         width_pct = obj.get('width', 100) / 100.0
         if z < 4:
             obj_layers_under.append((obj_path, pos_x, pos_y, width_pct))
         else:
             obj_layers_over.append((obj_path, pos_x, pos_y, width_pct))
 
-    def paste_obj(canvas, obj_path, pos_x, pos_y, width_pct):
+    def paste_obj(canvas, obj_path, pos_x, pos_y_bottom, width_pct):
         img = _fetch_image_cached(obj_path, ttl=3600, resize=None)
         if not img:
             return
         obj_w = int(W * width_pct)
         obj_h = int(obj_w * img.size[1] / img.size[0])
         x = int(pos_x * W)
-        y = int(pos_y * H)
+        # Converteste bottom% la top pixels
+        y = int(H - pos_y_bottom * H - obj_h)
         img = img.resize((obj_w, obj_h), Image.LANCZOS)
         if img.mode == 'RGBA':
             canvas.paste(img, (x, y), img)
