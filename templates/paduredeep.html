@@ -128,38 +128,12 @@ const bgImg     = new Image();
 bgImg.crossOrigin = 'anonymous';
 bgImg.src = BASE + 'ForestDeep.png';
 
-const arrowImg = new Image();
-arrowImg.crossOrigin = 'anonymous';
-arrowImg.src = BASE + 'ForestDeepArrow.png';
-
-const arrowOff = document.createElement('canvas');
-arrowOff.width  = W;
-arrowOff.height = H;
-
-let loaded = 0;
-function onLoad() {
-    loaded++;
-    if (loaded < 2) return;
+bgImg.onload = () => {
     ctx.drawImage(bgImg, 0, 0, W, H);
-    ctx.drawImage(arrowImg, 0, 0, W, H);
-    const oc = arrowOff.getContext('2d', { willReadFrequently: true });
-    oc.drawImage(arrowImg, 0, 0, W, H);
-}
-bgImg.onload     = onLoad;
-arrowImg.onload = onLoad;
+};
 function redraw(hover) {
     ctx.clearRect(0, 0, W, H);
     if (bgImg.complete && bgImg.naturalWidth) ctx.drawImage(bgImg, 0, 0, W, H);
-    if (arrowImg.complete && arrowImg.naturalWidth) {
-        ctx.drawImage(arrowImg, 0, 0, W, H);
-        if (hover) {
-            ctx.save();
-            ctx.globalAlpha = 0.45;
-            ctx.globalCompositeOperation = 'lighter';
-            ctx.drawImage(arrowImg, 0, 0, W, H);
-            ctx.restore();
-        }
-    }
 }
 
 let lastHit      = 0;
@@ -167,39 +141,9 @@ let currentHover = false;
 let popupOpen    = false;
 let inBattle     = false;
 
-canvas.addEventListener('mousemove', (e) => {
-    if (popupOpen || inBattle) return;
-    if (currentHover) {
-        tooltip.style.left = (e.clientX - wrap.getBoundingClientRect().left + 14) + 'px';
-        tooltip.style.top  = (e.clientY - wrap.getBoundingClientRect().top  - 8)  + 'px';
-    }
-    const now = Date.now();
-    if (now - lastHit < 33) return;
-    lastHit = now;
-    const rect  = canvas.getBoundingClientRect();
-    const x = Math.floor((e.clientX - rect.left) * W / rect.width);
-    const y = Math.floor((e.clientY - rect.top)  * H / rect.height);
-    const oc    = arrowOff.getContext('2d', { willReadFrequently: true });
-    const alpha = oc.getImageData(x, y, 1, 1).data[3];
-    const hit   = alpha > 20;
-    if (hit !== currentHover) {
-        currentHover = hit;
-        canvas.style.cursor   = hit ? 'pointer' : 'default';
-        tooltip.style.opacity = hit ? '1' : '0';
-        if (hit) tooltip.textContent = '🌲 Intră în Pădure';
-        redraw(hit);
-    }
-});
 
-canvas.addEventListener('click', (e) => {
-    if (inBattle) return;
-    const rect  = canvas.getBoundingClientRect();
-    const x = Math.floor((e.clientX - rect.left) * W / rect.width);
-    const y = Math.floor((e.clientY - rect.top)  * H / rect.height);
-    const oc    = arrowOff.getContext('2d', { willReadFrequently: true });
-    const alpha = oc.getImageData(x, y, 1, 1).data[3];
-    // capatul padurii - sageta nu duce nicaieri
-});
+
+
 
 canvas.addEventListener('mouseleave', () => {
     tooltip.style.opacity = '0';
@@ -220,19 +164,10 @@ function fadeStep() {
         fadeAlpha = 0; fadeDir = 1; fadActive = false;
         ctx.clearRect(0, 0, W, H);
         if (bgImg.complete && bgImg.naturalWidth) ctx.drawImage(bgImg, 0, 0, W, H);
-        if (arrowImg.complete && arrowImg.naturalWidth) ctx.drawImage(arrowImg, 0, 0, W, H);
         return;
     }
     ctx.clearRect(0, 0, W, H);
     if (bgImg.complete && bgImg.naturalWidth) ctx.drawImage(bgImg, 0, 0, W, H);
-    if (arrowImg.complete && arrowImg.naturalWidth) {
-        ctx.drawImage(arrowImg, 0, 0, W, H);
-        ctx.save();
-        ctx.globalAlpha = fadeAlpha * 0.35;
-        ctx.globalCompositeOperation = 'lighter';
-        ctx.drawImage(arrowImg, 0, 0, W, H);
-        ctx.restore();
-    }
     requestAnimationFrame(fadeStep);
 }
 
