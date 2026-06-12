@@ -133,6 +133,25 @@ def init_db():
         )
     ''')
 
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS pvp_queue (
+            user_id           INTEGER PRIMARY KEY,
+            loadout_snapshot  TEXT NOT NULL,
+            joined_at         INTEGER NOT NULL DEFAULT (strftime('%s','now'))
+        )
+    ''')
+    c.execute('''
+        CREATE TABLE IF NOT EXISTS pvp_match (
+            id           INTEGER PRIMARY KEY AUTOINCREMENT,
+            player1_id   INTEGER NOT NULL,
+            player2_id   INTEGER NOT NULL,
+            state        TEXT NOT NULL DEFAULT 'active',
+            session_data TEXT NOT NULL DEFAULT '{}',
+            created_at   INTEGER NOT NULL DEFAULT (strftime('%s','now')),
+            updated_at   INTEGER NOT NULL DEFAULT (strftime('%s','now'))
+        )
+    ''')
+
     conn.commit()
     conn.close()
 

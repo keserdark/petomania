@@ -25,7 +25,7 @@
                 <span class="assets-popup-btn-icon">📚</span>
                 <span>Antrenează</span>
             </button>
-            <button class="assets-popup-btn" onclick="closeCorvinPopup()">
+            <button class="assets-popup-btn" onclick="closeCorvinPopup(); enterPvpQueue()">
                 <span class="assets-popup-btn-icon">🏹</span>
                 <span>Provoacă un alt cetățean</span>
             </button>
@@ -928,9 +928,26 @@ async function forgetMove(oldMoveKey) {
     alert('✅ ' + newMove.name + ' a înlocuit abilitatea selectată!');
 }
 
-// Close overlays on backdrop click
-['training-overlay','training-zones-overlay','training-moves-overlay',
- 'training-confirm-overlay','training-forget-overlay'].forEach(id => {
+async function enterPvpQueue() {
+    // Verifica loadout count
+    const resp = await fetch('/joc/petomania/api/loadout/count');
+    const data = await resp.json();
+    if (!data.ok || data.count < 1) {
+        alert('Trebuie să ai cel puțin un companion în loadout pentru PvP!');
+        return;
+    }
+    // Intra in queue
+    const qResp = await fetch('/joc/petomania/api/pvp/queue/join', {method: 'POST'});
+    const qData = await qResp.json();
+    if (!qData.ok) { alert(qData.error || 'Eroare la intrare în coadă.'); return; }
+    if (qData.status === 'matched') {
+        window.location.href = '/joc/petomania/pvp/battle/' + qData.match_id;
+    } else {
+        window.location.href = '/joc/petomania/pvp/queue';
+    }
+}
+
+
     document.getElementById(id).addEventListener('click', e => {
         if (e.target.id === id) document.getElementById(id).classList.remove('open');
     });

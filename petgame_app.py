@@ -48,7 +48,7 @@ from modules.discord_helpers import (get_member_roles, get_lady_interaction,
 from inventory_config     import get_item as inv_get_item
 from shop_config          import get_shop
 from modules.shop         import build_shop_context, shop_buy
-from petgame_room_config  import ROOM_ITEMS, ITEM_BUNDLES
+from petgame_room_config  import ROOM_ITEMS
 from cogs.petgame_config  import SPECIES
 from cogs.petgame_natures import NATURES
 from cogs.petgame_stats   import get_stats_at_level
@@ -288,15 +288,9 @@ def acasa():
         'chimney': get_static_url(get_room_url('chimney', room['chimney'], room)) + f'?v={v}',
     }
     owned_items  = room.get('items', {})
-    # Bundle keys: daca userul are cheia trigger, se adauga automat si cele din bundle
-    effective_items = set(owned_items.keys())
-    for trigger_key, bundle_keys in ITEM_BUNDLES.items():
-        if trigger_key in effective_items:
-            effective_items.update(bundle_keys)
-
     room_objects = []
     for obj_key, obj_cfg in SHOP_ITEMS.get('obiecte', {}).items():
-        if obj_key in effective_items:
+        if obj_key in owned_items:
             room_objects.append({
                 'key':       obj_key,
                 'file':      obj_cfg.get('file', ''),
@@ -2707,6 +2701,121 @@ def api_daiana_amenda():
         spend_dacoins(uid, amenda)
 
     return jsonify({'ok': True, 'amenda': amenda, 'balance_ramas': balance - amenda})
+
+
+
+
+# ── PVP ───────────────────────────────────────────────────────────────────
+
+@app.route('/joc/petomania/pvp/queue')
+@login_required
+def pvp_queue_page():
+    return render_template('pvp_queue.html')
+
+
+@app.route('/joc/petomania/pvp/battle/<int:match_id>')
+@login_required
+def pvp_battle_page(match_id):
+    from modules.pvp import get_match
+    user = get_current_user()
+    uid  = int(user['id'])
+    match = get_match(match_id)
+    if not match or uid not in (match['player1_id'], match['player2_id']):
+        return redirect(url_for('arena'))
+    return render_template('pvp_battle.html', match_id=match_id)
+
+
+@app.route('/joc/petomania/api/pvp/queue/join', methods=['POST'])
+@login_required
+def api_pvp_queue_join():
+    from modules.pvp import queue_join
+    from modules.loadout import get_loadout, build_loadout_slot
+    user = get_current_user()
+    uid  = int(user['id'])
+
+    # Construieste loadout snapshot
+    loadout = get_loadout(uid)
+    slots   = [loadout.get(f'slot_{i}') for i in range(1, 6) if loadout.get(f'slot_{i}')]
+    if not slots:
+        # Fallback — pet activ
+        pet = get_pet(uid)
+        if not pet:
+            return jsonify({'ok': False, 'error': 'Nu ai niciun companion activ.'})
+        slots = [pet]
+    else:
+        conn = get_db()
+        pets = []
+        for pid in slots:
+            if pid == 0:
+                p = get_pet(uid)
+            else:
+                row = conn.execute('SELECT * FROM menagerie WHERE id = ? AND user_id = ?', (pid, uid)).fetchone()
+                p = dict(row) if row else None
+            if p:
+                p['user_id'] = uid
+                pets.append(p)
+        conn.close()
+        slots = pets
+
+    if not slots:
+        return jsonify({'ok': False, 'error': 'Nu ai companioni în loadout.'})
+
+    result = queue_join(uid, slots)
+    return jsonify({'ok': True, **result})
+
+
+@app.route('/joc/petomania/api/pvp/queue/leave', methods=['POST'])
+@login_required
+def api_pvp_queue_leave():
+    from modules.pvp import queue_leave
+    user = get_current_user()
+    queue_leave(int(user['id']))
+    return jsonify({'ok': True})
+
+
+@app.route('/joc/petomania/api/pvp/queue/poll')
+@login_required
+def api_pvp_queue_poll():
+    from modules.pvp import queue_poll
+    user = get_current_user()
+    return jsonify(queue_poll(int(user['id'])))
+
+
+@app.route('/joc/petomania/api/pvp/match/<int:match_id>/poll')
+@login_required
+def api_pvp_match_poll(match_id):
+    from modules.pvp import poll_match
+    user = get_current_user()
+    return jsonify(poll_match(match_id, int(user['id'])))
+
+
+@app.route('/joc/petomania/api/pvp/match/<int:match_id>/move', methods=['POST'])
+@login_required
+def api_pvp_match_move(match_id):
+    from modules.pvp import submit_move
+    user     = get_current_user()
+    uid      = int(user['id'])
+    data     = request.json or {}
+    move_key = data.get('move_key')
+    if not move_key:
+        return jsonify({'ok': False, 'error': 'move_key lipsește.'})
+    return jsonify(submit_move(match_id, uid, move_key))
+
+
+@app.route('/joc/petomania/api/pvp/match/<int:match_id>/abandon', methods=['POST'])
+@login_required
+def api_pvp_match_abandon(match_id):
+    from modules.pvp import abandon_match
+    user = get_current_user()
+    return jsonify(abandon_match(match_id, int(user['id'])))
+
+
+@app.route('/joc/petomania/api/pvp/match/<int:match_id>/reward', methods=['POST'])
+@login_required
+def api_pvp_match_reward(match_id):
+    from modules.pvp import grant_pvp_reward
+    user = get_current_user()
+    return jsonify(grant_pvp_reward(match_id, int(user['id'])))
 
 
 if __name__ == '__main__':
