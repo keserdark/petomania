@@ -572,9 +572,9 @@ def render_pet(user_id: int):
         pos_y_bottom = obj.get('pos_y', 0) / 100.0
         width_pct = obj.get('width', 100) / 100.0
         if z < 4:
-            obj_layers_under.append((obj_path, pos_x, pos_y, width_pct))
+            obj_layers_under.append((obj_path, pos_x, pos_y_bottom, width_pct))
         else:
-            obj_layers_over.append((obj_path, pos_x, pos_y, width_pct))
+            obj_layers_over.append((obj_path, pos_x, pos_y_bottom, width_pct))
 
     def paste_obj(canvas, obj_path, pos_x, pos_y_bottom, width_pct):
         img = _fetch_image_cached(obj_path, ttl=3600, resize=None)
