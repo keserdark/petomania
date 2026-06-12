@@ -108,6 +108,7 @@ ZONE_POOLS = {
 
     'pescuit': {
         'species': [
+            ('verdian',  'common'),
             ('goldfish', 'legendary'),
         ],
         'natures': [

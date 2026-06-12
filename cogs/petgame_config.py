@@ -493,4 +493,31 @@ SPECIES = {
             },
         },
     },
+
+    'verdian': {
+        'starter': False,
+        'name': 'Verdian', 'emoji': '🐟', 'button_label': '🐟 Verdian',
+        'codes': {1: 'VERD-001', 2: 'VERD-002', 3: 'VERD-003'},
+        'available_natures': ['water'],
+        'entries': {
+            1: {
+                'code': 'VERD-001',
+                'name': 'Verdian',
+                'description': 'Un pește verde de apă dulce, simplu și neremarcabil. Înoată liniștit prin apele Regnum Dacorum.',
+                'lore': 'Verdian este cel mai comun pește din apele dulci ale regatului. Nimeni nu îl vânează, nimeni nu îl caută — și tocmai de aceea a supraviețuit atâtea secole.\n\nSe spune că Verdian a trăit în aceleași râuri înainte ca Regnum Dacorum să existe. Nu are ambiții, nu are dușmani, nu are legende.\n\nDar cei care îl privesc îndelung în ochi spun că ascunde ceva — o liniște prea adâncă pentru un pește atât de mic.',
+            },
+            2: {
+                'code': 'VERD-002',
+                'name': 'Verdian Furtunii',
+                'description': 'Apele l-au schimbat. Solzii au căpătat o strălucire ciudată, iar curenții par să-l urmeze.',
+                'lore': 'Nu toți Verdian evoluează. Cei care o fac au petrecut ani întregi în apele subterane ale regatului, acolo unde curenții au memorie și apa cântă în frecvențe pe care urechea umană nu le poate auzi.\n\nVerdian Furtunii nu mai e pește comun. Solzii săi emit o luminescență slabă la adâncime, iar prezența sa calmează alte creaturi acvatice.\n\nMagicienii curții l-au studiat și au concluzionat că evoluția sa e legată de un fenomen inexplicabil: apa din jurul lui are altă compoziție.',
+            },
+            3: {
+                'code': 'VERD-003',
+                'name': 'Aquarion',
+                'description': 'Forma finală. Un războinic al apelor cu armură vie și trident cristalizat — gardianul râurilor regatului.',
+                'lore': 'Aquarion este o anomalie. Nimeni nu știe când a apărut primul, nimeni nu a documentat transformarea completă.\n\nCe se știe: Aquarion poartă o armură formată din solzi cristalizați de-a lungul deceniilor, iar tridentul său nu e o armă — e o extensie a corpului, format din minerale dizolvate în apa regatului.\n\nZamolxe ar fi spus că Aquarion este dovada că și cel mai umil lucru poate deveni extraordinar dacă i se dă suficient timp. Gardianul tăcut al apelor dulci — văzut rar, temut mult.',
+            },
+        },
+    },
 }

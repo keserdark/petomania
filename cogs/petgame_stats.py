@@ -87,6 +87,16 @@ BASE_STATS: dict[str, dict[str, int]] = {
         'control':  45,
         'reflection': 30,
     },
+    'verdian': {
+        'hp':       50,
+        'attack':   45,
+        'defense':  55,
+        'speed':    60,
+        'evasion':  40,
+        'healing':  40,
+        'control':  50,
+        'reflection': 35,
+    },
 }
 
 
@@ -165,6 +175,16 @@ STAT_GROWTH: dict[str, dict[str, float]] = {
         'healing':    0.8,
         'control':    1.0,
         'reflection': 0.8,
+    },
+    'verdian': {
+        'hp':         1.8,
+        'attack':     1.6,
+        'defense':    1.8,
+        'speed':      1.4,
+        'evasion':    1.0,
+        'healing':    1.0,
+        'control':    1.4,
+        'reflection': 1.0,
     },
 }
 
