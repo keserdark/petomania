@@ -412,18 +412,7 @@ function openBag() {
                     const stateResp = await fetch('/joc/petomania/api/battle/state');
                     const stateData = await stateResp.json();
 
-                    // Daca sesiunea de battle nu mai e activa -> captura reusita
-                    if (!stateData.active) {
-                        // Afiseaza ecran de captura reusita
-                        if (window._lastCaptureResult && window._lastCaptureResult.caught) {
-                            const r = window._lastCaptureResult;
-                            showVictory([],
-                                `🔮 ${r.name} a fost capturat!`,
-                                `<div style="margin-top:8px;font-size:13px;opacity:0.7">${r.species} · Nv.${r.level} · ${r.nature || 'fără natură'}</div>`
-                            );
-                        }
-                        return;
-                    }
+                    // Nu face nimic cu stateData.active — captura e gestionata de interceptorul fetch
 
                     // Altfel sync HP normal
                     if (stateData.ok && battleData.player) {
