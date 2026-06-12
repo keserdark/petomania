@@ -2752,6 +2752,8 @@ def api_pvp_queue_join():
                 row = conn.execute('SELECT * FROM menagerie WHERE id = ? AND user_id = ?', (pid, uid)).fetchone()
                 p = dict(row) if row else None
             if p:
+                if not isinstance(p, dict):
+                    p = dict(p)
                 p['user_id'] = uid
                 pets.append(p)
         conn.close()
