@@ -21,14 +21,24 @@
     {# Gaseste indexul itemului activ in lista lineara #}
     {% set active_index = namespace(val=0) %}
     {% for item in items %}
-        {% if room[category] == item.key %}
-            {% set active_index.val = loop.index0 %}
+        {% if category == 'obiecte' %}
+            {% if room['items'] and item.key in room['items'] %}
+                {% set active_index.val = loop.index0 %}
+            {% endif %}
+        {% else %}
+            {% if room[category] == item.key %}
+                {% set active_index.val = loop.index0 %}
+            {% endif %}
         {% endif %}
     {% endfor %}
 
     <div class="shop-grid">
         {% for item in items %}
-        {% set owned = (room[category] == item.key) %}
+        {% if category == 'obiecte' %}
+            {% set owned = (room['items'] and item.key in room['items']) %}
+        {% else %}
+            {% set owned = (room[category] == item.key) %}
+        {% endif %}
         {% set linear = item.get('linear', False) %}
         {% set item_index = loop.index0 %}
 

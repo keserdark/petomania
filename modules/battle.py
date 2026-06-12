@@ -16,8 +16,8 @@ from moves_config import get_moveset, get_move
 # ─────────────────────────────────────────────
 
 SPECIES_LIST   = ['dog', 'cat', 'blackcat', 'duck', 'fox', 'rhino']
-NATURES_LIST   = ['fire', 'water', 'nature', 'earth', 'storm', 'ice', 'shadow', 'crystal', 'steel', 'light']
-SPECIES_NAMES  = {'dog': 'Câine', 'cat': 'Pisică', 'blackcat': 'Pisică Neagră', 'duck': 'Rață'}
+NATURES_LIST   = ['fire', 'water', 'nature', 'earth', 'storm', 'ice', 'shadow', 'crystal', 'steel', 'light', 'dragon']
+SPECIES_NAMES  = {'dog': 'Câine', 'cat': 'Pisică', 'blackcat': 'Pisică Neagră', 'duck': 'Rață', 'fox': 'Vulpe', 'rhino': 'Rinocer'}
 from npc_names_config import get_npc_name
 
 
