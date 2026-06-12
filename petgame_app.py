@@ -2762,6 +2762,11 @@ def api_pvp_queue_join():
     if not slots:
         return jsonify({'ok': False, 'error': 'Nu ai companioni în loadout.'})
 
+    # Filtreaza petii cu HP 0
+    slots = [p for p in slots if (p.get('hp_current') or 0) > 0]
+    if not slots:
+        return jsonify({'ok': False, 'error': 'Toți companionii tăi sunt KO! Vindecă-i la Biserică înainte de PvP.'})
+
     result = queue_join(uid, slots)
     return jsonify({'ok': True, **result})
 
