@@ -146,7 +146,7 @@ ROOM_ITEMS = {
             'pos_x':     83.9,
             'pos_y':     13.4,
             'width':     16,
-            'z_index':   6,
+            'z_index':   8,
             'linear':    True,
         },
         {
