@@ -101,6 +101,14 @@ ROOM_ITEMS = {
             'file':    'Room1-Chimney1-Stone.png',
             'default': True,
         },
+        {
+            'key':     'Chimney2-Stone',
+            'name':    'Gratii de fier',
+            'desc':    'Semineu cu gratii de fier.',
+            'price':   500,
+            'file':    'Room1-Chimney2-Stone.png',
+            'default': True,
+        },
         # Adauga Chimney2 cu foc etc. aici
     ],
 
