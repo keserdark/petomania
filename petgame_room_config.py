@@ -239,6 +239,21 @@ ROOM_ITEMS = {
             'z_index':   4,
             'linear':    True,
         },
+        {
+            'key':       'foc',
+            'name':      'Foc',
+            'desc':      'Aprinde focul in semineu',
+            'price':     150,
+            'file':      'foc.png',
+            'default':   False,
+            'clickable': False,
+            'action':    None,
+            'pos_x':     0,
+            'pos_y':     0,
+            'width':     100,
+            'z_index':   4,
+            'linear':    True,
+        },
     ],
 }
 
