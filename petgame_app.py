@@ -1147,7 +1147,7 @@ def api_battle_start():
                 'gender':    slot.get('gender', 'male'),
             })
 
-    npc = generate_npc(player['level'])
+    npc = generate_npc(player['level'], zone='arena')
 
     moveset_data = []
     for mk in player['moveset']:
@@ -1222,7 +1222,7 @@ def api_battle_turn():
         if npc_index < battle_size:
             # Mai sunt NPC-uri — genereaza urmatorul
             from modules.battle import generate_npc as _gen_npc
-            new_npc = _gen_npc(player['level'])
+            new_npc = _gen_npc(player['level'], zone='arena')
             partial_reward = calculate_reward(player['level'], npc['level'], True)
             session['battle_accumulated_reward'] = session.get('battle_accumulated_reward', 0) + partial_reward
             session['battle_npc']       = new_npc
@@ -2155,7 +2155,7 @@ def api_vanatoare_start():
                 'gender':    slot.get('gender', 'male'),
             })
 
-    npc = generate_npc(player['level'])
+    npc = generate_npc(player['level'], zone='vanatoare')
 
     moveset_data = []
     for mk in player['moveset']:
@@ -2230,7 +2230,7 @@ def api_vanatoare_turn():
         if npc_index < battle_size:
             # Mai sunt NPC-uri — genereaza urmatorul
             from modules.battle import generate_npc as _gen_npc
-            new_npc = _gen_npc(player['level'])
+            new_npc = _gen_npc(player['level'], zone='vanatoare')
             pass  # fara dacoins la vanatoare
             session['vanatoare_npc']       = new_npc
             session['vanatoare_npc_index'] = npc_index + 1

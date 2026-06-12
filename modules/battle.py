@@ -21,18 +21,26 @@ SPECIES_NAMES  = {'dog': 'Câine', 'cat': 'Pisică', 'blackcat': 'Pisică Neagr�
 from npc_names_config import get_npc_name
 
 
-def generate_npc(player_level: int) -> dict:
-    """Genereaza un NPC random cu nivel apropriat (+-3 fata de player)."""
+def generate_npc(player_level: int, zone: str = 'arena') -> dict:
+    """Genereaza un NPC random cu nivel apropriat (+-3 fata de player), filtrat dupa zona."""
     from cogs.petgame_config import SPECIES as SPECIES_CONFIG
-    level     = max(1, player_level + random.randint(-3, 3))
-    species   = random.choice(SPECIES_LIST)
-    available = SPECIES_CONFIG.get(species, {}).get('available_natures', NATURES_LIST)
-    nature    = random.choice(available) if available else random.choice(NATURES_LIST)
-    form      = get_form(level)
-    stats     = get_stats_at_level(species, nature, level, form)
-    moveset   = get_moveset(species, nature, level)
-    name      = get_npc_name(nature)
-    gender    = random.choice(['male', 'female'])
+    from zone_config import get_zone_pool
+
+    pool    = get_zone_pool(zone)
+    species_pool = pool['species']
+    natures_pool = pool['natures']
+
+    level   = max(1, player_level + random.randint(-3, 3))
+    species = random.choice(species_pool)
+    # Intersecteaza available_natures ale speciei cu pool-ul zonei
+    available = SPECIES_CONFIG.get(species, {}).get('available_natures', natures_pool)
+    available = [n for n in available if n in natures_pool] or natures_pool
+    nature  = random.choice(available)
+    form    = get_form(level)
+    stats   = get_stats_at_level(species, nature, level, form)
+    moveset = get_moveset(species, nature, level)
+    name    = get_npc_name(nature)
+    gender  = random.choice(['male', 'female'])
 
     return {
         'id':           f'npc_{random.randint(10000, 99999)}',
