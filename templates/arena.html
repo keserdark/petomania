@@ -947,7 +947,9 @@ async function enterPvpQueue() {
     }
 }
 
-
+// Close overlays on backdrop click
+['training-overlay','training-zones-overlay','training-moves-overlay',
+ 'training-confirm-overlay','training-forget-overlay'].forEach(id => {
     document.getElementById(id).addEventListener('click', e => {
         if (e.target.id === id) document.getElementById(id).classList.remove('open');
     });
