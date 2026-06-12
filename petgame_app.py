@@ -2179,7 +2179,7 @@ def api_vanatoare_turn():
         session.pop('vanatoare_participants', None)
         # 5% sansa de trigger Daiana Solaris
         import random as _random
-        if _random.random() < 0.05:
+        if True:  # TEST 100%
             session['daiana_trigger'] = True
     elif result['winner'] == 'npc':
         _save_player_hp(player, uid, hp_override=0)
@@ -2198,7 +2198,7 @@ def api_vanatoare_turn():
             session.pop('vanatoare_accumulated_reward', None)
             session.pop('vanatoare_participants', None)
             import random as _random3
-            if _random3.random() < 0.05:
+            if True:  # TEST 100%
                 session['daiana_trigger'] = True
 
     return jsonify({
@@ -2222,7 +2222,7 @@ def api_vanatoare_flee():
     session.pop('battle_player', None)
     session.pop('vanatoare_npc', None)
     import random as _random
-    if _random.random() < 0.05:
+    if True:  # TEST 100%
         session['daiana_trigger'] = True
     return jsonify({'ok': True})
 
@@ -2387,7 +2387,7 @@ def api_vanatoare_abandon():
     session.pop('vanatoare_npc', None)
     session.pop('vanatoare_bench', None)
     import random as _random2
-    if _random2.random() < 0.05:
+    if True:  # TEST 100%
         session['daiana_trigger'] = True
     return jsonify({'ok': True})
 
