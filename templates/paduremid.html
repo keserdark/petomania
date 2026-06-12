@@ -138,11 +138,6 @@ const arrowImg = new Image();
 arrowImg.crossOrigin = 'anonymous';
 arrowImg.src = BASE + 'ForestMidArrow.png';
 
-// Battle background
-const battleBg = new Image();
-battleBg.crossOrigin = 'anonymous';
-battleBg.src = BASE + 'battle.png';
-
 const arrowOff = document.createElement('canvas');
 arrowOff.width  = W;
 arrowOff.height = H;
@@ -158,18 +153,18 @@ function onLoad() {
 }
 bgImg.onload     = onLoad;
 arrowImg.onload = onLoad;
-battleBg.onload  = () => {};  // preload
-
 function redraw(hover) {
     ctx.clearRect(0, 0, W, H);
-    ctx.drawImage(bgImg, 0, 0, W, H);
-    ctx.drawImage(arrowImg, 0, 0, W, H);
-    if (hover) {
-        ctx.save();
-        ctx.globalAlpha = 0.45;
-        ctx.globalCompositeOperation = 'lighter';
+    if (bgImg.complete && bgImg.naturalWidth) ctx.drawImage(bgImg, 0, 0, W, H);
+    if (arrowImg.complete && arrowImg.naturalWidth) {
         ctx.drawImage(arrowImg, 0, 0, W, H);
-        ctx.restore();
+        if (hover) {
+            ctx.save();
+            ctx.globalAlpha = 0.45;
+            ctx.globalCompositeOperation = 'lighter';
+            ctx.drawImage(arrowImg, 0, 0, W, H);
+            ctx.restore();
+        }
     }
 }
 
@@ -230,18 +225,20 @@ function fadeStep() {
     else if (fadeAlpha <= 0) {
         fadeAlpha = 0; fadeDir = 1; fadActive = false;
         ctx.clearRect(0, 0, W, H);
-        ctx.drawImage(bgImg, 0, 0, W, H);
-        ctx.drawImage(arrowImg, 0, 0, W, H);
+        if (bgImg.complete && bgImg.naturalWidth) ctx.drawImage(bgImg, 0, 0, W, H);
+        if (arrowImg.complete && arrowImg.naturalWidth) ctx.drawImage(arrowImg, 0, 0, W, H);
         return;
     }
     ctx.clearRect(0, 0, W, H);
-    ctx.drawImage(bgImg, 0, 0, W, H);
-    ctx.drawImage(arrowImg, 0, 0, W, H);
-    ctx.save();
-    ctx.globalAlpha = fadeAlpha * 0.35;
-    ctx.globalCompositeOperation = 'lighter';
-    ctx.drawImage(arrowImg, 0, 0, W, H);
-    ctx.restore();
+    if (bgImg.complete && bgImg.naturalWidth) ctx.drawImage(bgImg, 0, 0, W, H);
+    if (arrowImg.complete && arrowImg.naturalWidth) {
+        ctx.drawImage(arrowImg, 0, 0, W, H);
+        ctx.save();
+        ctx.globalAlpha = fadeAlpha * 0.35;
+        ctx.globalCompositeOperation = 'lighter';
+        ctx.drawImage(arrowImg, 0, 0, W, H);
+        ctx.restore();
+    }
     requestAnimationFrame(fadeStep);
 }
 
