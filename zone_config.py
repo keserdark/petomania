@@ -1,46 +1,148 @@
 # ─────────────────────────────────────────────
 # zone_config.py
-# Pool-uri de specii si naturi per zona.
-# Editeaza DOAR acest fisier pentru a modifica ce apare in fiecare zona.
+# Pool-uri de specii si naturi per zona, cu sistem de raritate.
+# Editeaza DOAR acest fisier.
 # ─────────────────────────────────────────────
+#
+# RARITATE — sanse de aparitie:
+#   common:    60%
+#   uncommon:  25%
+#   rare:      10%
+#   epic:       4%
+#   legendary:  1%
+#
+# Format entry: ('cheie', 'raritate')
+# ─────────────────────────────────────────────
+
+RARITY_WEIGHTS = {
+    'common':    60,
+    'uncommon':  25,
+    'rare':      10,
+    'epic':       4,
+    'legendary':  1,
+}
 
 ZONE_POOLS = {
 
     'arena': {
-        'species': ['dog', 'cat', 'blackcat', 'duck', 'fox', 'rhino'],
-        'natures': ['fire', 'water', 'nature', 'earth', 'storm', 'ice',
-                    'shadow', 'crystal', 'steel', 'light', 'dragon'],
+        'species': [
+            ('dog',      'common'),
+            ('cat',      'common'),
+            ('duck',     'common'),
+            ('blackcat', 'uncommon'),
+            ('fox',      'rare'),
+            ('rhino',    'epic'),
+        ],
+        'natures': [
+            ('nature',  'common'),
+            ('water',   'common'),
+            ('earth',   'common'),
+            ('fire',    'uncommon'),
+            ('storm',   'uncommon'),
+            ('ice',     'rare'),
+            ('steel',   'rare'),
+            ('light',   'epic'),
+            ('shadow',  'epic'),
+            ('crystal', 'epic'),
+            ('dragon',  'legendary'),
+        ],
     },
 
     'vanatoare': {
-        'species': ['cat', 'duck', 'fox'],
-        'natures': ['nature', 'water', 'earth', 'storm', 'ice'],
+        'species': [
+            ('cat',  'common'),
+            ('duck', 'common'),
+            ('fox',  'uncommon'),
+        ],
+        'natures': [
+            ('nature', 'common'),
+            ('water',  'common'),
+            ('earth',  'common'),
+            ('storm',  'uncommon'),
+            ('ice',    'rare'),
+        ],
     },
 
     'padure': {
-        'species': ['cat', 'duck'],
-        'natures': ['nature', 'water', 'earth'],
+        'species': [
+            ('cat',  'common'),
+            ('duck', 'common'),
+        ],
+        'natures': [
+            ('nature', 'common'),
+            ('water',  'common'),
+            ('earth',  'uncommon'),
+        ],
     },
 
     'paduremid': {
-        'species': ['cat', 'duck', 'fox'],
-        'natures': ['nature', 'water', 'earth', 'storm'],
+        'species': [
+            ('cat',  'common'),
+            ('duck', 'common'),
+            ('fox',  'uncommon'),
+        ],
+        'natures': [
+            ('nature', 'common'),
+            ('water',  'common'),
+            ('earth',  'common'),
+            ('storm',  'uncommon'),
+        ],
     },
 
     'paduredeep': {
-        'species': ['cat', 'duck', 'fox', 'blackcat'],
-        'natures': ['nature', 'water', 'earth', 'storm', 'shadow', 'ice'],
+        'species': [
+            ('cat',      'common'),
+            ('duck',     'common'),
+            ('fox',      'uncommon'),
+            ('blackcat', 'rare'),
+        ],
+        'natures': [
+            ('nature', 'common'),
+            ('water',  'common'),
+            ('earth',  'common'),
+            ('storm',  'uncommon'),
+            ('ice',    'rare'),
+            ('shadow', 'epic'),
+        ],
     },
 
 }
 
 # Fallback daca zona nu e definita
 DEFAULT_POOL = {
-    'species': ['dog', 'cat', 'blackcat', 'duck', 'fox', 'rhino'],
-    'natures': ['fire', 'water', 'nature', 'earth', 'storm', 'ice',
-                'shadow', 'crystal', 'steel', 'light', 'dragon'],
+    'species': [
+        ('dog',      'common'),
+        ('cat',      'common'),
+        ('duck',     'common'),
+        ('blackcat', 'uncommon'),
+        ('fox',      'rare'),
+        ('rhino',    'epic'),
+    ],
+    'natures': [
+        ('nature',  'common'),
+        ('water',   'common'),
+        ('earth',   'common'),
+        ('fire',    'uncommon'),
+        ('storm',   'uncommon'),
+        ('ice',     'rare'),
+        ('steel',   'rare'),
+        ('light',   'epic'),
+        ('shadow',  'epic'),
+        ('crystal', 'epic'),
+        ('dragon',  'legendary'),
+    ],
 }
 
 
 def get_zone_pool(zone: str) -> dict:
     return ZONE_POOLS.get(zone, DEFAULT_POOL)
+
+
+def weighted_choice(entries: list) -> str:
+    """
+    Alege random dintr-o lista de (cheie, raritate) folosind RARITY_WEIGHTS.
+    """
+    import random
+    keys    = [e[0] for e in entries]
+    weights = [RARITY_WEIGHTS.get(e[1], 60) for e in entries]
+    return random.choices(keys, weights=weights, k=1)[0]

@@ -466,4 +466,31 @@ SPECIES = {
             },
         },
     },
+
+    'goldfish': {
+        'starter': False,
+        'name': 'Peștișor', 'emoji': '🐟', 'button_label': '🐟 Peștișor',
+        'codes': {1: 'GOLD-001', 2: 'GOLD-002', 3: 'GOLD-003'},
+        'available_natures': ['water', 'dragon'],
+        'entries': {
+            1: {
+                'code': 'GOLD-001',
+                'name': 'Aurel',
+                'description': 'Un peștișor auriu nevinovat, înoată fericit în bolul său. Nimeni nu bănuiește ce putere doarme în el.',
+                'lore': 'Aurel este o enigmă printre companioni. La prima vedere e un simplu peștișor auriu — ochii mari, înotătoare delicate, mișcări line ca apa liniștită.\n\nSe spune că peștișorii de aur sunt urmașii dragonilor marini primordiali care au ales să se retragă în adâncuri, luând forma cea mai mică și umilă pentru a nu fi vânați.\n\nCei care îl aleg ca starter sunt considerați fie nebuni, fie înzestrați cu o intuiție ieșită din comun. Aurel nu impresionează — deocamdată.',
+            },
+            2: {
+                'code': 'GOLD-002',
+                'name': 'Koishar',
+                'description': 'Transformarea a început. Solzii aurului s-au întărit, înotătoarele s-au extins, iar în ochi arde o flacără albastră.',
+                'lore': 'Koishar marchează trezirea — momentul în care peștișorul banal începe să-și amintească ce a fost cândva.\n\nSolzii săi reflectă lumina în pattern-uri care seamănă cu scrierile dragonice vechi. Magicienii curții au confirmat că aceste pattern-uri nu sunt decorative — sunt rune vii.\n\nKoishar poate supraviețui în afara apei pentru perioade scurte, iar valurile de energie pe care le emite pot fi simțite de companioanele din jur. Este asexuat — forma sa transcende orice categorie.',
+            },
+            3: {
+                'code': 'GOLD-003',
+                'name': 'Dracaurul',
+                'description': 'Transformarea completă. Dragonul marin primordial s-a trezit — solzi de aur și abis, puterea apei și a dragonului unite.',
+                'lore': 'Dracaurul este una dintre cele mai rare și mai temute creaturi din Regnum Dacorum. Forma sa finală combină grația peștilor cu devastarea dragonilor marini.\n\nSe spune că apariția unui Dracaurul anunță fie o mare furtună pe mare, fie nașterea unui nou erou în regat. Nu există cale de mijloc.\n\nZamolxe ar fi spus că Dracaurul nu aparține nici lumii de sus, nici celei de jos — el este puntea dintre Apă și Dragon, dintre origine și destin. Cei care îl dețin poartă o responsabilitate pe care puțini o înțeleg.',
+            },
+        },
+    },
 }

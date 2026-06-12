@@ -13,6 +13,7 @@ GENDERED_SPECIES = {
     'duck':     [2, 3],
     'fox':      [2, 3],
     'rhino':    [2, 3],
+    # goldfish — asexuat, nicio forma nu are gen
 }
 
 

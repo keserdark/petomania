@@ -77,6 +77,16 @@ BASE_STATS: dict[str, dict[str, int]] = {
         'control':  30,
         'reflection': 20,
     },
+    'goldfish': {
+        'hp':       40,
+        'attack':   55,
+        'defense':  40,
+        'speed':    75,
+        'evasion':  55,
+        'healing':  35,
+        'control':  45,
+        'reflection': 30,
+    },
 }
 
 
@@ -145,6 +155,16 @@ STAT_GROWTH: dict[str, dict[str, float]] = {
         'healing':    0.5,
         'control':    0.7,
         'reflection': 0.4,
+    },
+    'goldfish': {
+        'hp':         2.0,
+        'attack':     1.8,
+        'defense':    1.0,
+        'speed':      1.8,
+        'evasion':    1.2,
+        'healing':    0.8,
+        'control':    1.0,
+        'reflection': 0.8,
     },
 }
 

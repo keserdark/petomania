@@ -15,27 +15,28 @@ from moves_config import get_moveset, get_move
 # GENERARE NPC INAMIC
 # ─────────────────────────────────────────────
 
-SPECIES_LIST   = ['dog', 'cat', 'blackcat', 'duck', 'fox', 'rhino']
+SPECIES_LIST   = ['dog', 'cat', 'blackcat', 'duck', 'fox', 'rhino', 'goldfish']
 NATURES_LIST   = ['fire', 'water', 'nature', 'earth', 'storm', 'ice', 'shadow', 'crystal', 'steel', 'light', 'dragon']
-SPECIES_NAMES  = {'dog': 'Câine', 'cat': 'Pisică', 'blackcat': 'Pisică Neagră', 'duck': 'Rață', 'fox': 'Vulpe', 'rhino': 'Rinocer'}
+SPECIES_NAMES  = {'dog': 'Câine', 'cat': 'Pisică', 'blackcat': 'Pisică Neagră', 'duck': 'Rață', 'fox': 'Vulpe', 'rhino': 'Rinocer', 'goldfish': 'Peștișor'}
 from npc_names_config import get_npc_name
 
 
 def generate_npc(player_level: int, zone: str = 'arena') -> dict:
     """Genereaza un NPC random cu nivel apropriat (+-3 fata de player), filtrat dupa zona."""
     from cogs.petgame_config import SPECIES as SPECIES_CONFIG
-    from zone_config import get_zone_pool
+    from zone_config import get_zone_pool, weighted_choice
 
     pool    = get_zone_pool(zone)
-    species_pool = pool['species']
-    natures_pool = pool['natures']
+    species = weighted_choice(pool['species'])
+
+    # Intersecteaza available_natures ale speciei cu naturile din pool
+    available_natures = SPECIES_CONFIG.get(species, {}).get('available_natures', [e[0] for e in pool['natures']])
+    pool_natures = [(key, rar) for key, rar in pool['natures'] if key in available_natures]
+    if not pool_natures:
+        pool_natures = pool['natures']
+    nature = weighted_choice(pool_natures)
 
     level   = max(1, player_level + random.randint(-3, 3))
-    species = random.choice(species_pool)
-    # Intersecteaza available_natures ale speciei cu pool-ul zonei
-    available = SPECIES_CONFIG.get(species, {}).get('available_natures', natures_pool)
-    available = [n for n in available if n in natures_pool] or natures_pool
-    nature  = random.choice(available)
     form    = get_form(level)
     stats   = get_stats_at_level(species, nature, level, form)
     moveset = get_moveset(species, nature, level)
