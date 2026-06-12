@@ -363,6 +363,8 @@ async function doSwitch(petId) {
 function showResult(winner, reward, xpResults) {
     const el = document.getElementById('result-overlay');
     el.classList.add('open');
+    // Verifica Daiana dupa orice rezultat de lupta
+    setTimeout(checkDaiana, 600);
     if (winner === 'player') {
         document.getElementById('result-icon').textContent  = '🏆';
         document.getElementById('result-title').textContent = 'Victorie!';
@@ -497,6 +499,116 @@ function showCaptureSuccess(data) {
                 ← Înapoi
             </button>
         </div>`;
+}
+
+// ── DAIANA SOLARIS ──
+let _daiana_data = null;
+
+async function checkDaiana() {
+    const resp = await fetch('/joc/petomania/api/daiana/check');
+    const data = await resp.json();
+    if (!data.trigger) return;
+    _daiana_data = data;
+    showDaianaOverlay();
+}
+
+function showDaianaOverlay() {
+    let overlay = document.getElementById('daiana-overlay');
+    if (!overlay) {
+        overlay = document.createElement('div');
+        overlay.id = 'daiana-overlay';
+        overlay.style.cssText = 'position:fixed;inset:0;z-index:600;display:flex;align-items:center;justify-content:center;';
+        document.body.appendChild(overlay);
+    }
+    overlay.style.display = 'flex';
+    renderDaiana('intro');
+}
+
+function renderDaiana(step) {
+    let overlay = document.getElementById('daiana-overlay');
+    overlay.innerHTML = `
+        <div style="position:absolute;inset:0;background-size:100% 100%;background-image:url('/static/padure/DaianaSolaris.png');filter:brightness(0.35)"></div>
+        <div id="daiana-box" style="position:relative;z-index:1;background:var(--bg-card,#1a1a2e);border:1px solid rgba(220,50,50,0.3);border-radius:16px;padding:28px 32px;max-width:480px;width:90vw;box-shadow:0 8px 40px rgba(0,0,0,0.85);text-align:center">
+            <div style="font-family:'Cinzel',serif;font-size:18px;font-weight:700;color:var(--gold,#c9a84c);margin-bottom:4px">Daiana Solaris</div>
+            <div style="font-size:11px;color:var(--text-muted);margin-bottom:14px;font-style:italic">Prim Gardian al Regatului</div>
+            <div id="daiana-text" style="font-size:13px;line-height:1.8;color:var(--text-secondary);margin-bottom:20px"></div>
+            <div id="daiana-actions"></div>
+        </div>`;
+    _renderDaianaStep(step);
+}
+
+function _renderDaianaStep(step) {
+    const textEl = document.getElementById('daiana-text');
+    const actsEl = document.getElementById('daiana-actions');
+    if (!textEl) return;
+    actsEl.innerHTML = '';
+
+    const mk = (label, fn) => {
+        const b = document.createElement('button');
+        b.className = 'result-btn';
+        b.style.cssText = 'width:100%;margin-bottom:8px;';
+        b.textContent = label;
+        b.onclick = fn;
+        actsEl.appendChild(b);
+    };
+
+    if (step === 'intro') {
+        textEl.innerHTML = `Am auzit zvonuri că mai nou se vânează ilegal în pădurile Regatului.<br><br>
+            Spune, cetățene, ai consimțământul Regelui pentru a vâna pe teritoriile lui?`;
+        mk('Da, am concesiune de vânătoare.', () => _renderDaianaStep('are_concesiune'));
+        mk('Nu... nu știam că am nevoie.', () => _renderDaianaStep('nu_are'));
+    }
+    else if (step === 'are_concesiune') {
+        textEl.innerHTML = `<em>*Daiana verifică rapid registrul mental al concesiunilor.*</em><br><br>
+            Bine. Apreciez că respecți legea — nu mulți o fac din proprie inițiativă.<br><br>
+            Continuă-ți vânătoarea și ai grijă de pădure.<br><br>
+            <span style="color:#4caf7d">Zi bună, cetățene.</span>`;
+        mk('Mulțumesc. O zi bună și ție.', () => {
+            document.getElementById('daiana-overlay').style.display = 'none';
+        });
+    }
+    else if (step === 'nu_are') {
+        if (_daiana_data.daiana_warned === 0) {
+            textEl.innerHTML = `<em>*Daiana te privește cu o privire calculată, fără ostilitate, dar fără blândețe.*</em><br><br>
+                Înțeleg. De data aceasta, accept că nu ai știut.<br><br>
+                Dar acum știi: pădurile aparțin Coroanei, iar vânătoarea fără concesiune este ilegală.<br><br>
+                Du-te la Castel și cere-i lui Aldric Solvar o concesiune. Până atunci, te sfătuiesc să te limitezi la plimbări.<br><br>
+                <em>Data viitoare nu voi mai fi atât de îngăduitoare.</em>`;
+            mk('Înțeleg. Mulțumesc pentru avertisment.', () => applyDaianaAvertisment());
+        } else {
+            textEl.innerHTML = `<em>*Daiana te recunoaște imediat și un zâmbet rece îi încrețește colțul gurii.*</em><br><br>
+                Iar tu... te-am mai văzut eu pe-aci.<br><br>
+                Ți-am spus și data trecută să îți faci rost de un consimțământ, nu?<br><br>
+                Va fi <span style="color:#e05252">1.000 Dacoins</span> amendă.`;
+            mk('Plătesc amenda.', () => applyDaianaAmenda());
+        }
+    }
+    else if (step === 'amenda_platita') {
+        const a = _daiana_data._amenda;
+        const r = _daiana_data._ramas;
+        textEl.innerHTML = `${a === 1000
+            ? `<em>*Daiana înregistrează plata.*</em><br><br>Bine. Cei 1.000 de Dacoins au fost reținuți.`
+            : `Hmm, pari amărât și nu ai nici măcar bani de amendă.<br><br><em>Voi lua cât ai la tine — <span style="color:#e05252">${a} Dacoins</span>.</em>`
+        }<br><br>
+        Du-te la Castel și rezolvă situația.<br>
+        <span style="opacity:0.6;font-size:12px">Sold rămas: ${r} Dacoins</span>`;
+        mk('Da, mă duc imediat.', () => {
+            document.getElementById('daiana-overlay').style.display = 'none';
+        });
+    }
+}
+
+async function applyDaianaAvertisment() {
+    await fetch('/joc/petomania/api/daiana/amenda', {method:'POST'});
+    document.getElementById('daiana-overlay').style.display = 'none';
+}
+
+async function applyDaianaAmenda() {
+    const resp = await fetch('/joc/petomania/api/daiana/amenda', {method:'POST'});
+    const data = await resp.json();
+    _daiana_data._amenda = data.amenda;
+    _daiana_data._ramas  = data.balance_ramas;
+    _renderDaianaStep('amenda_platita');
 }
 
 async function tryFlee() {
