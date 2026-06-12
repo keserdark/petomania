@@ -266,7 +266,7 @@ ROOM_ITEMS = {
             'pos_x':     50,
             'pos_y':     40,
             'width':     30,
-            'z_index':   3,
+            'z_index':   6,
             'linear':    True,
             'hidden_in_shop': True,
         },
