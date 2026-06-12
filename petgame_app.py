@@ -413,7 +413,28 @@ def api_activa():
               active['happiness'], active['cleanliness'], active['energy'],
               active['sleeping'], active['sleep_started'], active['last_decay'],
               active['last_xp_tick'], active['born_at'], now, active['hp_current'] if 'hp_current' in active.keys() else 0))
+        # Salveaza active_moves si known_moves ale petului activ in menajerie
+        new_men_id = conn.execute('SELECT last_insert_rowid() as id').fetchone()['id']
+        move_rows = conn.execute('SELECT slot, move_key FROM active_moves WHERE user_id = ? AND pet_id = 0', (uid,)).fetchall()
+        for r in move_rows:
+            conn.execute('INSERT OR REPLACE INTO active_moves (user_id, pet_id, slot, move_key) VALUES (?, ?, ?, ?)',
+                         (uid, new_men_id, r['slot'], r['move_key']))
+        known_rows = conn.execute('SELECT move_key FROM known_moves WHERE user_id = ? AND pet_id = 0', (uid,)).fetchall()
+        for r in known_rows:
+            conn.execute('INSERT OR IGNORE INTO known_moves (user_id, pet_id, move_key) VALUES (?, ?, ?)',
+                         (uid, new_men_id, r['move_key']))
+        conn.execute('DELETE FROM active_moves WHERE user_id = ? AND pet_id = 0', (uid,))
+        conn.execute('DELETE FROM known_moves WHERE user_id = ? AND pet_id = 0', (uid,))
         conn.execute('DELETE FROM pets WHERE user_id = ?', (uid,))
+    # Copiaza active_moves si known_moves ale noului pet activ (din menagerie_id -> pet_id=0)
+    new_active = conn.execute('SELECT slot, move_key FROM active_moves WHERE user_id = ? AND pet_id = ?', (uid, menagerie_id)).fetchall()
+    for r in new_active:
+        conn.execute('INSERT OR REPLACE INTO active_moves (user_id, pet_id, slot, move_key) VALUES (?, ?, ?, ?)',
+                     (uid, 0, r['slot'], r['move_key']))
+    new_known = conn.execute('SELECT move_key FROM known_moves WHERE user_id = ? AND pet_id = ?', (uid, menagerie_id)).fetchall()
+    for r in new_known:
+        conn.execute('INSERT OR IGNORE INTO known_moves (user_id, pet_id, move_key) VALUES (?, ?, ?)',
+                     (uid, 0, r['move_key']))
     conn.execute('''
         INSERT OR REPLACE INTO pets
         (user_id, name, gender, species, nature, level, xp, hunger, happiness,
