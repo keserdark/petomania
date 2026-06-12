@@ -212,7 +212,7 @@ async function initPvp() {
 
     pvpState = data.session;
     renderSession(pvpState);
-    renderMoves(pvpState.me.moveset, pvpState.me.mp);
+    renderMoves(pvpState.moveset_data, pvpState.me.mp);
     addLog('⚔️ Lupta PvP a început!');
 
     if (pvpState.state !== 'finished') {
@@ -250,7 +250,7 @@ async function pollMatch() {
 
         // Daca s-a rezolvat turul — re-render moves
         if (!s.i_chose && s.state === 'choosing') {
-            renderMoves(s.me.moveset, s.me.mp);
+            renderMoves(s.moveset_data, s.me.mp);
             showMenu();
         }
 
@@ -357,16 +357,21 @@ function updateUI(side, c) {
     }
 }
 
-function renderMoves(moveset, mp) {
+function renderMoves(movesetData, mp) {
     const container = document.getElementById('battle-moves');
     container.innerHTML = '';
-    (moveset || []).forEach(moveKey => {
-        const mpVal = mp ? (mp[moveKey] ?? '?') : '?';
+    (movesetData || []).forEach(m => {
+        const mpVal = mp ? (mp[m.key] ?? '?') : '?';
         const empty = mpVal === 0;
         const btn = document.createElement('button');
         btn.className = 'bmove' + (empty ? ' bmove-empty' : '');
-        btn.innerHTML = `<span>${moveKey}</span><span class="bmove-mp">MP: ${mpVal}</span>`;
-        if (!empty) btn.onclick = () => submitMove(moveKey);
+        const natIcon = NATURE_ICONS[m.nature] || '';
+        btn.innerHTML = `
+            ${natIcon ? `<span class="bmove-nature">${natIcon}</span>` : ''}
+            <span>${m.icon} ${m.name}</span>
+            <span class="bmove-mp">MP: ${mpVal}</span>
+        `;
+        if (!empty) btn.onclick = () => submitMove(m.key);
         else btn.disabled = true;
         container.appendChild(btn);
     });
@@ -413,6 +418,11 @@ function showMenu() {
 }
 
 function showMoves() {
+    if (!pvpState || pvpState.state === 'finished') return;
+    if (pvpState.i_chose) {
+        document.getElementById('pvp-waiting-overlay').classList.add('show');
+        return;
+    }
     document.getElementById('battle-menu').style.display = 'none';
     document.getElementById('battle-moves-panel').classList.add('open');
 }

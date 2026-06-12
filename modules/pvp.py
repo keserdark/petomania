@@ -439,6 +439,24 @@ def poll_match(match_id: int, user_id: int) -> dict:
     return {'ok': True, 'session': _session_snapshot(session, user_id, match)}
 
 
+def _get_moveset_data(moveset: list) -> list:
+    """Returneaza date complete pentru moves (nume, icon, power, nature)."""
+    from moves_config import get_move
+    result = []
+    for key in moveset:
+        m = get_move(key)
+        if m:
+            result.append({
+                'key':    key,
+                'name':   m.get('name', key),
+                'icon':   m.get('icon', '⚔️'),
+                'power':  m.get('power', 0),
+                'nature': m.get('nature', ''),
+                'type':   m.get('type', 'attack'),
+            })
+    return result
+
+
 def _session_snapshot(session: dict, user_id: int, match: dict) -> dict:
     """
     Snapshot al sesiunii pentru frontend.
@@ -460,13 +478,14 @@ def _session_snapshot(session: dict, user_id: int, match: dict) -> dict:
     i_chose = session.get(my_move_field) is not None
 
     return {
-        'state':     session.get('state'),
-        'turn':      session.get('turn', 1),
-        'time_left': time_left,
-        'i_chose':   i_chose,
-        'winner':    session.get('winner'),
-        'log':       session.get('log', []),
-        'me':        _combatant_snapshot(me),
-        'opponent':  _combatant_snapshot(opp),
-        'opp_name':  opp.get('name', '?'),
+        'state':        session.get('state'),
+        'turn':         session.get('turn', 1),
+        'time_left':    time_left,
+        'i_chose':      i_chose,
+        'winner':       session.get('winner'),
+        'log':          session.get('log', []),
+        'me':           _combatant_snapshot(me),
+        'opponent':     _combatant_snapshot(opp),
+        'opp_name':     opp.get('name', '?'),
+        'moveset_data': _get_moveset_data(me.get('moveset', [])),
     }
