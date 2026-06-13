@@ -12,9 +12,10 @@ from petgame_room_config import get_item, resolve_file
 from modules.db import get_db
 
 # Constante gameplay
-DECAY_INTERVAL   = 60
+DECAY_INTERVAL   = 120
 SLEEP_REGEN      = 2
 HP_SLEEP_REGEN   = 10   # HP regenerat per minut dormit
+MP_SLEEP_REGEN   = 3    # MP regenerat per minut dormit (per abilitate)
 FEED_AMOUNT      = 10
 WASH_AMOUNT      = 10
 PLAY_HAPPINESS   = 10
@@ -134,6 +135,20 @@ def apply_decay(pet) -> dict:
             hp_max = stats['hp']
             regen  = sleep_minutes * HP_SLEEP_REGEN
             p['hp_current'] = min(hp_max, p.get('hp_current', 0) + regen)
+            # MP regen la somn — 3 per minut per abilitate
+            import json
+            from moves_config import get_move
+            mp = {}
+            try:
+                mp = json.loads(p.get('mp_json') or '{}')
+            except Exception:
+                mp = {}
+            mp_regen = sleep_minutes * MP_SLEEP_REGEN
+            for key in list(mp.keys()):
+                move = get_move(key)
+                max_mp = move.get('max_mp', 15) if move else 15
+                mp[key] = min(max_mp, mp.get(key, 0) + mp_regen)
+            p['mp_json'] = json.dumps(mp)
         if p['energy'] >= 100 and p.get('hp_current', 0) >= hp_max:
             p['sleeping']      = 0
             p['sleep_started'] = None
@@ -182,6 +197,7 @@ def sync_pet(user_id: int):
         level=p['level'], xp=p['xp'],
         last_decay=p['last_decay'], last_xp_tick=p['last_xp_tick'],
         hp_current=p.get('hp_current', 0),
+        mp_json=p.get('mp_json', '{}'),
     )
     return p
 
