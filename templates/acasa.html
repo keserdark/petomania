@@ -147,7 +147,7 @@
         </div>
 
         <!-- Butoane -->
-        <div class="pet-actions" id="pet-actions">
+        <div class="pet-actions" id="pet-actions" style="width:100%;justify-content:center;">
             {% if pet.sleeping %}
             <button class="pet-btn pet-btn-wake" data-action="wake"
                     {% if pet.energy < 50 %}disabled title="Nevoie de 50 energie"{% endif %}>
