@@ -103,7 +103,7 @@
                          style="width:{{ hp_pct }}%;
                                 background:{% if hp_pct > 50 %}#4caf7d{% elif hp_pct > 25 %}#f0c060{% else %}#f04747{% endif %}"></div>
                 </div>
-                <span class="pet-stat-val" id="val-hp">{{ pet.hp_current }}/{{ pet.stats.hp }}</span>
+                <span class="pet-stat-val" id="val-hp">{{ hp_pct }}%</span>
             </div>
             <div class="pet-stat-row">
                 <span class="pet-stat-label">🍖 Foame</span>

@@ -381,7 +381,7 @@
 
 .pet-meta-row { display: flex; gap: clamp(8px, 1vw, 16px); font-size: clamp(10px, 1.2vw, 14px); color: var(--text-muted); flex-wrap: wrap; }
 
-.pet-actions { display: flex; flex-wrap: wrap; gap: 7px; }
+.pet-actions { display: flex; flex-wrap: wrap; gap: 7px; justify-content: center; }
 
 .pet-btn {
     display: inline-flex;
@@ -904,7 +904,6 @@
     background: #0a0a0a;
     flex-shrink: 0;
 }
-
 @media (max-width: 768px) {
     .care-panel {
         width: 100vw;
