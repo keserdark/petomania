@@ -2216,5 +2216,5 @@ img { max-width: 100%; display: block; }
     }
 }
 @media (max-width: 768px) {
-    html { zoom: 0.70; }
+    html { zoom: 0.80; }
 }
