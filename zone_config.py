@@ -53,6 +53,7 @@ ZONE_POOLS = {
             ('cat',  'common'),
             ('duck', 'common'),
             ('fox',  'uncommon'),
+            ('rhino', 'uncommon'),
         ],
         'natures': [
             ('nature', 'common'),
@@ -60,6 +61,7 @@ ZONE_POOLS = {
             ('earth',  'common'),
             ('storm',  'uncommon'),
             ('ice',    'rare'),
+            ('steel',  'uncommon'),
         ],
     },
 
