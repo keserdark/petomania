@@ -904,3 +904,15 @@
     background: #0a0a0a;
     flex-shrink: 0;
 }
+
+@media (max-width: 768px) {
+    .care-panel {
+        width: 100vw;
+        height: calc(100vh / 0.8);
+        top: 0;
+        right: calc(-100vw / 0.8);
+    }
+    .care-panel-open {
+        right: 0 !important;
+    }
+}
