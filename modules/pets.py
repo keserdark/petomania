@@ -12,7 +12,7 @@ from petgame_room_config import get_item, resolve_file
 from modules.db import get_db
 
 # Constante gameplay
-DECAY_INTERVAL   = 120
+DECAY_INTERVAL   = 60
 SLEEP_REGEN      = 2
 HP_SLEEP_REGEN   = 10   # HP regenerat per minut dormit
 MP_SLEEP_REGEN   = 3    # MP regenerat per minut dormit (per abilitate)
