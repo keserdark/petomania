@@ -572,25 +572,35 @@ def render_pet(user_id: int):
         chimney_img = f_chimney.result()
         pet_img     = f_pet.result() if f_pet else None
     # Separam obiectele in doua grupuri: z_index < 20 (sub pet) si >= 20 (peste pet)
-    from petgame_room_config import ROOM_ITEMS as _ROOM_ITEMS
+    from petgame_room_config import ROOM_ITEMS as _ROOM_ITEMS, ITEM_BUNDLES as _ITEM_BUNDLES
     owned_items = room.get('items', {})
+
+    # Aplica bundles
+    effective_items = set(owned_items.keys())
+    for trigger_key, bundle_keys in _ITEM_BUNDLES.items():
+        if trigger_key in effective_items:
+            effective_items.update(bundle_keys)
+
     obj_layers_under = []  # z_index < 20
     obj_layers_over  = []  # z_index >= 20
 
     for obj in _ROOM_ITEMS.get('obiecte', []):
         key = obj['key']
-        if key not in owned_items:
+        if key not in effective_items:
             continue
         obj_path = _to_disk(f"/static/room1/{obj['file']}")
         z = obj.get('z_index', 5)
         pos_x = obj.get('pos_x', 0) / 100.0
-        # In joc pos_y e 'bottom' (de jos), in PIL trebuie convertit la 'top'
         pos_y_bottom = obj.get('pos_y', 0) / 100.0
         width_pct = obj.get('width', 100) / 100.0
         if z < 20:
-            obj_layers_under.append((obj_path, pos_x, pos_y_bottom, width_pct))
+            obj_layers_under.append((z, obj_path, pos_x, pos_y_bottom, width_pct))
         else:
-            obj_layers_over.append((obj_path, pos_x, pos_y_bottom, width_pct))
+            obj_layers_over.append((z, obj_path, pos_x, pos_y_bottom, width_pct))
+
+    # Sorteaza dupa z_index
+    obj_layers_under.sort(key=lambda x: x[0])
+    obj_layers_over.sort(key=lambda x: x[0])
 
     def paste_obj(canvas, obj_path, pos_x, pos_y_bottom, width_pct):
         img = _fetch_image_cached(obj_path, ttl=3600, resize=None)
@@ -612,7 +622,7 @@ def render_pet(user_id: int):
             canvas.paste(img, (0, 0), img)
 
     # Obiecte sub pet
-    for (op, px, py, wp) in obj_layers_under:
+    for (_, op, px, py, wp) in obj_layers_under:
         paste_obj(canvas, op, px, py, wp)
 
     if pet_img:
@@ -623,7 +633,7 @@ def render_pet(user_id: int):
         canvas.paste(pet_img, ((W - pet_w) // 2, H - pet_h), pet_img)
 
     # Obiecte peste pet
-    for (op, px, py, wp) in obj_layers_over:
+    for (_, op, px, py, wp) in obj_layers_over:
         paste_obj(canvas, op, px, py, wp)
     output = io.BytesIO()
     canvas.convert('RGB').save(output, format='PNG', optimize=True)
