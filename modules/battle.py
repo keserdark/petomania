@@ -374,7 +374,11 @@ def execute_move(attacker: dict, defender: dict, move_key: str) -> dict:
 
     elif move['type'] == 'status':
         log.append(f'{attacker["name"]} folosește {move["name"]}!')
-        effect_msg = apply_effect(defender if 'down' in move.get('effect', {}).get('type', '') else attacker, move.get('effect'))
+        effect_type = move.get('effect', {}).get('type', '')
+        # Self-buff: heal, shield → pe attacker; restul (poison, stun, burn, freeze, speed_down) → pe defender
+        self_buff_types = ('heal', 'shield')
+        effect_target = attacker if effect_type in self_buff_types else defender
+        effect_msg = apply_effect(effect_target, move.get('effect'))
         if effect_msg:
             log.append(effect_msg)
         result['effect_msg'] = effect_msg
