@@ -571,11 +571,11 @@ def render_pet(user_id: int):
         floor_img   = f_floor.result()
         chimney_img = f_chimney.result()
         pet_img     = f_pet.result() if f_pet else None
-    # Separam obiectele in doua grupuri: z_index < 4 (sub pet) si >= 4 (peste pet)
+    # Separam obiectele in doua grupuri: z_index < 20 (sub pet) si >= 20 (peste pet)
     from petgame_room_config import ROOM_ITEMS as _ROOM_ITEMS
     owned_items = room.get('items', {})
-    obj_layers_under = []  # z_index < 4
-    obj_layers_over  = []  # z_index >= 4
+    obj_layers_under = []  # z_index < 20
+    obj_layers_over  = []  # z_index >= 20
 
     for obj in _ROOM_ITEMS.get('obiecte', []):
         key = obj['key']
@@ -587,7 +587,7 @@ def render_pet(user_id: int):
         # In joc pos_y e 'bottom' (de jos), in PIL trebuie convertit la 'top'
         pos_y_bottom = obj.get('pos_y', 0) / 100.0
         width_pct = obj.get('width', 100) / 100.0
-        if z < 4:
+        if z < 20:
             obj_layers_under.append((obj_path, pos_x, pos_y_bottom, width_pct))
         else:
             obj_layers_over.append((obj_path, pos_x, pos_y_bottom, width_pct))
