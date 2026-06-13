@@ -8,12 +8,13 @@ from modules.db import get_db
 from modules.pets import get_form
 
 GENDERED_SPECIES = {
-    'blackcat': [1, 2, 3],
-    'dog':      [1, 2, 3],
-    'duck':     [2, 3],
-    'fox':      [2, 3],
-    'rhino':    [2, 3],
-    # goldfish — asexuat, nicio forma nu are gen
+    'blackcat':  [1, 2, 3],
+    'dog':       [1, 2, 3],
+    'duck':      [2, 3],
+    'fox':       [2, 3],
+    'rhino':     [2, 3],
+    'toadisimo': [1, 2, 3],
+    # goldfish, verdian — asexuate, nicio forma nu are gen
 }
 
 

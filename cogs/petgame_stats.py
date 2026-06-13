@@ -97,6 +97,16 @@ BASE_STATS: dict[str, dict[str, int]] = {
         'control':  50,
         'reflection': 35,
     },
+    'toadisimo': {
+        'hp':       70,
+        'attack':   45,
+        'defense':  60,
+        'speed':    25,
+        'evasion':  30,
+        'healing':  50,
+        'control':  65,
+        'reflection': 30,
+    },
 }
 
 
@@ -185,6 +195,16 @@ STAT_GROWTH: dict[str, dict[str, float]] = {
         'healing':    1.0,
         'control':    1.4,
         'reflection': 1.0,
+    },
+    'toadisimo': {
+        'hp':         2.4,
+        'attack':     1.2,
+        'defense':    2.0,
+        'speed':      0.5,
+        'evasion':    0.6,
+        'healing':    1.5,
+        'control':    2.0,
+        'reflection': 0.8,
     },
 }
 

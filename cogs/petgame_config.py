@@ -520,4 +520,31 @@ SPECIES = {
             },
         },
     },
+
+    'toadisimo': {
+        'starter': False,
+        'name': 'Toadisimo', 'emoji': '🐸', 'button_label': '🐸 Toadisimo',
+        'codes': {1: 'TOAD-001', 2: 'TOAD-002', 3: 'TOAD-003'},
+        'available_natures': ['nature'],
+        'entries': {
+            1: {
+                'code': 'TOAD-001',
+                'name': 'Toadisimo',
+                'description': 'O broască jovială din mlaștinile Regnum Dacorum. Aparent inofensivă, dar cu o privire care ascunde mai mult decât pare.',
+                'lore': 'Toadisimo trăiește la marginea mlaștinilor regatului, acolo unde pădurile se topesc în nămol și nimeni nu vine fără motiv serios.\n\nMasculii sunt verzi și discreți — se camuflează perfect în vegetație și observă totul fără să fie văzuți. Femelele sunt violet și nu se ascund deloc — știu că nimeni nu le va ataca primul.\n\nAmândoi secretă o toxină ușoară din glande, suficientă să descurajeze prădătorii. În Regnum Dacorum se spune: nu deranja o broască dacă nu știi ce culoare are.',
+            },
+            2: {
+                'code': 'TOAD-002',
+                'name': 'Toadisimo Rex',
+                'description': 'A crescut, a absorbit toxinele mlaștinii și a devenit ceva mai mult decât o broască. Natura o respectă.',
+                'lore': 'Toadisimo Rex marchează momentul în care broasca încetează să mai fie pradă și devine parte din echilibrul naturii.\n\nCorpul său a absorbit ani de plante toxice, ciuperci otrăvitoare și rădăcini rare — acum el însuși e parte din ecosistem. Plantele cresc mai repede în preajma lui, iar insectele îl ocolesc instinctiv.\n\nFemelele dezvoltă un colier natural din excrescențe perlate — nu decorativ, ci funcțional: emit vibrații ce perturbă inamicii. Masculii devin mai masivi și mai lenți, dar lovitura lor paralizează.',
+            },
+            3: {
+                'code': 'TOAD-003',
+                'name': 'Toadisimo Regalis',
+                'description': 'Forma finală. Stăpânul mlaștinii — o creatură care a fuzionat cu natura până la punctul în care e greu de spus unde se termină broasca și unde începe pădurea.',
+                'lore': 'Toadisimo Regalis nu mai locuiește în mlaștină — mlaștina locuiește în el.\n\nCorpul său e acoperit de mușchi, flori și ciuperci care cresc direct din piele, vii și funcționale. Nu e parazitism — e simbioză perfectă. Plantele îl hrănesc, el le protejează.\n\nZamolxe ar fi recunoscut în Toadisimo Regalis spiritul naturii pure — nu blând, nu crud, ci pur și simplu complet. Cei care îl dețin sunt considerați în Regnum Dacorum drept prieteni ai pădurii, primiți oriunde fără întrebări.',
+            },
+        },
+    },
 }

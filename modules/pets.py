@@ -54,7 +54,7 @@ def get_image_url(species: str, form: int, state: str, gender: str = 'male') -> 
         return f"{base}/Stage{form}-{state}-Form.png"
     if species in ('goldfish', 'verdian'):
         return f"{base}/Stage{form}-{state}-Form.png"
-    if species in ('blackcat', 'dog', 'duck', 'fox', 'rhino'):
+    if species in ('blackcat', 'dog', 'duck', 'fox', 'rhino', 'toadisimo'):
         gender_suffix = 'Male' if gender == 'male' else 'Female'
         return f"{base}/Stage{form}-{state}-Form-{gender_suffix}.png"
     return f"{base}/Stage{form}-{state}-Form.png"
