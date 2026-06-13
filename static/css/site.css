@@ -2215,3 +2215,6 @@ img { max-width: 100%; display: block; }
         width: 100%;
     }
 }
+@media (max-width: 768px) {
+    html { zoom: 0.70; }
+}
