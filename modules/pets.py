@@ -12,7 +12,7 @@ from petgame_room_config import get_item, resolve_file
 from modules.db import get_db
 
 # Constante gameplay
-DECAY_INTERVAL   = 120
+DECAY_INTERVAL   = 60
 SLEEP_REGEN      = 2
 HP_SLEEP_REGEN   = 10   # HP regenerat per minut dormit
 FEED_AMOUNT      = 10
@@ -134,7 +134,7 @@ def apply_decay(pet) -> dict:
             hp_max = stats['hp']
             regen  = sleep_minutes * HP_SLEEP_REGEN
             p['hp_current'] = min(hp_max, p.get('hp_current', 0) + regen)
-        if p['energy'] >= 100:
+        if p['energy'] >= 100 and p.get('hp_current', 0) >= hp_max:
             p['sleeping']      = 0
             p['sleep_started'] = None
             p['energy']        = 100
