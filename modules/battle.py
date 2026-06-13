@@ -52,6 +52,7 @@ def generate_npc(player_level: int, zone: str = 'arena') -> dict:
         'nature':       nature,
         'level':        level,
         'form':         form,
+        'gender':       gender,
         'hp_max':       stats['hp'],
         'hp_current':   stats['hp'],
         'stats':        stats,
