@@ -95,6 +95,15 @@
         <!-- Stats -->
         <div class="pet-stats-grid">
             <div class="pet-stat-row">
+                <span class="pet-stat-label">❤️ Viață</span>
+                <div class="pet-stat-bar-wrap">
+                    <div class="pet-stat-bar" id="bar-hp"
+                         style="width:{{ ((pet.hp_current / pet.stats.hp) * 100)|int }}%;
+                                background:{% if pet.hp_current / pet.stats.hp > 0.5 %}#4caf7d{% elif pet.hp_current / pet.stats.hp > 0.25 %}#f0c060{% else %}#f04747{% endif %}"></div>
+                </div>
+                <span class="pet-stat-val" id="val-hp">{{ pet.hp_current }}/{{ pet.stats.hp }}</span>
+            </div>
+            <div class="pet-stat-row">
                 <span class="pet-stat-label">🍖 Foame</span>
                 <div class="pet-stat-bar-wrap">
                     <div class="pet-stat-bar" id="bar-hunger"
@@ -126,6 +135,7 @@
                 </div>
                 <span class="pet-stat-val" id="val-energy">{{ pet.energy }}/100</span>
             </div>
+        </div>
         </div>
 
         <!-- Meta -->
