@@ -1996,7 +1996,7 @@ def api_battle_capture():
     species = npc.get('species', 'cat')
     nature  = npc.get('nature')
     level   = npc.get('level', 1)
-    gender  = random.choice(['male', 'female'])
+    gender  = npc.get('gender', 'male')  # din NPC generat
 
     # Genereaza nume din species
     species_data = SPECIES.get(species, {})
@@ -2588,7 +2588,7 @@ def api_vanatoare_capture():
     species = npc.get('species', 'cat')
     nature  = npc.get('nature')
     level   = npc.get('level', 1)
-    gender  = random.choice(['male', 'female'])
+    gender  = npc.get('gender', 'male')  # din NPC generat
 
     # Genereaza nume din species
     species_data = SPECIES.get(species, {})
@@ -2892,7 +2892,8 @@ def api_pescuit_capture():
     species      = npc.get('species', 'goldfish')
     nature       = npc.get('nature')
     level        = npc.get('level', 1)
-    gender       = 'male'  # goldfish e asexuat — stocam male ca default
+    # Preia gender-ul din NPC — asexuate (goldfish, verdian) stocam 'male' ca default
+    gender       = npc.get('gender', 'male')
 
     species_data = SPECIES.get(species, {})
     from modules.pets import get_form
