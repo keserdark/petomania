@@ -80,6 +80,7 @@ ZONE_POOLS = {
     'paduremid': {
         'species': [
             ('cat',  'common'),
+            ('dog',  'common'),
             ('duck', 'common'),
             ('fox',  'uncommon'),
             ('rhino', 'uncommon'),
