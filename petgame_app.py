@@ -2659,8 +2659,23 @@ def api_pescuit_start():
     pet.setdefault('user_id', uid)
 
     player = build_combatant(pet)
+
+    # Daca petul activ e KO, cauta primul viu din loadout
     if player['hp_current'] <= 0:
-        return jsonify({'ok': False, 'error': 'Companionul tău este KO. Vindecă-l înainte.'})
+        from modules.loadout import build_loadout_context
+        loadout_raw = build_loadout_context(uid)
+        alive = [s for s in loadout_raw if not s.get('empty') and s.get('slot') != 1 and s.get('hp_current', 0) > 0]
+        if not alive:
+            return jsonify({'ok': False, 'error': 'Toți companionii tăi sunt KO. Vindecă-i la Biserică.'})
+        first = alive[0]
+        conn_b = get_db()
+        row_b  = conn_b.execute('SELECT * FROM menagerie WHERE id = ? AND user_id = ?', (first['id'], uid)).fetchone()
+        conn_b.close()
+        if not row_b:
+            return jsonify({'ok': False, 'error': 'Companion negăsit.'})
+        row_b_dict = dict(row_b)
+        row_b_dict.setdefault('user_id', uid)
+        player = build_combatant(row_b_dict)
 
     npc = generate_npc(player['level'], zone='pescuit')
 
