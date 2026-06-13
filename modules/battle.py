@@ -513,6 +513,7 @@ def _combatant_snapshot(c: dict) -> dict:
         'mp':           c.get('mp', {}),
         'nature':       c.get('nature'),
         'moveset':      c.get('moveset', []),
+        'gender':       c.get('gender', 'male'),
     }
 
 
