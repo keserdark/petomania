@@ -241,8 +241,13 @@ def apply_effect(target: dict, effect: dict) -> str | None:
         return None
 
     etype = effect['type']
-    val   = effect['value']
-    turns = effect['turns']
+    val   = effect.get('value', 0)
+    turns = effect.get('turns', 0)
+
+    # Nu suprascrie un status activ cu alt status
+    status_effects = ('stun', 'burn', 'poison', 'freeze')
+    if etype in status_effects and target.get('status') in status_effects:
+        return None
 
     if etype == 'stun':
         target['status'] = 'stun'
@@ -396,7 +401,10 @@ def execute_move(attacker: dict, defender: dict, move_key: str) -> dict:
 
             # Aplica efect
             if move.get('effect'):
-                effect_msg = apply_effect(defender, move['effect'])
+                effect_type = move['effect'].get('type', '')
+                # heal si shield pe attack moves = self-buff pentru attacker
+                effect_target = attacker if effect_type in ('heal', 'shield') else defender
+                effect_msg = apply_effect(effect_target, move['effect'])
                 if effect_msg:
                     if effect_msg.startswith('life_steal:'):
                         steal = int(effect_msg.split(':')[1])
@@ -464,12 +472,9 @@ def execute_turn(player: dict, npc: dict, player_move_key: str) -> dict:
     r1 = execute_move(first, second, first_move)
     log.extend(r1['log'])
 
-    # Daca primul atac a fost blocat de MP 0 si e playerul, NPC nu ataca
-    player_had_no_mp = r1.get('no_mp') and first is player
-
-    # Al doilea atac (daca al doilea e in viata si primul nu a fost blocat de MP)
+    # Al doilea atac (daca al doilea e in viata)
     r2 = {'log': [], 'damage': 0}
-    if second['hp_current'] > 0 and not player_had_no_mp:
+    if second['hp_current'] > 0:
         r2 = execute_move(second, first, sec_move)
         log.extend(r2['log'])
 
@@ -507,6 +512,7 @@ def _combatant_snapshot(c: dict) -> dict:
         'evasion_mod':  c.get('evasion_mod', 0),
         'mp':           c.get('mp', {}),
         'nature':       c.get('nature'),
+        'moveset':      c.get('moveset', []),
     }
 
 
