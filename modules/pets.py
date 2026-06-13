@@ -14,6 +14,7 @@ from modules.db import get_db
 # Constante gameplay
 DECAY_INTERVAL   = 120
 SLEEP_REGEN      = 2
+HP_SLEEP_REGEN   = 10   # HP regenerat per minut dormit
 FEED_AMOUNT      = 10
 WASH_AMOUNT      = 10
 PLAY_HAPPINESS   = 10
@@ -125,6 +126,14 @@ def apply_decay(pet) -> dict:
         p['hunger']      = max(0, p['hunger']      - ticks)
         p['happiness']   = max(0, p['happiness']   - ticks)
         p['cleanliness'] = max(0, p['cleanliness'] - ticks)
+        # HP regen la somn — doar daca nu e mort
+        if sleep_minutes > 0:
+            from cogs.petgame_stats import get_stats_at_level
+            form   = get_form(p['level'])
+            stats  = get_stats_at_level(p['species'], p.get('nature'), p['level'], form)
+            hp_max = stats['hp']
+            regen  = sleep_minutes * HP_SLEEP_REGEN
+            p['hp_current'] = min(hp_max, p.get('hp_current', 0) + regen)
         if p['energy'] >= 100:
             p['sleeping']      = 0
             p['sleep_started'] = None
@@ -171,7 +180,8 @@ def sync_pet(user_id: int):
         cleanliness=p['cleanliness'], energy=p['energy'],
         sleeping=p['sleeping'], sleep_started=p['sleep_started'],
         level=p['level'], xp=p['xp'],
-        last_decay=p['last_decay'], last_xp_tick=p['last_xp_tick']
+        last_decay=p['last_decay'], last_xp_tick=p['last_xp_tick'],
+        hp_current=p.get('hp_current', 0),
     )
     return p
 
