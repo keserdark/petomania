@@ -32,8 +32,9 @@ def generate_npc(player_level: int, zone: str = 'arena') -> dict:
     # Intersecteaza available_natures ale speciei cu naturile din pool
     available_natures = SPECIES_CONFIG.get(species, {}).get('available_natures', [e[0] for e in pool['natures']])
     pool_natures = [(key, rar) for key, rar in pool['natures'] if key in available_natures]
+    # Daca intersectia e goala, folosim available_natures speciei cu weight 'common'
     if not pool_natures:
-        pool_natures = pool['natures']
+        pool_natures = [(n, 'common') for n in available_natures] or pool['natures']
     nature = weighted_choice(pool_natures)
 
     level   = max(1, player_level + random.randint(-3, 3))
