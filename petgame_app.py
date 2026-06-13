@@ -2647,8 +2647,8 @@ def api_pescuit_start():
     user = get_current_user()
     uid  = int(user['id'])
 
-    # Roll 1% sansa sa apara goldfish
-    if _rand.random() > 0.01:
+    # Roll sansa aparitie — goldfish e legendary in zone_config (1%), verdian/toadisimo sunt common
+    if _rand.random() > 0.40:
         return jsonify({'ok': True, 'appeared': False, 'msg': 'Liniște... Nimic nu a mușcat. Încearcă din nou.'})
 
     pet = sync_pet(uid)
