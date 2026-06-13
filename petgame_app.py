@@ -271,6 +271,15 @@ def logout():
 
 # ── PAGINI ────────────────────────────────────────────────────────────
 
+@app.route('/joc/petomania/sw.js')
+def service_worker():
+    from flask import send_from_directory
+    response = send_from_directory('static', 'service_worker.js')
+    response.headers['Content-Type'] = 'application/javascript'
+    response.headers['Service-Worker-Allowed'] = '/joc/petomania/'
+    return response
+
+
 @app.route('/joc/petomania/')
 @app.route('/joc/petomania')
 @login_required
