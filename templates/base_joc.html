@@ -8,12 +8,26 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/petomania.css') }}">
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='imagini/dacoin.png') }}">
+
+    <!-- PWA -->
+    <link rel="manifest" href="/static/manifest.json">
+    <meta name="theme-color" content="#c9a84c">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Petomania">
+    <link rel="apple-touch-icon" href="/static/imagini/sigla.png">
 </head>
 
 <script>
 document.addEventListener('contextmenu', function(e) {
     e.preventDefault();
 });
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/static/service_worker.js');
+    });
+}
 </script>
 
 
